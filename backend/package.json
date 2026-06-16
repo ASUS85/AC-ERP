@@ -1,0 +1,27 @@
+{
+  "name": "ac-erp-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "openapi:print": "node -e \"import('./src/config/swagger.js').then(({ swaggerSpec }) => console.log(JSON.stringify(swaggerSpec, null, 2)))\"",
+    "prisma:generate": "prisma generate",
+    "prisma:format": "prisma format",
+    "prisma:studio": "prisma studio",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0",
+    "typescript": "^5.8.3"
+  }
+}

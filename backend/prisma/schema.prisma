@@ -1,0 +1,823 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatutUtilisateur {
+  ACTIF
+  INACTIF
+  BLOQUE
+}
+
+enum StatutSimple {
+  ACTIF
+  INACTIF
+}
+
+enum StatutProduit {
+  ACTIF
+  INACTIF
+  ARCHIVE
+}
+
+enum TypeClient {
+  PARTICULIER
+  ENTREPRISE
+}
+
+enum ModePaiement {
+  ESPECES
+  CHEQUE
+  VIREMENT
+  MOBILE_MONEY
+  CARTE
+  COMPENSATION
+}
+
+enum UniteMesure {
+  PIECE
+  KG
+  LITRE
+  METRE
+  M2
+  BOITE
+  CARTON
+}
+
+enum TypeMouvementStock {
+  ENTREE_ACHAT
+  SORTIE_VENTE
+  AJUSTEMENT_POS
+  AJUSTEMENT_NEG
+  RETOUR_CLIENT
+  RETOUR_FOURNISSEUR
+}
+
+enum StatutInventaire {
+  EN_COURS
+  VALIDE
+  ANNULE
+}
+
+enum StatutDemandeAchat {
+  EN_ATTENTE
+  VALIDEE
+  REJETEE
+  ANNULEE
+}
+
+enum StatutBonCommandeFournisseur {
+  BROUILLON
+  SOUMIS
+  VALIDE
+  ENVOYE
+  RECU_PARTIEL
+  RECU_TOTAL
+  ANNULE
+}
+
+enum StatutReception {
+  CONFORME
+  NON_CONFORME
+  PARTIELLE
+}
+
+enum StatutDevis {
+  BROUILLON
+  ENVOYE
+  ACCEPTE
+  REFUSE
+  EXPIRE
+  CONVERTI
+}
+
+enum StatutBonCommandeClient {
+  EN_ATTENTE
+  CONFIRME
+  EN_PREPARATION
+  EXPEDIE
+  LIVRE
+  ANNULE
+  RETOURNE
+}
+
+enum StatutBonLivraison {
+  PREPARATION
+  EXPEDIE
+  LIVRE
+  PARTIEL
+}
+
+enum TypeFacture {
+  VENTE
+  ACHAT
+}
+
+enum StatutFacture {
+  BROUILLON
+  EMISE
+  PARTIELLEMENT_PAYEE
+  SOLDEE
+  ANNULEE
+  EN_RETARD
+}
+
+enum TypeNotification {
+  ALERTE_STOCK
+  NOUVELLE_COMMANDE
+  FACTURE_ECHEANCE
+  DEVIS_EXPIRE
+  PAIEMENT_RECU
+  RAPPORT_PRET
+  SECURITE
+}
+
+enum TendancePrevision {
+  HAUSSE
+  STABLE
+  BAISSE
+}
+
+enum StatutAlerteRupture {
+  CRITIQUE
+  VIGILANCE
+  OK
+}
+
+enum RoleMessageIa {
+  user
+  assistant
+}
+
+model Role {
+  id           String           @id @default(uuid()) @db.Char(36)
+  nomRole      String           @unique(map: "uk_roles_nom") @map("nom_role") @db.VarChar(100)
+  description  String?          @db.Text
+  isSystemRole Boolean          @default(false) @map("is_system_role")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  permissions  RolePermission[]
+  utilisateurs Utilisateur[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Char(36)
+  module      String           @db.VarChar(100)
+  action      String           @db.VarChar(100)
+  description String?          @db.VarChar(255)
+  roles       RolePermission[]
+
+  @@unique([module, action], map: "uk_permission_module_action")
+  @@map("permissions")
+}
+
+model RolePermission {
+  idRole       String     @map("id_role") @db.Char(36)
+  idPermission String     @map("id_permission") @db.Char(36)
+  role         Role       @relation(fields: [idRole], references: [id], onDelete: Cascade, map: "fk_rp_role")
+  permission   Permission @relation(fields: [idPermission], references: [id], onDelete: Cascade, map: "fk_rp_permission")
+
+  @@id([idRole, idPermission])
+  @@map("role_permissions")
+}
+
+model Utilisateur {
+  id                       String                   @id @default(uuid()) @db.Char(36)
+  nom                      String                   @db.VarChar(100)
+  prenom                   String                   @db.VarChar(100)
+  email                    String                   @unique(map: "uk_utilisateurs_email") @db.VarChar(255)
+  passwordHash             String                   @map("password_hash") @db.VarChar(255)
+  telephone                String?                  @db.VarChar(20)
+  avatar                   String?                  @db.VarChar(500)
+  statut                   StatutUtilisateur        @default(ACTIF)
+  failedAttempts           Int                      @default(0) @map("failed_attempts") @db.TinyInt
+  lockedUntil              DateTime?                @map("locked_until")
+  idRole                   String                   @map("id_role") @db.Char(36)
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  updatedAt                DateTime                 @updatedAt @map("updated_at")
+  role                     Role                     @relation(fields: [idRole], references: [id], map: "fk_user_role")
+  refreshTokens            RefreshToken[]
+  auditLogs                AuditLog[]
+  mouvementsStock          MouvementStock[]
+  inventairesCrees         Inventaire[]             @relation("InventaireCreateur")
+  inventairesValides       Inventaire[]             @relation("InventaireValidateur")
+  demandesAchatCreees      DemandeAchat[]           @relation("DemandeAchatCreateur")
+  demandesAchatValidees    DemandeAchat[]           @relation("DemandeAchatValidateur")
+  bonsCommandeFournisseurs BonCommandeFournisseur[]
+  receptionsMarchandises   ReceptionMarchandise[]
+  devis                    Devis[]
+  bonsCommandeClients      BonCommandeClient[]
+  bonsLivraison            BonLivraison[]
+  factures                 Facture[]
+  avoirs                   Avoir[]
+  paiements                Paiement[]
+  notifications            Notification[]
+  conversationsIa          ConversationIa[]
+  rapportsIa               RapportIa[]
+
+  @@map("utilisateurs")
+}
+
+model RefreshToken {
+  id            String      @id @default(uuid()) @db.Char(36)
+  token         String      @unique(map: "uk_refresh_token") @db.VarChar(512)
+  idUtilisateur String      @map("id_utilisateur") @db.Char(36)
+  expiresAt     DateTime    @map("expires_at")
+  isRevoked     Boolean     @default(false) @map("is_revoked")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  utilisateur   Utilisateur @relation(fields: [idUtilisateur], references: [id], onDelete: Cascade, map: "fk_token_user")
+
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id            String       @id @default(uuid()) @db.Char(36)
+  action        String       @db.VarChar(100)
+  module        String       @db.VarChar(100)
+  entityId      String?      @map("entity_id") @db.Char(36)
+  oldValues     Json?        @map("old_values")
+  newValues     Json?        @map("new_values")
+  ipAddress     String?      @map("ip_address") @db.VarChar(45)
+  userAgent     String?      @map("user_agent") @db.Text
+  idUtilisateur String?      @map("id_utilisateur") @db.Char(36)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  utilisateur   Utilisateur? @relation(fields: [idUtilisateur], references: [id], onDelete: SetNull, map: "fk_audit_user")
+
+  @@index([idUtilisateur], map: "idx_audit_user")
+  @@index([module, action], map: "idx_audit_module")
+  @@index([createdAt], map: "idx_audit_date")
+  @@map("audit_logs")
+}
+
+model Categorie {
+  id                String       @id @default(uuid()) @db.Char(36)
+  nom               String       @db.VarChar(100)
+  description       String?      @db.Text
+  slug              String       @unique(map: "uk_categories_slug") @db.VarChar(150)
+  icone             String?      @db.VarChar(100)
+  idCategorieParent String?      @map("id_categorie_parent") @db.Char(36)
+  statut            StatutSimple @default(ACTIF)
+  createdAt         DateTime     @default(now()) @map("created_at")
+  parent            Categorie?   @relation("CategorieParent", fields: [idCategorieParent], references: [id], onDelete: Restrict, map: "fk_categorie_parent")
+  enfants           Categorie[]  @relation("CategorieParent")
+  produits          Produit[]
+
+  @@map("categories")
+}
+
+model Produit {
+  id                 String               @id @default(uuid()) @db.Char(36)
+  reference          String               @unique(map: "uk_produits_reference") @db.VarChar(50)
+  designation        String               @db.VarChar(255)
+  description        String?              @db.Text
+  uniteMesure        UniteMesure          @default(PIECE) @map("unite_mesure")
+  prixAchatHt        Decimal              @default(0.00) @map("prix_achat_ht") @db.Decimal(15, 2)
+  prixVenteHt        Decimal              @default(0.00) @map("prix_vente_ht") @db.Decimal(15, 2)
+  tauxTva            Decimal              @default(18.00) @map("taux_tva") @db.Decimal(5, 2)
+  stockMinimum       Int                  @default(0) @map("stock_minimum")
+  photo              String?              @db.VarChar(500)
+  idCategorie        String               @map("id_categorie") @db.Char(36)
+  statut             StatutProduit        @default(ACTIF)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  categorie          Categorie            @relation(fields: [idCategorie], references: [id], onDelete: Restrict, map: "fk_produit_categorie")
+  fournisseurs       ProduitFournisseur[]
+  stock              Stock?
+  mouvementsStock    MouvementStock[]
+  lignesInventaire   LigneInventaire[]
+  lignesDemandeAchat LigneDemandeAchat[]
+  lignesBcf          LigneBcf[]
+  lignesDevis        LigneDevis[]
+  lignesBcc          LigneBcc[]
+  lignesBl           LigneBl[]
+  lignesFacture      LigneFacture[]
+  lignesAvoir        LigneAvoir[]
+  previsionsVentes   PrevisionVente[]
+  alertesRupture     AlerteRupture[]
+
+  @@map("produits")
+}
+
+model Client {
+  id                  String              @id @default(uuid()) @db.Char(36)
+  codeClient          String              @unique(map: "uk_clients_code") @map("code_client") @db.VarChar(20)
+  type                TypeClient          @default(ENTREPRISE)
+  nom                 String              @db.VarChar(255)
+  email               String              @unique(map: "uk_clients_email") @db.VarChar(255)
+  telephone           String              @db.VarChar(20)
+  adresse             String              @db.Text
+  ville               String              @db.VarChar(100)
+  pays                String              @default("Cameroun") @db.VarChar(100)
+  numeroFiscal        String?             @unique(map: "uk_clients_nif") @map("numero_fiscal") @db.VarChar(50)
+  plafondCredit       Decimal             @default(0.00) @map("plafond_credit") @db.Decimal(15, 2)
+  modePaiementDefaut  ModePaiement        @default(ESPECES) @map("mode_paiement_defaut")
+  delaiPaiement       Int                 @default(30) @map("delai_paiement")
+  statut              StatutUtilisateur   @default(ACTIF)
+  createdAt           DateTime            @default(now()) @map("created_at")
+  devis               Devis[]
+  bonsCommandeClients BonCommandeClient[]
+  factures            Facture[]
+
+  @@map("clients")
+}
+
+model Fournisseur {
+  id                       String                   @id @default(uuid()) @db.Char(36)
+  codeFournisseur          String                   @unique(map: "uk_fournisseur_code") @map("code_fournisseur") @db.VarChar(20)
+  raisonSociale            String                   @map("raison_sociale") @db.VarChar(255)
+  email                    String                   @unique(map: "uk_fournisseur_email") @db.VarChar(255)
+  telephone                String                   @db.VarChar(20)
+  adresse                  String                   @db.Text
+  ville                    String                   @db.VarChar(100)
+  pays                     String                   @default("Cameroun") @db.VarChar(100)
+  numeroFiscal             String?                  @unique(map: "uk_fournisseur_nif") @map("numero_fiscal") @db.VarChar(50)
+  delaiLivraisonMoyen      Int                      @default(7) @map("delai_livraison_moyen")
+  conditionsPaiement       String?                  @map("conditions_paiement") @db.Text
+  statut                   StatutSimple             @default(ACTIF)
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  produits                 ProduitFournisseur[]
+  bonsCommandeFournisseurs BonCommandeFournisseur[]
+  factures                 Facture[]
+
+  @@map("fournisseurs")
+}
+
+model ProduitFournisseur {
+  idProduit                String      @map("id_produit") @db.Char(36)
+  idFournisseur            String      @map("id_fournisseur") @db.Char(36)
+  prixAchatFournisseur     Decimal?    @map("prix_achat_fournisseur") @db.Decimal(15, 2)
+  delaiLivraisonSpecifique Int?        @map("delai_livraison_specifique")
+  estFournisseurPrincipal  Boolean     @default(false) @map("est_fournisseur_principal")
+  produit                  Produit     @relation(fields: [idProduit], references: [id], onDelete: Cascade, map: "fk_pf_produit")
+  fournisseur              Fournisseur @relation(fields: [idFournisseur], references: [id], onDelete: Cascade, map: "fk_pf_fournisseur")
+
+  @@id([idProduit, idFournisseur])
+  @@map("produit_fournisseurs")
+}
+
+model Stock {
+  id           String   @id @default(uuid()) @db.Char(36)
+  idProduit    String   @unique(map: "uk_stock_produit") @map("id_produit") @db.Char(36)
+  stockActuel  Int      @default(0) @map("stock_actuel")
+  stockReserve Int      @default(0) @map("stock_reserve")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  produit      Produit  @relation(fields: [idProduit], references: [id], onDelete: Cascade, map: "fk_stock_produit")
+
+  @@map("stocks")
+}
+
+model MouvementStock {
+  id            String             @id @default(uuid()) @db.Char(36)
+  idProduit     String             @map("id_produit") @db.Char(36)
+  idUtilisateur String             @map("id_utilisateur") @db.Char(36)
+  typeMouvement TypeMouvementStock @map("type_mouvement")
+  quantite      Int
+  stockAvant    Int                @map("stock_avant")
+  stockApres    Int                @map("stock_apres")
+  referenceDoc  String?            @map("reference_doc") @db.VarChar(50)
+  motif         String?            @db.Text
+  createdAt     DateTime           @default(now()) @map("created_at")
+  produit       Produit            @relation(fields: [idProduit], references: [id], onDelete: Restrict, map: "fk_mvt_produit")
+  utilisateur   Utilisateur        @relation(fields: [idUtilisateur], references: [id], onDelete: Restrict, map: "fk_mvt_user")
+
+  @@index([idProduit], map: "idx_mvt_produit")
+  @@index([createdAt], map: "idx_mvt_date")
+  @@index([typeMouvement], map: "idx_mvt_type")
+  @@map("mouvements_stock")
+}
+
+model Inventaire {
+  id                      String            @id @default(uuid()) @db.Char(36)
+  idUtilisateurCreateur   String            @map("id_utilisateur_createur") @db.Char(36)
+  idUtilisateurValidateur String?           @map("id_utilisateur_validateur") @db.Char(36)
+  dateDebut               DateTime          @default(now()) @map("date_debut")
+  dateFin                 DateTime?         @map("date_fin")
+  statut                  StatutInventaire  @default(EN_COURS)
+  createdAt               DateTime          @default(now()) @map("created_at")
+  createur                Utilisateur       @relation("InventaireCreateur", fields: [idUtilisateurCreateur], references: [id], map: "fk_inv_createur")
+  validateur              Utilisateur?      @relation("InventaireValidateur", fields: [idUtilisateurValidateur], references: [id], map: "fk_inv_validateur")
+  lignes                  LigneInventaire[]
+
+  @@map("inventaires")
+}
+
+model LigneInventaire {
+  id             String     @id @default(uuid()) @db.Char(36)
+  idInventaire   String     @map("id_inventaire") @db.Char(36)
+  idProduit      String     @map("id_produit") @db.Char(36)
+  stockTheorique Int        @map("stock_theorique")
+  stockReel      Int?       @map("stock_reel")
+  ecart          Int        @default(dbgenerated()) @ignore
+  statut         String     @default("EN_ATTENTE") @db.VarChar(20)
+  inventaire     Inventaire @relation(fields: [idInventaire], references: [id], onDelete: Cascade, map: "fk_li_inventaire")
+  produit        Produit    @relation(fields: [idProduit], references: [id], onDelete: Restrict, map: "fk_li_produit")
+
+  @@unique([idInventaire, idProduit], map: "uk_ligne_inv")
+  @@map("lignes_inventaire")
+}
+
+model DemandeAchat {
+  id                       String                   @id @default(uuid()) @db.Char(36)
+  numeroDa                 String                   @unique(map: "uk_da_numero") @map("numero_da") @db.VarChar(30)
+  idUtilisateurCreateur    String                   @map("id_utilisateur_createur") @db.Char(36)
+  idUtilisateurValidateur  String?                  @map("id_utilisateur_validateur") @db.Char(36)
+  justification            String?                  @db.Text
+  statut                   StatutDemandeAchat       @default(EN_ATTENTE)
+  dateValidation           DateTime?                @map("date_validation")
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  createur                 Utilisateur              @relation("DemandeAchatCreateur", fields: [idUtilisateurCreateur], references: [id], map: "fk_da_createur")
+  validateur               Utilisateur?             @relation("DemandeAchatValidateur", fields: [idUtilisateurValidateur], references: [id], map: "fk_da_validateur")
+  lignes                   LigneDemandeAchat[]
+  bonsCommandeFournisseurs BonCommandeFournisseur[]
+
+  @@map("demandes_achat")
+}
+
+model LigneDemandeAchat {
+  id                 String       @id @default(uuid()) @db.Char(36)
+  idDa               String       @map("id_da") @db.Char(36)
+  idProduit          String       @map("id_produit") @db.Char(36)
+  quantiteDemandee   Int          @map("quantite_demandee")
+  justificationLigne String?      @map("justification_ligne") @db.Text
+  demandeAchat       DemandeAchat @relation(fields: [idDa], references: [id], onDelete: Cascade, map: "fk_lda_da")
+  produit            Produit      @relation(fields: [idProduit], references: [id], map: "fk_lda_produit")
+
+  @@map("lignes_demande_achat")
+}
+
+model BonCommandeFournisseur {
+  id                  String                       @id @default(uuid()) @db.Char(36)
+  numeroBcf           String                       @unique(map: "uk_bcf_numero") @map("numero_bcf") @db.VarChar(30)
+  idFournisseur       String                       @map("id_fournisseur") @db.Char(36)
+  idUtilisateur       String                       @map("id_utilisateur") @db.Char(36)
+  idDa                String?                      @map("id_da") @db.Char(36)
+  dateCommande        DateTime                     @default(now()) @map("date_commande") @db.Date
+  dateLivraisonPrevue DateTime?                    @map("date_livraison_prevue") @db.Date
+  statut              StatutBonCommandeFournisseur @default(BROUILLON)
+  totalHt             Decimal                      @default(0.00) @map("total_ht") @db.Decimal(15, 2)
+  totalTva            Decimal                      @default(0.00) @map("total_tva") @db.Decimal(15, 2)
+  totalTtc            Decimal                      @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
+  notes               String?                      @db.Text
+  createdAt           DateTime                     @default(now()) @map("created_at")
+  fournisseur         Fournisseur                  @relation(fields: [idFournisseur], references: [id], map: "fk_bcf_fournisseur")
+  utilisateur         Utilisateur                  @relation(fields: [idUtilisateur], references: [id], map: "fk_bcf_user")
+  demandeAchat        DemandeAchat?                @relation(fields: [idDa], references: [id], map: "fk_bcf_da")
+  lignes              LigneBcf[]
+  receptions          ReceptionMarchandise[]
+
+  @@index([idFournisseur], map: "idx_bcf_fournisseur")
+  @@index([statut], map: "idx_bcf_statut")
+  @@map("bons_commande_fournisseurs")
+}
+
+model LigneBcf {
+  id                String                 @id @default(uuid()) @db.Char(36)
+  idBcf             String                 @map("id_bcf") @db.Char(36)
+  idProduit         String                 @map("id_produit") @db.Char(36)
+  quantiteCommandee Int                    @map("quantite_commandee")
+  quantiteRecue     Int                    @default(0) @map("quantite_recue")
+  prixUnitaireHt    Decimal                @map("prix_unitaire_ht") @db.Decimal(15, 2)
+  remise            Decimal                @default(0.00) @db.Decimal(5, 2)
+  montantHt         Decimal                @map("montant_ht") @db.Decimal(15, 2)
+  statut            String                 @default("EN_ATTENTE") @db.VarChar(20)
+  bonCommande       BonCommandeFournisseur @relation(fields: [idBcf], references: [id], onDelete: Cascade, map: "fk_lbcf_bcf")
+  produit           Produit                @relation(fields: [idProduit], references: [id], map: "fk_lbcf_produit")
+  lignesReception   LigneReception[]
+
+  @@map("lignes_bcf")
+}
+
+model ReceptionMarchandise {
+  id            String                 @id @default(uuid()) @db.Char(36)
+  idBcf         String                 @map("id_bcf") @db.Char(36)
+  idUtilisateur String                 @map("id_utilisateur") @db.Char(36)
+  dateReception DateTime               @default(now()) @map("date_reception")
+  statut        StatutReception
+  notes         String?                @db.Text
+  createdAt     DateTime               @default(now()) @map("created_at")
+  bonCommande   BonCommandeFournisseur @relation(fields: [idBcf], references: [id], map: "fk_rec_bcf")
+  utilisateur   Utilisateur            @relation(fields: [idUtilisateur], references: [id], map: "fk_rec_user")
+  lignes        LigneReception[]
+
+  @@map("receptions_marchandises")
+}
+
+model LigneReception {
+  id            String               @id @default(uuid()) @db.Char(36)
+  idReception   String               @map("id_reception") @db.Char(36)
+  idLigneBcf    String               @map("id_ligne_bcf") @db.Char(36)
+  quantiteRecue Int                  @map("quantite_recue")
+  conforme      Boolean              @default(true)
+  observation   String?              @db.Text
+  reception     ReceptionMarchandise @relation(fields: [idReception], references: [id], onDelete: Cascade, map: "fk_lr_reception")
+  ligneBcf      LigneBcf             @relation(fields: [idLigneBcf], references: [id], map: "fk_lr_ligne_bcf")
+
+  @@map("lignes_reception")
+}
+
+model Devis {
+  id                  String              @id @default(uuid()) @db.Char(36)
+  numeroDevis         String              @unique(map: "uk_devis_numero") @map("numero_devis") @db.VarChar(30)
+  idClient            String              @map("id_client") @db.Char(36)
+  idUtilisateur       String              @map("id_utilisateur") @db.Char(36)
+  dateDevis           DateTime            @default(now()) @map("date_devis") @db.Date
+  dateValidite        DateTime            @map("date_validite") @db.Date
+  statut              StatutDevis         @default(BROUILLON)
+  totalHt             Decimal             @default(0.00) @map("total_ht") @db.Decimal(15, 2)
+  totalTva            Decimal             @default(0.00) @map("total_tva") @db.Decimal(15, 2)
+  totalTtc            Decimal             @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
+  conditions          String?             @db.Text
+  createdAt           DateTime            @default(now()) @map("created_at")
+  client              Client              @relation(fields: [idClient], references: [id], map: "fk_devis_client")
+  utilisateur         Utilisateur         @relation(fields: [idUtilisateur], references: [id], map: "fk_devis_user")
+  lignes              LigneDevis[]
+  bonsCommandeClients BonCommandeClient[]
+
+  @@index([idClient], map: "idx_devis_client")
+  @@index([statut], map: "idx_devis_statut")
+  @@map("devis")
+}
+
+model LigneDevis {
+  id             String  @id @default(uuid()) @db.Char(36)
+  idDevis        String  @map("id_devis") @db.Char(36)
+  idProduit      String  @map("id_produit") @db.Char(36)
+  designation    String  @db.VarChar(255)
+  quantite       Int
+  prixUnitaireHt Decimal @map("prix_unitaire_ht") @db.Decimal(15, 2)
+  remise         Decimal @default(0.00) @db.Decimal(5, 2)
+  tauxTva        Decimal @map("taux_tva") @db.Decimal(5, 2)
+  montantHt      Decimal @map("montant_ht") @db.Decimal(15, 2)
+  montantTva     Decimal @map("montant_tva") @db.Decimal(15, 2)
+  montantTtc     Decimal @map("montant_ttc") @db.Decimal(15, 2)
+  devis          Devis   @relation(fields: [idDevis], references: [id], onDelete: Cascade, map: "fk_ld_devis")
+  produit        Produit @relation(fields: [idProduit], references: [id], map: "fk_ld_produit")
+
+  @@map("lignes_devis")
+}
+
+model BonCommandeClient {
+  id                  String                  @id @default(uuid()) @db.Char(36)
+  numeroBcc           String                  @unique(map: "uk_bcc_numero") @map("numero_bcc") @db.VarChar(30)
+  idClient            String                  @map("id_client") @db.Char(36)
+  idUtilisateur       String                  @map("id_utilisateur") @db.Char(36)
+  idDevis             String?                 @map("id_devis") @db.Char(36)
+  dateCommande        DateTime                @default(now()) @map("date_commande") @db.Date
+  dateLivraisonPrevue DateTime?               @map("date_livraison_prevue") @db.Date
+  statut              StatutBonCommandeClient @default(EN_ATTENTE)
+  totalHt             Decimal                 @default(0.00) @map("total_ht") @db.Decimal(15, 2)
+  totalTva            Decimal                 @default(0.00) @map("total_tva") @db.Decimal(15, 2)
+  totalTtc            Decimal                 @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
+  createdAt           DateTime                @default(now()) @map("created_at")
+  client              Client                  @relation(fields: [idClient], references: [id], map: "fk_bcc_client")
+  utilisateur         Utilisateur             @relation(fields: [idUtilisateur], references: [id], map: "fk_bcc_user")
+  devis               Devis?                  @relation(fields: [idDevis], references: [id], map: "fk_bcc_devis")
+  lignes              LigneBcc[]
+  bonsLivraison       BonLivraison[]
+
+  @@index([idClient], map: "idx_bcc_client")
+  @@index([statut], map: "idx_bcc_statut")
+  @@map("bons_commande_clients")
+}
+
+model LigneBcc {
+  id             String            @id @default(uuid()) @db.Char(36)
+  idBcc          String            @map("id_bcc") @db.Char(36)
+  idProduit      String            @map("id_produit") @db.Char(36)
+  designation    String            @db.VarChar(255)
+  quantite       Int
+  prixUnitaireHt Decimal           @map("prix_unitaire_ht") @db.Decimal(15, 2)
+  remise         Decimal           @default(0.00) @db.Decimal(5, 2)
+  tauxTva        Decimal           @map("taux_tva") @db.Decimal(5, 2)
+  montantHt      Decimal           @map("montant_ht") @db.Decimal(15, 2)
+  montantTva     Decimal           @map("montant_tva") @db.Decimal(15, 2)
+  montantTtc     Decimal           @map("montant_ttc") @db.Decimal(15, 2)
+  bonCommande    BonCommandeClient @relation(fields: [idBcc], references: [id], onDelete: Cascade, map: "fk_lbcc_bcc")
+  produit        Produit           @relation(fields: [idProduit], references: [id], map: "fk_lbcc_produit")
+  lignesBl       LigneBl[]
+
+  @@map("lignes_bcc")
+}
+
+model BonLivraison {
+  id            String             @id @default(uuid()) @db.Char(36)
+  numeroBl      String             @unique(map: "uk_bl_numero") @map("numero_bl") @db.VarChar(30)
+  idBcc         String             @map("id_bcc") @db.Char(36)
+  idUtilisateur String             @map("id_utilisateur") @db.Char(36)
+  dateLivraison DateTime           @default(now()) @map("date_livraison") @db.Date
+  statut        StatutBonLivraison @default(PREPARATION)
+  notes         String?            @db.Text
+  createdAt     DateTime           @default(now()) @map("created_at")
+  bonCommande   BonCommandeClient  @relation(fields: [idBcc], references: [id], map: "fk_bl_bcc")
+  utilisateur   Utilisateur        @relation(fields: [idUtilisateur], references: [id], map: "fk_bl_user")
+  lignes        LigneBl[]
+  factures      Facture[]
+
+  @@index([idBcc], map: "idx_bl_bcc")
+  @@map("bons_livraison")
+}
+
+model LigneBl {
+  id             String       @id @default(uuid()) @db.Char(36)
+  idBl           String       @map("id_bl") @db.Char(36)
+  idLigneBcc     String       @map("id_ligne_bcc") @db.Char(36)
+  idProduit      String       @map("id_produit") @db.Char(36)
+  quantiteLivree Int          @map("quantite_livree")
+  bonLivraison   BonLivraison @relation(fields: [idBl], references: [id], onDelete: Cascade, map: "fk_lbl_bl")
+  ligneBcc       LigneBcc     @relation(fields: [idLigneBcc], references: [id], map: "fk_lbl_ligne")
+  produit        Produit      @relation(fields: [idProduit], references: [id], map: "fk_lbl_produit")
+
+  @@map("lignes_bl")
+}
+
+model Facture {
+  id              String         @id @default(uuid()) @db.Char(36)
+  numeroFacture   String         @unique(map: "uk_facture_numero") @map("numero_facture") @db.VarChar(30)
+  typeFacture     TypeFacture    @map("type_facture")
+  idClient        String?        @map("id_client") @db.Char(36)
+  idFournisseur   String?        @map("id_fournisseur") @db.Char(36)
+  idBl            String?        @map("id_bl") @db.Char(36)
+  idUtilisateur   String         @map("id_utilisateur") @db.Char(36)
+  dateEmission    DateTime       @default(now()) @map("date_emission") @db.Date
+  dateEcheance    DateTime       @map("date_echeance") @db.Date
+  statut          StatutFacture  @default(EMISE)
+  totalHt         Decimal        @default(0.00) @map("total_ht") @db.Decimal(15, 2)
+  totalTva        Decimal        @default(0.00) @map("total_tva") @db.Decimal(15, 2)
+  totalTtc        Decimal        @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
+  montantPaye     Decimal        @default(0.00) @map("montant_paye") @db.Decimal(15, 2)
+  mentionsLegales String?        @map("mentions_legales") @db.Text
+  createdAt       DateTime       @default(now()) @map("created_at")
+  client          Client?        @relation(fields: [idClient], references: [id], map: "fk_fac_client")
+  fournisseur     Fournisseur?   @relation(fields: [idFournisseur], references: [id], map: "fk_fac_fourn")
+  bonLivraison    BonLivraison?  @relation(fields: [idBl], references: [id], map: "fk_fac_bl")
+  utilisateur     Utilisateur    @relation(fields: [idUtilisateur], references: [id], map: "fk_fac_user")
+  lignes          LigneFacture[]
+  avoirs          Avoir[]
+  paiements       Paiement[]
+
+  @@index([idClient], map: "idx_facture_client")
+  @@index([idFournisseur], map: "idx_facture_fournisseur")
+  @@index([statut], map: "idx_facture_statut")
+  @@index([dateEmission], map: "idx_facture_date")
+  @@map("factures")
+}
+
+model LigneFacture {
+  id             String   @id @default(uuid()) @db.Char(36)
+  idFacture      String   @map("id_facture") @db.Char(36)
+  idProduit      String?  @map("id_produit") @db.Char(36)
+  designation    String   @db.VarChar(255)
+  quantite       Int
+  prixUnitaireHt Decimal  @map("prix_unitaire_ht") @db.Decimal(15, 2)
+  remise         Decimal  @default(0.00) @db.Decimal(5, 2)
+  tauxTva        Decimal  @map("taux_tva") @db.Decimal(5, 2)
+  montantHt      Decimal  @map("montant_ht") @db.Decimal(15, 2)
+  montantTva     Decimal  @map("montant_tva") @db.Decimal(15, 2)
+  montantTtc     Decimal  @map("montant_ttc") @db.Decimal(15, 2)
+  facture        Facture  @relation(fields: [idFacture], references: [id], onDelete: Cascade, map: "fk_lf_facture")
+  produit        Produit? @relation(fields: [idProduit], references: [id], map: "fk_lf_produit")
+
+  @@map("lignes_facture")
+}
+
+model Avoir {
+  id            String       @id @default(uuid()) @db.Char(36)
+  numeroAvoir   String       @unique(map: "uk_avoir_numero") @map("numero_avoir") @db.VarChar(30)
+  idFacture     String       @map("id_facture") @db.Char(36)
+  idUtilisateur String       @map("id_utilisateur") @db.Char(36)
+  dateAvoir     DateTime     @default(now()) @map("date_avoir") @db.Date
+  motif         String       @db.Text
+  totalHt       Decimal      @default(0.00) @map("total_ht") @db.Decimal(15, 2)
+  totalTtc      Decimal      @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  facture       Facture      @relation(fields: [idFacture], references: [id], map: "fk_avoir_facture")
+  utilisateur   Utilisateur  @relation(fields: [idUtilisateur], references: [id], map: "fk_avoir_user")
+  lignes        LigneAvoir[]
+
+  @@map("avoirs")
+}
+
+model LigneAvoir {
+  id             String   @id @default(uuid()) @db.Char(36)
+  idAvoir        String   @map("id_avoir") @db.Char(36)
+  idProduit      String?  @map("id_produit") @db.Char(36)
+  designation    String   @db.VarChar(255)
+  quantite       Int
+  prixUnitaireHt Decimal  @map("prix_unitaire_ht") @db.Decimal(15, 2)
+  tauxTva        Decimal  @map("taux_tva") @db.Decimal(5, 2)
+  montantHt      Decimal  @map("montant_ht") @db.Decimal(15, 2)
+  montantTtc     Decimal  @map("montant_ttc") @db.Decimal(15, 2)
+  avoir          Avoir    @relation(fields: [idAvoir], references: [id], onDelete: Cascade, map: "fk_la_avoir")
+  produit        Produit? @relation(fields: [idProduit], references: [id], map: "fk_la_produit")
+
+  @@map("lignes_avoir")
+}
+
+model Paiement {
+  id            String       @id @default(uuid()) @db.Char(36)
+  idFacture     String       @map("id_facture") @db.Char(36)
+  idUtilisateur String       @map("id_utilisateur") @db.Char(36)
+  montant       Decimal      @db.Decimal(15, 2)
+  datePaiement  DateTime     @default(now()) @map("date_paiement") @db.Date
+  modePaiement  ModePaiement @map("mode_paiement")
+  reference     String?      @db.VarChar(100)
+  notes         String?      @db.Text
+  createdAt     DateTime     @default(now()) @map("created_at")
+  facture       Facture      @relation(fields: [idFacture], references: [id], map: "fk_pay_facture")
+  utilisateur   Utilisateur  @relation(fields: [idUtilisateur], references: [id], map: "fk_pay_user")
+
+  @@index([idFacture], map: "idx_paiement_facture")
+  @@map("paiements")
+}
+
+model Notification {
+  id            String           @id @default(uuid()) @db.Char(36)
+  idUtilisateur String           @map("id_utilisateur") @db.Char(36)
+  typeNotif     TypeNotification @map("type_notif")
+  titre         String           @db.VarChar(255)
+  message       String           @db.Text
+  canal         String           @default("IN_APP") @db.VarChar(20)
+  isLue         Boolean          @default(false) @map("is_lue")
+  isEnvoyee     Boolean          @default(false) @map("is_envoyee")
+  entityType    String?          @map("entity_type") @db.VarChar(50)
+  entityId      String?          @map("entity_id") @db.Char(36)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  utilisateur   Utilisateur      @relation(fields: [idUtilisateur], references: [id], onDelete: Cascade, map: "fk_notif_user")
+
+  @@index([idUtilisateur, isLue], map: "idx_notif_user")
+  @@map("notifications")
+}
+
+model PrevisionVente {
+  id             String            @id @default(uuid()) @db.Char(36)
+  idProduit      String            @map("id_produit") @db.Char(36)
+  periode        DateTime          @db.Date
+  quantitePrevue Int               @map("quantite_prevue")
+  quantiteMin    Int               @map("quantite_min")
+  quantiteMax    Int               @map("quantite_max")
+  tendance       TendancePrevision
+  tauxConfiance  Decimal           @map("taux_confiance") @db.Decimal(5, 2)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  produit        Produit           @relation(fields: [idProduit], references: [id], onDelete: Cascade, map: "fk_prev_produit")
+
+  @@unique([idProduit, periode], map: "uk_prevision")
+  @@map("previsions_ventes")
+}
+
+model AlerteRupture {
+  id                String              @id @default(uuid()) @db.Char(36)
+  idProduit         String              @map("id_produit") @db.Char(36)
+  joursAvantRupture Int                 @map("jours_avant_rupture")
+  vitesseEcoulement Decimal             @map("vitesse_ecoulement") @db.Decimal(10, 4)
+  qteRecommandee    Int                 @map("qte_recommandee")
+  statut            StatutAlerteRupture @default(VIGILANCE)
+  resolue           Boolean             @default(false)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  produit           Produit             @relation(fields: [idProduit], references: [id], onDelete: Cascade, map: "fk_alerte_produit")
+
+  @@index([idProduit], map: "idx_alerte_produit")
+  @@index([resolue], map: "idx_alerte_resolue")
+  @@map("alertes_rupture")
+}
+
+model ConversationIa {
+  id            String      @id @default(uuid()) @db.Char(36)
+  idUtilisateur String      @map("id_utilisateur") @db.Char(36)
+  titre         String?     @db.VarChar(255)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  utilisateur   Utilisateur @relation(fields: [idUtilisateur], references: [id], onDelete: Cascade, map: "fk_conv_user")
+  messages      MessageIa[]
+
+  @@map("conversations_ia")
+}
+
+model MessageIa {
+  id             String         @id @default(uuid()) @db.Char(36)
+  idConversation String         @map("id_conversation") @db.Char(36)
+  role           RoleMessageIa
+  contenu        String         @db.Text
+  donnees        Json?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  conversation   ConversationIa @relation(fields: [idConversation], references: [id], onDelete: Cascade, map: "fk_msg_conv")
+
+  @@index([idConversation], map: "idx_msg_conv")
+  @@map("messages_ia")
+}
+
+model RapportIa {
+  id            String      @id @default(uuid()) @db.Char(36)
+  idUtilisateur String      @map("id_utilisateur") @db.Char(36)
+  typeRapport   String      @map("type_rapport") @db.VarChar(50)
+  periode       String      @db.VarChar(20)
+  contenu       String      @db.Text
+  fichierPdf    String?     @map("fichier_pdf") @db.VarChar(500)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  utilisateur   Utilisateur @relation(fields: [idUtilisateur], references: [id], map: "fk_rap_user")
+
+  @@map("rapports_ia")
+}

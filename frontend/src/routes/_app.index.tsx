@@ -1,0 +1,243 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Banknote,
+  Receipt,
+  Users,
+  Package,
+  Warehouse,
+  Truck,
+  Download,
+  Plus,
+  AlertTriangle,
+  FileWarning,
+  Sparkles,
+  Target,
+} from "lucide-react";
+import { PageHeader } from "@/components/erp/PageHeader";
+import { StatCard, SectionCard } from "@/components/erp/widgets";
+import { StatusBadge } from "@/components/erp/StatusBadge";
+import { Button } from "@/components/ui/button";
+import {
+  kpis,
+  salesTrend,
+  topProducts,
+  stockSplit,
+  recentSales,
+  alerts,
+  fmtCurrency,
+} from "@/lib/erp-data";
+
+export const Route = createFileRoute("/_app/")({
+  head: () => ({ meta: [{ title: "Tableau de bord — AC ERP" }] }),
+  component: Dashboard,
+});
+
+const kpiIcons: Record<string, React.ReactNode> = {
+  revenue: <Banknote className="h-5 w-5" />,
+  sales: <Receipt className="h-5 w-5" />,
+  customers: <Users className="h-5 w-5" />,
+  products: <Package className="h-5 w-5" />,
+  stock: <Warehouse className="h-5 w-5" />,
+  suppliers: <Truck className="h-5 w-5" />,
+};
+
+const alertIcons: Record<string, React.ReactNode> = {
+  stock: <AlertTriangle className="h-4 w-4" />,
+  invoice: <FileWarning className="h-4 w-4" />,
+  ai: <Sparkles className="h-4 w-4" />,
+  goal: <Target className="h-4 w-4" />,
+};
+
+const alertStyles: Record<string, string> = {
+  warning: "bg-warning/12 text-warning-foreground",
+  destructive: "bg-destructive/10 text-destructive",
+  info: "bg-info/12 text-info",
+  success: "bg-success/12 text-success",
+};
+
+const pieColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-pop">
+      <p className="mb-1 font-medium text-foreground">{label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} className="flex items-center gap-1.5 text-muted-foreground">
+          <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+          {p.name}: <span className="font-medium text-foreground">{fmtCurrency(p.value)}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function Dashboard() {
+  return (
+    <>
+      <PageHeader
+        title="Tableau de bord"
+        description="Vue décisionnelle de votre activité commerciale — Juin 2026"
+        actions={
+          <>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Download className="h-4 w-4" /> Exporter
+            </Button>
+            <Button size="sm" className="gap-1.5" asChild>
+              <Link to="/sales">
+                <Plus className="h-4 w-4" /> Nouvelle vente
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {kpis.map((k) => (
+          <StatCard key={k.label} {...k} icon={kpiIcons[k.icon]} />
+        ))}
+      </div>
+
+      {/* Charts row 1 */}
+      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <SectionCard
+          title="Évolution des ventes & achats"
+          description="Chiffre d'affaires mensuel sur 12 mois"
+          className="lg:col-span-2"
+        >
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={salesTrend} margin={{ left: -10, right: 8, top: 8 }}>
+                <defs>
+                  <linearGradient id="gVentes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gAchats" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--chart-3)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--chart-3)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="mois" tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
+                <YAxis tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" tickFormatter={(v) => `${v / 1000}k`} />
+                <Tooltip content={<ChartTooltip />} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Area type="monotone" dataKey="ventes" name="Ventes" stroke="var(--chart-1)" strokeWidth={2.5} fill="url(#gVentes)" />
+                <Area type="monotone" dataKey="achats" name="Achats" stroke="var(--chart-3)" strokeWidth={2.5} fill="url(#gAchats)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Répartition des stocks" description="Par catégorie de produits">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={stockSplit} dataKey="value" nameKey="name" innerRadius={55} outerRadius={88} paddingAngle={3}>
+                  {stockSplit.map((_, i) => (
+                    <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", fontSize: 12 }}
+                  formatter={(v: number, n: string) => [`${v} %`, n]}
+                />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Charts row 2 */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <SectionCard title="Produits les plus vendus" description="Top 5 ce mois-ci" className="lg:col-span-2">
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 40, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+                <XAxis type="number" tickLine={false} axisLine={false} fontSize={12} stroke="var(--muted-foreground)" />
+                <YAxis type="category" dataKey="nom" tickLine={false} axisLine={false} width={150} fontSize={11} stroke="var(--muted-foreground)" />
+                <Tooltip cursor={{ fill: "var(--secondary)" }} contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", fontSize: 12 }} />
+                <Bar dataKey="ventes" name="Unités vendues" fill="var(--chart-1)" radius={[0, 6, 6, 0]} barSize={18} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Alertes & notifications" description="Éléments nécessitant votre attention">
+          <div className="space-y-3">
+            {alerts.map((a) => (
+              <div key={a.title} className="flex items-start gap-3 rounded-lg border border-border p-3">
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${alertStyles[a.type]}`}>
+                  {alertIcons[a.icon]}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground">{a.title}</p>
+                  <p className="text-xs text-muted-foreground">{a.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Recent activity */}
+      <div className="mt-4">
+        <SectionCard
+          title="Dernières ventes"
+          description="Activité récente"
+          action={
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/sales">Tout voir</Link>
+            </Button>
+          }
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="pb-2 font-medium">Référence</th>
+                  <th className="pb-2 font-medium">Client</th>
+                  <th className="pb-2 font-medium">Date</th>
+                  <th className="pb-2 text-right font-medium">Montant</th>
+                  <th className="pb-2 text-right font-medium">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSales.map((s) => (
+                  <tr key={s.ref} className="border-b border-border/60 last:border-0 hover:bg-secondary/40">
+                    <td className="py-3 font-medium text-foreground">{s.ref}</td>
+                    <td className="py-3 text-muted-foreground">{s.client}</td>
+                    <td className="py-3 text-muted-foreground">{s.date}</td>
+                    <td className="py-3 text-right font-medium text-foreground">{fmtCurrency(s.montant)}</td>
+                    <td className="py-3 text-right">
+                      <StatusBadge status={s.statut} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      </div>
+    </>
+  );
+}
