@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { login } from "@/lib/api/auth.service";
 import logo from "@/assets/erp-logo.png";
 import illustration from "@/assets/login-illustration.jpg";
 
@@ -21,12 +22,22 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const [show, setShow] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Connexion réussie", { description: "Bienvenue sur AC ERP." });
-    navigate({ to: "/" });
+    const formData = new FormData(e.currentTarget);
+    setIsSubmitting(true);
+    try {
+      await login(String(formData.get("email")), String(formData.get("password")));
+      toast.success("Connexion réussie", { description: "Bienvenue sur AC ERP." });
+      navigate({ to: "/" });
+    } catch (error: any) {
+      toast.error("Connexion impossible", { description: error.message || "Verifier vos identifiants." });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -85,7 +96,7 @@ function LoginPage() {
               <Label htmlFor="email">Adresse e-mail</Label>
               <div className="relative">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="email" type="email" defaultValue="s.martin@acerp.fr" className="h-11 pl-9" required />
+                <Input id="email" name="email" type="email" defaultValue="s.martin@acerp.fr" className="h-11 pl-9" required />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -94,6 +105,7 @@ function LoginPage() {
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={show ? "text" : "password"}
                   defaultValue="motdepasse"
                   className="h-11 px-9"
@@ -117,8 +129,8 @@ function LoginPage() {
                 Mot de passe oublié ?
               </a>
             </div>
-            <Button type="submit" className="h-11 w-full text-base">
-              Se connecter
+            <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
+              {isSubmitting ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
 

@@ -1,0 +1,39 @@
+import { Router } from "express";
+import authRoutes from "./auth/auth.routes.js";
+import usersRoutes from "./users/users.routes.js";
+import rolesRoutes from "./roles/roles.routes.js";
+import categoriesRoutes from "./categories/categories.routes.js";
+import produitsRoutes from "./produits/produits.routes.js";
+import clientsRoutes from "./clients/clients.routes.js";
+import fournisseursRoutes from "./fournisseurs/fournisseurs.routes.js";
+import stocksRoutes from "./stocks/stocks.routes.js";
+import achatsRoutes from "./achats/achats.routes.js";
+import ventesRoutes from "./ventes/ventes.routes.js";
+import facturesRoutes from "./factures/factures.routes.js";
+import paiementsRoutes from "./paiements/paiements.routes.js";
+import notificationsRoutes from "./notifications/notifications.routes.js";
+import dashboardRoutes from "./dashboard/dashboard.routes.js";
+import rapportsRoutes from "./rapports/rapports.routes.js";
+import iaRoutes from "./ia/ia.routes.js";
+
+const router = Router();
+
+router.use("/auth", authRoutes);
+router.use("/utilisateurs", usersRoutes);
+router.use("/roles", rolesRoutes);
+router.use("/categories", categoriesRoutes);
+router.use("/produits", produitsRoutes);
+router.use("/clients", clientsRoutes);
+router.use("/fournisseurs", fournisseursRoutes);
+router.use("/stocks", stocksRoutes);
+router.use("/achats", achatsRoutes);
+router.use("/ventes", ventesRoutes);
+router.use("/factures", facturesRoutes);
+router.use("/paiements", paiementsRoutes);
+router.use("/notifications", notificationsRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/rapports", rapportsRoutes);
+router.use("/ia", iaRoutes);
+
+export default router;
+

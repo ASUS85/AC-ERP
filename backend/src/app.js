@@ -1,0 +1,34 @@
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import morgan from "morgan";
+import corsConfig from "./config/cors.js";
+import { setupSwagger } from "./config/swagger.js";
+import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
+import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
+import routes from "./modules/index.js";
+import "./events/index.js";
+
+const app = express();
+
+app.use(helmet());
+app.use(cors(corsConfig));
+app.use(express.json({ limit: "10mb" }));
+app.use(morgan("dev"));
+app.use(rateLimiter);
+
+setupSwagger(app);
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "OK",
+    timestamp: new Date().toISOString(),
+    version: process.env.API_VERSION || "v1",
+  });
+});
+
+app.use("/api/v1", routes);
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+export default app;

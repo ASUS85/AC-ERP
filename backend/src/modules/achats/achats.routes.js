@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { authenticate } from "../../middlewares/auth.middleware.js";
+import { achatsController } from "./achats.controller.js";
+
+const router = Router();
+router.use(authenticate);
+router.get("/demandes", achatsController.getDemandes);
+router.post("/demandes", achatsController.createDemande);
+router.get("/demandes/:id", achatsController.getDemande);
+router.patch("/demandes/:id/valider", achatsController.validerDemande);
+router.get("/bons-commande", achatsController.getBonsCommande);
+router.post("/bons-commande", achatsController.createBonCommande);
+router.get("/bons-commande/:id", achatsController.getBonCommande);
+router.patch("/bons-commande/:id/envoyer", achatsController.envoyerBonCommande);
+router.post("/bons-commande/:id/reception", achatsController.reception);
+
+export default router;
+
