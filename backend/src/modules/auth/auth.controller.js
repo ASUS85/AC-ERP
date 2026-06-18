@@ -23,6 +23,20 @@ export const authController = {
       next(error);
     }
   },
+  async verifyMfa(req, res, next) {
+    try {
+      return sendSuccess(res, await authService.verifyMfa(req.body), "Verification MFA reussie");
+    } catch (error) {
+      next(error);
+    }
+  },
+  async resendMfa(req, res, next) {
+    try {
+      return sendSuccess(res, await authService.resendMfa(req.body), "Code MFA renvoye");
+    } catch (error) {
+      next(error);
+    }
+  },
   async me(req, res, next) {
     try {
       return sendSuccess(res, await authService.me(req.user.userId), "Profil recupere");
@@ -38,4 +52,3 @@ export const authController = {
     }
   },
 };
-

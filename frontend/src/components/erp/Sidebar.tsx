@@ -3,8 +3,41 @@ import { navGroups } from "@/lib/erp-data";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/erp-logo.png";
 
+type StoredUser = {
+  nom?: string;
+  prenom?: string;
+  email?: string;
+  role?: { nomRole?: string } | string | null;
+  permissions?: string[];
+};
+
+function getStoredUser(): StoredUser | null {
+  try {
+    if (typeof window === "undefined") return null;
+    return JSON.parse(localStorage.getItem("erp_user") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function roleName(user: StoredUser | null) {
+  if (!user?.role) return "Utilisateur";
+  return typeof user.role === "string" ? user.role : user.role.nomRole || "Utilisateur";
+}
+
+function initials(user: StoredUser | null) {
+  const raw = `${user?.prenom?.[0] || ""}${user?.nom?.[0] || ""}` || user?.email?.slice(0, 2) || "AC";
+  return raw.toUpperCase();
+}
+
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const user = getStoredUser();
+  const permissions = user?.permissions || [];
+  const canSee = (permission?: string) => !permission || permissions.includes(permission);
+  const visibleGroups = navGroups
+    .map((group) => ({ ...group, items: group.items.filter((item) => canSee(item.permission)) }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -17,7 +50,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.label}>
             <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
               {group.label}
@@ -61,11 +94,13 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       <div className="shrink-0 border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent/50 px-3 py-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-sm font-semibold text-white">
-            SM
+            {initials(user)}
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-medium text-white">Sophie Martin</p>
-            <p className="truncate text-xs text-sidebar-foreground/60">Administrateur</p>
+            <p className="truncate text-sm font-medium text-white">
+              {user ? `${user.prenom || ""} ${user.nom || ""}`.trim() || user.email : "Non connecte"}
+            </p>
+            <p className="truncate text-xs text-sidebar-foreground/60">{roleName(user)}</p>
           </div>
         </div>
       </div>

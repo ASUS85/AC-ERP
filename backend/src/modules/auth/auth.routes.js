@@ -6,10 +6,11 @@ import { authController } from "./auth.controller.js";
 const router = Router();
 
 router.post("/login", authLimiter, authController.login);
+router.post("/verify-mfa", authLimiter, authController.verifyMfa);
+router.post("/resend-mfa", authLimiter, authController.resendMfa);
 router.post("/refresh", authController.refresh);
 router.post("/logout", authenticate, authController.logout);
 router.get("/me", authenticate, authController.me);
 router.put("/change-password", authenticate, authController.changePassword);
 
 export default router;
-

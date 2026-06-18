@@ -25,6 +25,7 @@ export type NavItem = {
   url: string;
   icon: LucideIcon;
   badge?: string;
+  permission?: string;
 };
 
 export type NavGroup = {
@@ -35,43 +36,43 @@ export type NavGroup = {
 export const navGroups: NavGroup[] = [
   {
     label: "Pilotage",
-    items: [{ title: "Tableau de bord", url: "/", icon: LayoutDashboard }],
+    items: [{ title: "Tableau de bord", url: "/", icon: LayoutDashboard, permission: "dashboard:lire" }],
   },
   {
     label: "Gestion commerciale",
     items: [
-      { title: "Produits", url: "/products", icon: Package },
-      { title: "Catégories", url: "/categories", icon: FolderTree },
-      { title: "Clients", url: "/customers", icon: Contact },
-      { title: "Fournisseurs", url: "/suppliers", icon: Truck },
-      { title: "Stocks", url: "/inventory", icon: Warehouse, badge: "3" },
+      { title: "Produits", url: "/products", icon: Package, permission: "produits:lire" },
+      { title: "Catégories", url: "/categories", icon: FolderTree, permission: "categories:lire" },
+      { title: "Clients", url: "/customers", icon: Contact, permission: "clients:lire" },
+      { title: "Fournisseurs", url: "/suppliers", icon: Truck, permission: "fournisseurs:lire" },
+      { title: "Stocks", url: "/inventory", icon: Warehouse, badge: "3", permission: "stocks:lire" },
     ],
   },
   {
     label: "Transactions",
     items: [
-      { title: "Achats", url: "/purchases", icon: ShoppingCart },
-      { title: "Ventes", url: "/sales", icon: Receipt },
-      { title: "Factures", url: "/invoices", icon: FileText, badge: "5" },
-      { title: "Paiements", url: "/payments", icon: CreditCard },
+      { title: "Achats", url: "/purchases", icon: ShoppingCart, permission: "achats:lire" },
+      { title: "Ventes", url: "/sales", icon: Receipt, permission: "ventes:lire" },
+      { title: "Factures", url: "/invoices", icon: FileText, badge: "5", permission: "factures:lire" },
+      { title: "Paiements", url: "/payments", icon: CreditCard, permission: "paiements:lire" },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { title: "Prévisions IA", url: "/ai", icon: BrainCircuit },
-      { title: "Assistant ERP", url: "/assistant", icon: Bot },
-      { title: "Rapports", url: "/reports", icon: FileBarChart },
-      { title: "Statistiques", url: "/statistics", icon: BarChart3 },
+      { title: "Prévisions IA", url: "/ai", icon: BrainCircuit, permission: "ia:lire" },
+      { title: "Assistant ERP", url: "/assistant", icon: Bot, permission: "ia:chat" },
+      { title: "Rapports", url: "/reports", icon: FileBarChart, permission: "rapports:lire" },
+      { title: "Statistiques", url: "/statistics", icon: BarChart3, permission: "dashboard:lire" },
     ],
   },
   {
     label: "Administration",
     items: [
-      { title: "Utilisateurs", url: "/users", icon: Users },
-      { title: "Rôles & permissions", url: "/roles", icon: ShieldCheck },
+      { title: "Utilisateurs", url: "/users", icon: Users, permission: "users:lire" },
+      { title: "Rôles & permissions", url: "/roles", icon: ShieldCheck, permission: "roles:lire" },
       { title: "Notifications", url: "/notifications", icon: Bell, badge: "8" },
-      { title: "Paramètres", url: "/settings", icon: Settings },
+      { title: "Paramètres", url: "/settings", icon: Settings, permission: "users:modifier" },
     ],
   },
 ];
