@@ -26,6 +26,16 @@ export async function resendMfa(mfaToken: string) {
   return response.data;
 }
 
+export async function forgotPassword(email: string) {
+  const response: any = await api.post("/auth/forgot-password", { email });
+  return response.data;
+}
+
+export async function resetPassword(token: string, nouveauPassword: string) {
+  const response: any = await api.post("/auth/reset-password", { token, nouveauPassword });
+  return response.data;
+}
+
 export async function logout(refreshToken = localStorage.getItem("erp_refresh_token")) {
   try {
     return await api.post("/auth/logout", { refreshToken });

@@ -128,3 +128,61 @@ Please make sure your database server is running at `localhost:3306`. {"stack":"
 2026-06-19T10:05:56.966Z info: Socket connecte 41d4mW4DtZrhsOhqAAAQ
 2026-06-19T10:06:02.385Z info: Socket deconnecte 41d4mW4DtZrhsOhqAAAQ
 2026-06-19T10:26:16.782Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:88:22)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:7:31)","code":"INVALID_CREDENTIALS"}
+2026-06-19T11:21:08.235Z info: Base de donnees connectee
+2026-06-19T11:21:08.270Z info: Serveur demarre port 3000
+2026-06-19T11:21:08.617Z info: Socket connecte t61iCDc0647_zo7gAAAB
+2026-06-19T11:21:37.920Z info: Base de donnees connectee
+2026-06-19T11:21:37.940Z info: Serveur demarre port 3000
+2026-06-19T11:21:49.434Z info: Base de donnees connectee
+2026-06-19T11:21:49.449Z info: Serveur demarre port 3000
+2026-06-19T11:21:50.623Z info: Socket connecte gUSMAIbGulcx5OC8AAAB
+2026-06-19T11:23:48.861Z info: Base de donnees connectee
+2026-06-19T11:23:49.305Z info: Serveur demarre port 3000
+2026-06-19T11:23:50.476Z info: Socket connecte YrzMKC3rauN0GEv4AAAB
+2026-06-19T11:44:54.152Z info: Base de donnees connectee
+2026-06-19T11:44:54.179Z info: Serveur demarre port 3000
+2026-06-19T11:44:59.619Z info: Socket connecte GeXI0MWVqauNk1lgAAAB
+2026-06-19T11:47:17.915Z info: Socket connecte 7-FVvpPBR9u7gmb1AAAE
+2026-06-19T11:48:37.789Z info: Socket deconnecte 7-FVvpPBR9u7gmb1AAAE
+2026-06-19T11:52:58.312Z info: Socket connecte XpM7nYnWHvF0PdDTAAAH
+2026-06-19T12:00:26.676Z info: Socket deconnecte XpM7nYnWHvF0PdDTAAAH
+2026-06-19T12:00:44.948Z info: Arret du serveur
+2026-06-19T12:03:12.822Z info: Base de donnees connectee
+2026-06-19T12:03:12.838Z info: Serveur demarre port 3000
+2026-06-19T12:03:12.943Z info: Socket connecte hytByJ0vW0JvMBUiAAAB
+2026-06-19T12:04:28.835Z info: Socket connecte BS28DXM1dYZbYb4zAAAE
+2026-06-19T12:07:06.384Z info: Socket deconnecte BS28DXM1dYZbYb4zAAAE
+2026-06-19T12:07:07.889Z info: Socket connecte 8ia3btncm-1IFUGnAAAH
+2026-06-19T12:07:09.096Z info: Socket deconnecte 8ia3btncm-1IFUGnAAAH
+2026-06-19T12:07:12.066Z info: Socket connecte iJhDDIZwg1wIbP2JAAAJ
+2026-06-19T12:07:38.608Z info: Arret du serveur
+2026-06-19T12:07:49.167Z info: Base de donnees connectee
+2026-06-19T12:07:49.187Z info: Serveur demarre port 3000
+2026-06-19T12:07:51.241Z info: Socket connecte zZcBunYrKftNU8SIAAAB
+2026-06-19T12:07:51.586Z info: Socket connecte 1PBWBoYQJcnwO5I4AAAD
+2026-06-19T12:07:51.986Z info: Socket deconnecte zZcBunYrKftNU8SIAAAB
+2026-06-19T12:08:00.274Z info: Socket connecte 3k7KpRl9_sFy3T-sAAAF
+2026-06-19T12:08:40.466Z info: Socket deconnecte 3k7KpRl9_sFy3T-sAAAF
+2026-06-19T12:08:45.108Z info: Socket connecte LqLLyh5ZQ2yp7WjRAAAJ
+2026-06-19T12:08:50.875Z info: Socket deconnecte LqLLyh5ZQ2yp7WjRAAAJ
+2026-06-19T12:08:54.075Z info: Socket connecte fWA2IsCS5QPwUgLCAAAL
+2026-06-19T12:09:06.747Z info: Socket deconnecte fWA2IsCS5QPwUgLCAAAL
+2026-06-19T12:09:27.306Z info: Socket connecte SEKMTRXWIGadhLQuAAAO
+2026-06-19T12:10:20.110Z info: Socket deconnecte SEKMTRXWIGadhLQuAAAO
+2026-06-19T12:10:20.812Z info: Socket connecte Qnu1_vpkFO8R1X6KAAAR
+2026-06-19T12:10:25.038Z info: Socket connecte Cd-J7b2nukktH6Z6AAAT
+2026-06-19T12:11:05.245Z info: Socket deconnecte Qnu1_vpkFO8R1X6KAAAR
+2026-06-19T12:11:09.546Z info: Socket deconnecte Cd-J7b2nukktH6Z6AAAT
+2026-06-19T12:11:12.844Z info: Socket connecte Vo698Fw-LqrrTcdaAAAW
+2026-06-19T12:16:18.899Z error: Lien de reinitialisation invalide ou expire {"stack":"ApiError: Lien de reinitialisation invalide ou expire\n    at Object.resetPassword (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:210:13)\n    at async resetPassword (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:49:31)","code":"RESET_TOKEN_INVALID"}
+2026-06-19T12:17:05.719Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:108:22)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:7:31)","code":"INVALID_CREDENTIALS"}
+2026-06-19T12:17:10.733Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:108:22)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:7:31)","code":"INVALID_CREDENTIALS"}
+2026-06-19T12:18:07.071Z info: Socket deconnecte Vo698Fw-LqrrTcdaAAAW
+2026-06-19T12:18:08.493Z info: Socket connecte cmcwSB6N7XuwneEKAAAY
+2026-06-19T12:20:20.642Z info: Socket deconnecte cmcwSB6N7XuwneEKAAAY
+2026-06-19T12:24:57.227Z error: Client network socket disconnected before secure TLS connection was established {"stack":"Error: Client network socket disconnected before secure TLS connection was established\n    at TLSSocket.onConnectEnd (node:internal/tls/wrap:1754:19)\n    at TLSSocket.emit (node:events:531:35)\n    at endReadableNT (node:internal/streams/readable:1698:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)","code":"ESOCKET"}
+2026-06-19T12:28:43.484Z info: Base de donnees connectee
+2026-06-19T12:28:43.507Z info: Serveur demarre port 3000
+2026-06-19T12:28:43.640Z info: Socket connecte 2rw0rWmu9XVAwK2RAAAB
+2026-06-19T12:29:02.897Z error: getaddrinfo ENOTFOUND smtp.gmail.com {"stack":"Error: getaddrinfo ENOTFOUND smtp.gmail.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)","code":"EDNS"}
+2026-06-19T12:30:14.030Z info: Socket connecte 18jTHd1rewrMpaNAAAAE

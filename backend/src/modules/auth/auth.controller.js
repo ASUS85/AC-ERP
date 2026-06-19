@@ -37,6 +37,20 @@ export const authController = {
       next(error);
     }
   },
+  async forgotPassword(req, res, next) {
+    try {
+      return sendSuccess(res, await authService.forgotPassword(req.body), "Si cette adresse existe, un email de reinitialisation a ete envoye");
+    } catch (error) {
+      next(error);
+    }
+  },
+  async resetPassword(req, res, next) {
+    try {
+      return sendSuccess(res, await authService.resetPassword(req.body), "Mot de passe reinitialise");
+    } catch (error) {
+      next(error);
+    }
+  },
   async me(req, res, next) {
     try {
       return sendSuccess(res, await authService.me(req.user.userId), "Profil recupere");

@@ -27,5 +27,30 @@ export const authRepository = {
   revokeRefreshToken(token) {
     return prisma.refreshToken.update({ where: { token }, data: { isRevoked: true } });
   },
+  revokeRefreshTokensByUser(idUtilisateur) {
+    return prisma.refreshToken.updateMany({
+      where: { idUtilisateur, isRevoked: false },
+      data: { isRevoked: true },
+    });
+  },
+  createPasswordResetToken(data) {
+    return prisma.passwordResetToken.create({ data });
+  },
+  findPasswordResetToken(tokenHash) {
+    return prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { utilisateur: { include: userInclude } },
+    });
+  },
+  markPasswordResetTokenUsed(id) {
+    return prisma.passwordResetToken.update({ where: { id }, data: { usedAt: new Date() } });
+  },
+  deletePendingPasswordResetTokens(idUtilisateur) {
+    return prisma.passwordResetToken.deleteMany({
+      where: {
+        idUtilisateur,
+        usedAt: null,
+      },
+    });
+  },
 };
-

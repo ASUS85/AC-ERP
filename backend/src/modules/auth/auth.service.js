@@ -4,12 +4,13 @@ import dayjs from "dayjs";
 import { ApiError } from "../../utils/response.util.js";
 import { BCRYPT_ROUNDS } from "../../config/constants.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../services/jwt.service.js";
-import { sendMfaCodeEmail } from "../../services/email.service.js";
+import { sendMfaCodeEmail, sendPasswordResetEmail } from "../../services/email.service.js";
 import { authRepository } from "./auth.repository.js";
 
 const mfaChallenges = new Map();
 const MFA_CODE_TTL_MS = 10 * 60 * 1000;
 const MFA_RESEND_DELAY_MS = 30 * 1000;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
 function permissionsFromUser(user) {
   return user.role?.permissions?.map(({ permission }) => `${permission.module}:${permission.action}`) || [];
@@ -35,6 +36,25 @@ function generateMfaCode() {
 
 function hashCode(code) {
   return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+function hashToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function generatePasswordResetToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function passwordResetLink(token) {
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  return `${frontendUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+}
+
+function validateNewPassword(password) {
+  if (!password || String(password).length < 8) {
+    throw new ApiError(400, "PASSWORD_TOO_SHORT", "Le nouveau mot de passe doit contenir au moins 8 caracteres");
+  }
 }
 
 function maskEmail(email) {
@@ -157,6 +177,49 @@ export const authService = {
       resendAfter: 30,
     };
   },
+  async forgotPassword({ email }) {
+    if (!email || !String(email).trim()) {
+      throw new ApiError(400, "EMAIL_REQUIRED", "Adresse e-mail requise");
+    }
+
+    const user = await authRepository.findUserByEmail(String(email).trim());
+    if (!user || user.statut !== "ACTIF") {
+      return { emailSent: true };
+    }
+
+    const token = generatePasswordResetToken();
+    const tokenHash = hashToken(token);
+
+    await authRepository.deletePendingPasswordResetTokens(user.id);
+    await authRepository.createPasswordResetToken({
+      tokenHash,
+      idUtilisateur: user.id,
+      expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+    });
+
+    await sendPasswordResetEmail(user.email, user.prenom || user.nom || "Utilisateur", passwordResetLink(token));
+
+    return { emailSent: true };
+  },
+  async resetPassword({ token, nouveauPassword }) {
+    if (!token) throw new ApiError(400, "RESET_TOKEN_REQUIRED", "Lien de reinitialisation invalide");
+    validateNewPassword(nouveauPassword);
+
+    const resetToken = await authRepository.findPasswordResetToken(hashToken(String(token)));
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      throw new ApiError(400, "RESET_TOKEN_INVALID", "Lien de reinitialisation invalide ou expire");
+    }
+
+    const user = resetToken.utilisateur;
+    if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+
+    const passwordHash = await bcrypt.hash(nouveauPassword, BCRYPT_ROUNDS);
+    await authRepository.updateUser(user.id, { passwordHash, failedAttempts: 0, lockedUntil: null });
+    await authRepository.markPasswordResetTokenUsed(resetToken.id);
+    await authRepository.revokeRefreshTokensByUser(user.id);
+
+    return { changed: true };
+  },
   async logout(refreshToken) {
     if (!refreshToken) return { revoked: false };
     const existing = await authRepository.findRefreshToken(refreshToken);
@@ -187,6 +250,7 @@ export const authService = {
   async changePassword(userId, { ancienPassword, nouveauPassword }) {
     const user = await authRepository.findUserById(userId);
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+    validateNewPassword(nouveauPassword);
     const valid = await bcrypt.compare(ancienPassword, user.passwordHash);
     if (!valid) throw new ApiError(400, "INVALID_PASSWORD", "Ancien mot de passe incorrect");
     const passwordHash = await bcrypt.hash(nouveauPassword, BCRYPT_ROUNDS);

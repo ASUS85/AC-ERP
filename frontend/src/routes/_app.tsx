@@ -1,7 +1,8 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SidebarNav } from "@/components/erp/Sidebar";
 import { Topbar } from "@/components/erp/Topbar";
+import { GlobalLoaderSlot, useGlobalLoader } from "@/components/erp/GlobalLoader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_app")({
@@ -10,6 +11,13 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { showLoader } = useGlobalLoader();
+
+  useEffect(() => {
+    return showLoader({ target: "main", maxDurationMs: 2000 });
+  }, [pathname, showLoader]);
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Desktop fixed sidebar */}
@@ -26,8 +34,9 @@ function AppLayout() {
 
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Topbar onMenu={() => setOpen(true)} />
-        <main className="flex-1 p-4 md:p-6 lg:p-8">
+        <main className="relative flex-1 p-4 md:p-6 lg:p-8">
           <Outlet />
+          <GlobalLoaderSlot target="main" />
         </main>
       </div>
     </div>

@@ -1,13 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BarChart3, Eye, EyeOff, KeyRound, Lock, Mail, MailCheck, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, BarChart3, Eye, EyeOff, KeyRound, Lock, Mail, MailCheck, ShieldCheck, Zap, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { login, resendMfa, verifyMfa } from "@/lib/api/auth.service";
+import { forgotPassword, login, resendMfa, verifyMfa } from "@/lib/api/auth.service";
 import logo from "@/assets/erp-logo.png";
 import illustration from "@/assets/login-illustration.jpg";
 
@@ -24,7 +23,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const [show, setShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState<"credentials" | "method" | "code">("credentials");
+  const [step, setStep] = useState<"credentials" | "method" | "code" | "resetSent">("credentials");
   const [mfaToken, setMfaToken] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [code, setCode] = useState("");
@@ -135,6 +134,33 @@ function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrors((prev) => ({ ...prev, email: "Champ requis" }));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await forgotPassword(email.trim());
+      setStep("resetSent");
+      toast.success("Email envoyé", {
+        description: "Consultez votre boîte mail pour modifier votre mot de passe.",
+      });
+    } catch (error: any) {
+      toast.error("Envoi impossible", {
+        description: error.message || "Veuillez réessayer plus tard.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const backToCredentials = () => {
+    setStep("credentials");
+    setPassword("");
   };
 
   const resetMfa = () => {
@@ -278,15 +304,49 @@ function LoginPage() {
                   {/* <label className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Checkbox defaultChecked /> Se souvenir de moi
                   </label> */}
-                  <a href="#" className="text-sm font-medium text-primary hover:underline">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={isSubmitting}
+                    className="text-sm font-medium text-primary hover:underline disabled:pointer-events-none disabled:opacity-60"
+                  >
                     Mot de passe oublié ?
-                  </a>
+                  </button>
                 </div>
-                <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting}>
-                  {isSubmitting ? "Vérification..." : "Se connecter"}
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Vérification
+                    </>
+                  ) : (
+                    "Se connecter"
+                  )}
                 </Button>
               </form>
             </>
+          )}
+
+          {step === "resetSent" && (
+            <div className="mt-2">
+              <button type="button" onClick={backToCredentials} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-4 w-4" /> Retour à la connexion
+              </button>
+              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <MailCheck className="h-6 w-6" />
+              </span>
+              <h1 className="text-2xl font-bold text-foreground">Vérifiez votre email</h1>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Si un compte AC ERP correspond à <span className="font-medium text-foreground">{email}</span>, un message vient d'être envoyé avec un lien pour modifier votre mot de passe.
+              </p>
+              <Button type="button" variant="outline" className="mt-8 h-11 w-full" onClick={backToCredentials}>
+                Revenir au formulaire
+              </Button>
+            </div>
           )}
 
           {step === "method" && (
@@ -337,8 +397,19 @@ function LoginPage() {
                   </InputOTPGroup>
                 </InputOTP>
 
-                <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting || code.length !== 6}>
-                  {isSubmitting ? "Validation..." : "Valider le code"}
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base flex items-center justify-center"
+                  disabled={isSubmitting || code.length !== 6}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Validation
+                    </>
+                  ) : (
+                    "Valider le code"
+                  )}
                 </Button>
               </form>
 
