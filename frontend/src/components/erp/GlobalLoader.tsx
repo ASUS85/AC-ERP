@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 type LoaderTarget = "main" | "page" | "fullscreen";
@@ -25,7 +34,9 @@ type GlobalLoaderContextValue = {
 const DEFAULT_MAX_DURATION_MS = 500;
 const DEFAULT_LABEL = "Chargement...";
 
-const GlobalLoaderContext = createContext<GlobalLoaderContextValue | null>(null);
+const GlobalLoaderContext = createContext<GlobalLoaderContextValue | null>(
+  null,
+);
 
 export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
   const timeoutRef = useRef<number | null>(null);
@@ -96,16 +107,29 @@ export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
     [hideLoader, loader, runWithLoader, showLoader],
   );
 
-  return <GlobalLoaderContext.Provider value={value}>{children}</GlobalLoaderContext.Provider>;
+  return (
+    <GlobalLoaderContext.Provider value={value}>
+      {children}
+    </GlobalLoaderContext.Provider>
+  );
 }
 
 export function useGlobalLoader() {
   const context = useContext(GlobalLoaderContext);
-  if (!context) throw new Error("useGlobalLoader must be used within GlobalLoaderProvider.");
+  if (!context)
+    throw new Error(
+      "useGlobalLoader must be used within GlobalLoaderProvider.",
+    );
   return context;
 }
 
-export function GlobalLoaderSlot({ target = "main", className }: { target?: LoaderTarget; className?: string }) {
+export function GlobalLoaderSlot({
+  target = "main",
+  className,
+}: {
+  target?: LoaderTarget;
+  className?: string;
+}) {
   const { loader } = useGlobalLoader();
 
   if (!loader.visible || loader.target !== target) return null;
@@ -113,7 +137,7 @@ export function GlobalLoaderSlot({ target = "main", className }: { target?: Load
   return (
     <div
       className={cn(
-        "absolute inset-0 z-20 flex min-h-48 items-center justify-center rounded-lg bg-background/85 backdrop-blur-sm",
+        "absolute inset-0 z-20 flex min-h-48 items-center justify-center rounded-lg bg-background/5 backdrop-blur-sm",
         className,
       )}
       role="status"
@@ -126,7 +150,9 @@ export function GlobalLoaderSlot({ target = "main", className }: { target?: Load
           <span className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" />
           <span className="absolute inset-3 rounded-full bg-primary/10" />
         </div>
-        <p className="text-sm font-medium text-muted-foreground">{loader.label}</p>
+        {/* <p className="text-sm font-medium text-muted-foreground">
+          {loader.label}
+        </p> */}
       </div>
     </div>
   );
