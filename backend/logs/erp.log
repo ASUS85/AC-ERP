@@ -97,3 +97,4 @@ Please make sure your database server is running at `localhost:3306`. {"stack":"
 2026-06-18T12:29:18.991Z info: Base de donnees connectee
 2026-06-18T12:29:19.025Z info: Serveur demarre port 3000
 2026-06-18T12:29:19.108Z info: Socket connecte hNjoEkvWCsf-I2FmAAAB
+2026-06-18T12:30:50.517Z info: Socket deconnecte hNjoEkvWCsf-I2FmAAAB
