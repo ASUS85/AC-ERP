@@ -30,6 +30,13 @@ function LoginPage() {
   const [code, setCode] = useState("");
   const [resendCountdown, setResendCountdown] = useState(0);
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
 
   useEffect(() => {
     if (resendCountdown <= 0) return;
@@ -39,21 +46,53 @@ function LoginPage() {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+
+    const newErrors = {
+      email: "",
+      password: "",
+    };
+
+    let hasError = false;
+
+    if (!email.trim()) {
+      newErrors.email = "Champ requis";
+      hasError = true;
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "Champ requis";
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasError) {
+      return;
+    }
+
     setIsSubmitting(true);
+
     try {
-      const result = await login(String(formData.get("email")), String(formData.get("password")));
+      const result = await login(email, password);
+
       if (result.mfaRequired) {
         setMfaToken(result.mfaToken);
         setMaskedEmail(result.email);
         setResendCountdown(result.resendAfter || 30);
         setStep("method");
-        toast.success("Identifiants validés", { description: "Choisissez votre méthode de vérification." });
+
+        toast.success("Identifiants validés", {
+          description: "Choisissez votre méthode de vérification.",
+        });
+
         return;
       }
+
       completeLogin();
     } catch (error: any) {
-      toast.error("Connexion impossible", { description: error.message || "Verifier vos identifiants." });
+      toast.error("Connexion impossible", {
+        description: error.message || "Verifier vos identifiants.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -147,25 +186,54 @@ function LoginPage() {
       </div>
 
       {/* Form panel */}
-      <div className="flex items-center justify-center bg-background px-6 py-12">
+      <div className="lg:flex lg:flex-col lg:justify-start lg:p-12 items-center justify-center bg-background px-6 py-12">
+        <div className="flex flex-col items-center gap-3">
+          <img src={logo} alt="Logo AC ERP" width={80} height={80} className="h-80 w-80" />
+        </div>
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <img src={logo} alt="Logo AC ERP" width={40} height={40} className="h-10 w-10" />
+            <img src={logo} alt="Logo AC ERP" width={10} height={10} className="h-10 w-10" />
             <span className="font-display text-lg font-bold">AC ERP</span>
           </div>
 
           {step === "credentials" && (
             <>
-              <h1 className="text-2xl font-bold text-foreground">Connexion</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">Accédez à votre espace de gestion.</p>
+              <h1 className="text-2xl font-bold text-foreground text-center">Bienvenue</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground text-center">Accédez à votre espace de gestion.</p>
 
               <form onSubmit={submit} className="mt-8 space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Adresse e-mail</Label>
+
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input id="email" name="email" type="email" defaultValue="s.martin@acerp.fr" className="h-11 pl-9" required />
+
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Adresse e-mail"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+
+                        if (errors.email) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            email: "",
+                          }));
+                        }
+                      }}
+                      className={`h-11 pl-9 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""
+                        }`}
+                    />
                   </div>
+
+                  {errors.email && (
+                    <p className="text-sm text-red-500">
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password">Mot de passe</Label>
@@ -175,24 +243,41 @@ function LoginPage() {
                       id="password"
                       name="password"
                       type={show ? "text" : "password"}
-                      defaultValue="User@1234"
-                      className="h-11 px-9"
-                      required
+                      placeholder="Mot de passe"
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+
+                        if (errors.password) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            password: "",
+                          }));
+                        }
+                      }}
+                      className={`h-11 px-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""
+                        }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShow((s) => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-[22px] -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       aria-label={show ? "Masquer" : "Afficher"}
                     >
                       {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+
+                  {errors.password && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {/* <label className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Checkbox defaultChecked /> Se souvenir de moi
-                  </label>
+                  </label> */}
                   <a href="#" className="text-sm font-medium text-primary hover:underline">
                     Mot de passe oublié ?
                   </a>
@@ -270,17 +355,17 @@ function LoginPage() {
             </div>
           )}
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          {/*<p className="mt-6 text-center text-sm text-muted-foreground">
             Pas encore de compte ?{" "}
             <a href="#" className="font-medium text-primary hover:underline">
               Contactez votre administrateur
             </a>
           </p>
-          <p className="mt-8 text-center text-xs text-muted-foreground">
+           <p className="mt-8 text-center text-xs text-muted-foreground">
             <Link to="/" className="hover:underline">
               Accéder à la démo →
             </Link>
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
