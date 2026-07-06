@@ -7,6 +7,8 @@ import { setupSwagger } from "./config/swagger.js";
 import { rateLimiter } from "./middlewares/rateLimiter.middleware.js";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middleware.js";
 import routes from "./modules/index.js";
+import { maintenanceGuard } from "./middlewares/maintenance.middleware.js";
+import { auditActivity } from "./middlewares/audit.middleware.js";
 import "./events/index.js";
 
 const app = express();
@@ -16,6 +18,8 @@ app.use(cors(corsConfig));
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
 app.use(rateLimiter);
+app.use(maintenanceGuard);
+app.use(auditActivity);
 
 setupSwagger(app);
 

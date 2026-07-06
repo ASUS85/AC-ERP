@@ -58,6 +58,15 @@ export const authController = {
       next(error);
     }
   },
+  async updateProfile(req, res, next) {
+    try { return sendSuccess(res, await authService.updateProfile(req.user.userId, req.body), "Profil modifie"); } catch (error) { next(error); }
+  },
+  async sessions(req, res, next) {
+    try { return sendSuccess(res, await authService.sessions(req.user.userId), "Sessions recuperees"); } catch (error) { next(error); }
+  },
+  async revokeOtherSessions(req, res, next) {
+    try { return sendSuccess(res, await authService.revokeOtherSessions(req.user.userId, req.body.refreshToken), "Autres sessions revoquees"); } catch (error) { next(error); }
+  },
   async changePassword(req, res, next) {
     try {
       return sendSuccess(res, await authService.changePassword(req.user.userId, req.body), "Mot de passe modifie");

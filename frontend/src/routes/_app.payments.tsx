@@ -36,9 +36,9 @@ function PaymentsPage() {
     <>
       <PageHeader title="Paiements" description="Paiements reçus, paiements effectués et reçus" breadcrumb={["Transactions", "Paiements"]} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Encaissements" value="248 100 €" sub="ce mois" icon={<ArrowDownLeft className="h-5 w-5" />} />
-        <StatCard label="Décaissements" value="186 500 €" sub="ce mois" icon={<ArrowUpRight className="h-5 w-5" />} />
-        <StatCard label="Trésorerie nette" value="+61 600 €" delta="+8 %" up sub="solde du mois" icon={<Wallet className="h-5 w-5" />} />
+        <StatCard label="Encaissements" value="248 100 f" sub="ce mois" icon={<ArrowDownLeft className="h-5 w-5" />} />
+        <StatCard label="Décaissements" value="186 500 f" sub="ce mois" icon={<ArrowUpRight className="h-5 w-5" />} />
+        <StatCard label="Trésorerie nette" value="+61 600 f" delta="+8 %" up sub="solde du mois" icon={<Wallet className="h-5 w-5" />} />
         <StatCard label="Reçus émis" value="148" sub="documents" icon={<Receipt className="h-5 w-5" />} />
       </div>
       <SectionCard title="Historique des paiements">

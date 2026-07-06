@@ -45,10 +45,10 @@ function InvoicesPage() {
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total facturé" value="284 750 €" sub="ce mois" icon={<FileText className="h-5 w-5" />} />
-        <StatCard label="Payées" value="248 100 €" sub="encaissées" icon={<FileText className="h-5 w-5" />} />
-        <StatCard label="En attente" value="18 230 €" sub="à venir" icon={<FileText className="h-5 w-5" />} />
-        <StatCard label="En retard" value="18 420 €" sub="5 factures" icon={<FileText className="h-5 w-5" />} />
+        <StatCard label="Total facturé" value="284 750 f" sub="ce mois" icon={<FileText className="h-5 w-5" />} />
+        <StatCard label="Payées" value="248 100 f" sub="encaissées" icon={<FileText className="h-5 w-5" />} />
+        <StatCard label="En attente" value="18 230 f" sub="à venir" icon={<FileText className="h-5 w-5" />} />
+        <StatCard label="En retard" value="18 420 f" sub="5 factures" icon={<FileText className="h-5 w-5" />} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">

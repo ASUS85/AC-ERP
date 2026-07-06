@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { User, Building2, SlidersHorizontal, ScrollText, Shield, DatabaseBackup } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { User, Building2, SlidersHorizontal, ScrollText, Shield, MonitorSmartphone, LoaderCircle } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard } from "@/components/erp/widgets";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { changePassword, getMe, getSessions, revokeOtherSessions, updateProfile } from "@/lib/api/auth.service";
+import { getEntreprise, getJournal, getSysteme, updateEntreprise, updateMaintenance, updateSysteme } from "@/lib/api/parametres.service";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -14,14 +17,81 @@ export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
 });
 
-const activity = [
-  { a: "Sophie Martin", t: "a validé la facture FAC-2026-148", time: "Il y a 12 min" },
-  { a: "Karim Benali", t: "a créé la vente VTE-2048", time: "Il y a 1 h" },
-  { a: "Léa Dubois", t: "a enregistré un paiement de 4 280 €", time: "Il y a 2 h" },
-  { a: "Nadia Haddad", t: "a passé le bon de commande ACH-1182", time: "Hier" },
-];
+type Profile = { nom: string; prenom: string; email: string; telephone?: string; avatar?: string; statut?: string; role?: { nomRole: string } };
+type Company = { raisonSociale: string; numeroFiscal?: string; adresse?: string; telephone?: string; email?: string; devise: string; fuseauHoraire: string; logo?: string };
+type SystemSettings = { notificationsEmail: boolean; alertesIa: boolean; facturationAutomatique: boolean; modeMaintenance: boolean };
+type Audit = { id: string; action: string; module: string; newValues?: { status?: number }; createdAt: string; utilisateur?: { nom: string; prenom: string; email: string } };
+type Session = { id: string; createdAt: string; expiresAt: string };
+
+const today = () => {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+};
+const bounds = (date: string) => ({ dateFrom: new Date(`${date}T00:00:00`).toISOString(), dateTo: new Date(`${date}T23:59:59.999`).toISOString() });
+const unwrap = (response: any) => response.data;
 
 function SettingsPage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
+  const [system, setSystem] = useState<SystemSettings | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [audits, setAudits] = useState<Audit[]>([]);
+  const [logDate, setLogDate] = useState(today);
+  const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
+  const [loading, setLoading] = useState(true);
+
+  const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
+
+  useEffect(() => {
+    Promise.all([getMe(), getEntreprise(), getSysteme(), getSessions()])
+      .then(([me, business, settings, activeSessions]: any[]) => {
+        setProfile(unwrap(me)); setCompany(unwrap(business)); setSystem(unwrap(settings)); setSessions(unwrap(activeSessions) || []);
+      })
+      .catch(() => toast.error("Impossible de charger tous les paramètres"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    getJournal(bounds(logDate)).then((response: any) => setAudits(unwrap(response) || [])).catch(() => toast.error("Impossible de charger le journal"));
+  }, [logDate]);
+
+  const saveProfile = async () => {
+    if (!profile) return;
+    try {
+      const response: any = await updateProfile(profile);
+      const updated = unwrap(response); setProfile(updated); localStorage.setItem("erp_user", JSON.stringify(updated));
+      toast.success("Profil enregistré");
+    } catch (error: any) { toast.error(error?.response?.data?.error?.message || "Échec de l'enregistrement"); }
+  };
+
+  const saveCompany = async () => {
+    if (!company) return;
+    try { setCompany(unwrap(await updateEntreprise(company) as any)); toast.success("Paramètres entreprise enregistrés"); }
+    catch { toast.error("Échec de l'enregistrement"); }
+  };
+
+  const toggleSystem = async (field: keyof SystemSettings, value: boolean) => {
+    if (!system) return;
+    try {
+      const response: any = field === "modeMaintenance" ? await updateMaintenance(value) : await updateSysteme({ [field]: value });
+      setSystem(unwrap(response)); toast.success("Paramètre mis à jour");
+    } catch (error: any) { toast.error(error?.response?.data?.error?.message || "Modification refusée"); }
+  };
+
+  const submitPassword = async () => {
+    if (passwords.next !== passwords.confirm) return toast.error("Les nouveaux mots de passe ne correspondent pas");
+    try { await changePassword(passwords.current, passwords.next); setPasswords({ current: "", next: "", confirm: "" }); toast.success("Mot de passe mis à jour"); }
+    catch (error: any) { toast.error(error?.response?.data?.error?.message || "Échec du changement de mot de passe"); }
+  };
+
+  const revokeSessions = async () => {
+    try { await revokeOtherSessions(); const response: any = await getSessions(); setSessions(unwrap(response) || []); toast.success("Les autres sessions ont été déconnectées"); }
+    catch { toast.error("Impossible de révoquer les sessions"); }
+  };
+
+  const logDescription = useMemo(() => `${audits.length} activité${audits.length > 1 ? "s" : ""} pour cette date`, [audits.length]);
+  if (loading) return <div className="flex min-h-64 items-center justify-center"><LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
   return (
     <>
       <PageHeader title="Paramètres & configuration" description="Profil, entreprise, système et sécurité" breadcrumb={["Administration", "Paramètres"]} />
@@ -36,87 +106,90 @@ function SettingsPage() {
 
         <TabsContent value="profile">
           <SectionCard title="Profil utilisateur" description="Vos informations personnelles">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label>Nom complet</Label><Input defaultValue="Sophie Martin" /></div>
-              <div className="space-y-1.5"><Label>Adresse e-mail</Label><Input defaultValue="s.martin@acerp.fr" /></div>
-              <div className="space-y-1.5"><Label>Téléphone</Label><Input defaultValue="+33 6 12 34 56 78" /></div>
-              <div className="space-y-1.5"><Label>Rôle</Label><Input defaultValue="Administrateur" disabled /></div>
-            </div>
-            <Button className="mt-4" onClick={() => toast.success("Profil enregistré")}>Enregistrer</Button>
+            {profile && <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Prénom" value={profile.prenom} onChange={(prenom) => setProfile({ ...profile, prenom })} />
+              <Field label="Nom" value={profile.nom} onChange={(nom) => setProfile({ ...profile, nom })} />
+              <Field label="Adresse e-mail" type="email" value={profile.email} onChange={(email) => setProfile({ ...profile, email })} />
+              <Field label="Téléphone" value={profile.telephone || ""} onChange={(telephone) => setProfile({ ...profile, telephone })} />
+              <Field label="Avatar (URL)" value={profile.avatar || ""} onChange={(avatar) => setProfile({ ...profile, avatar })} />
+              <Field label="Rôle" value={profile.role?.nomRole || ""} disabled />
+              <Field label="Statut" value={profile.statut || ""} disabled />
+            </div>}
+            <Button className="mt-4" onClick={saveProfile}>Enregistrer</Button>
           </SectionCard>
         </TabsContent>
 
         <TabsContent value="company">
-          <SectionCard title="Paramètres entreprise" description="Coordonnées de l'entreprise">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label>Raison sociale</Label><Input defaultValue="AC ERP SAS" /></div>
-              <div className="space-y-1.5"><Label>N° TVA</Label><Input defaultValue="FR 12 345 678 901" /></div>
-              <div className="space-y-1.5"><Label>Adresse</Label><Input defaultValue="12 rue du Commerce, Lyon" /></div>
-              <div className="space-y-1.5"><Label>Devise</Label><Input defaultValue="EUR (€)" /></div>
-            </div>
-            <Button className="mt-4" onClick={() => toast.success("Paramètres enregistrés")}>Enregistrer</Button>
+          <SectionCard title="Paramètres entreprise" description="Informations utilisées sur les documents et rapports">
+            {company && <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Raison sociale" value={company.raisonSociale} onChange={(raisonSociale) => setCompany({ ...company, raisonSociale })} />
+              <Field label="Identifiant fiscal" value={company.numeroFiscal || ""} onChange={(numeroFiscal) => setCompany({ ...company, numeroFiscal })} />
+              <Field label="Adresse" value={company.adresse || ""} onChange={(adresse) => setCompany({ ...company, adresse })} />
+              <Field label="Téléphone" value={company.telephone || ""} onChange={(telephone) => setCompany({ ...company, telephone })} />
+              <Field label="E-mail" type="email" value={company.email || ""} onChange={(email) => setCompany({ ...company, email })} />
+              <Field label="Devise" value={company.devise} onChange={(devise) => setCompany({ ...company, devise })} />
+              <Field label="Fuseau horaire" value={company.fuseauHoraire} onChange={(fuseauHoraire) => setCompany({ ...company, fuseauHoraire })} />
+              <Field label="Logo (URL)" value={company.logo || ""} onChange={(logo) => setCompany({ ...company, logo })} />
+            </div>}
+            <Button className="mt-4" onClick={saveCompany}>Enregistrer</Button>
           </SectionCard>
         </TabsContent>
 
         <TabsContent value="system">
-          <SectionCard title="Paramètres système" description="Préférences de la plateforme">
-            <div className="space-y-4">
-              {[
-                { t: "Notifications par e-mail", d: "Recevoir les alertes importantes par e-mail", on: true },
-                { t: "Alertes IA proactives", d: "Prévisions et recommandations automatiques", on: true },
-                { t: "Facturation automatique", d: "Générer les factures à la validation des ventes", on: true },
-                { t: "Mode maintenance", d: "Restreindre l'accès aux administrateurs", on: false },
-              ].map((s) => (
-                <div key={s.t} className="flex items-center justify-between gap-4 rounded-lg border border-border p-3.5">
-                  <div><p className="text-sm font-medium text-foreground">{s.t}</p><p className="text-xs text-muted-foreground">{s.d}</p></div>
-                  <Switch defaultChecked={s.on} />
-                </div>
-              ))}
-            </div>
+          <SectionCard title="Paramètres système" description="Préférences globales de la plateforme">
+            {system && <div className="space-y-4">
+              <Setting label="Notifications par e-mail" description="Recevoir les alertes importantes par e-mail" checked={system.notificationsEmail} onChange={(v) => toggleSystem("notificationsEmail", v)} />
+              <Setting label="Alertes IA proactives" description="Prévisions et recommandations automatiques" checked={system.alertesIa} onChange={(v) => toggleSystem("alertesIa", v)} />
+              <Setting label="Facturation automatique" description="Générer les factures à la validation des ventes" checked={system.facturationAutomatique} onChange={(v) => toggleSystem("facturationAutomatique", v)} />
+              <Setting label="Mode maintenance" description={isSuperAdmin ? "Bloque les écritures pour tous sauf le super administrateur" : "Seul le super administrateur peut modifier ce réglage"} checked={system.modeMaintenance} disabled={!isSuperAdmin} onChange={(v) => toggleSystem("modeMaintenance", v)} />
+            </div>}
           </SectionCard>
         </TabsContent>
 
         <TabsContent value="security">
           <div className="grid gap-4 lg:grid-cols-2">
-            <SectionCard title="Sécurité" description="Mot de passe et authentification">
+            <SectionCard title="Sécurité" description="Modification du mot de passe">
               <div className="space-y-3">
-                <div className="space-y-1.5"><Label>Mot de passe actuel</Label><Input type="password" defaultValue="********" /></div>
-                <div className="space-y-1.5"><Label>Nouveau mot de passe</Label><Input type="password" /></div>
-                <div className="flex items-center justify-between rounded-lg border border-border p-3.5">
-                  <div><p className="text-sm font-medium text-foreground">Double authentification (2FA)</p><p className="text-xs text-muted-foreground">Sécurité renforcée à la connexion</p></div>
-                  <Switch defaultChecked />
-                </div>
+                <Field label="Mot de passe actuel" type="password" value={passwords.current} onChange={(current) => setPasswords({ ...passwords, current })} />
+                <Field label="Nouveau mot de passe" type="password" value={passwords.next} onChange={(next) => setPasswords({ ...passwords, next })} />
+                <Field label="Confirmer le mot de passe" type="password" value={passwords.confirm} onChange={(confirm) => setPasswords({ ...passwords, confirm })} />
               </div>
-              <Button className="mt-4" onClick={() => toast.success("Sécurité mise à jour")}>Mettre à jour</Button>
+              <Button className="mt-4" onClick={submitPassword}>Mettre à jour</Button>
             </SectionCard>
-            <SectionCard title="Sauvegardes" description="Gestion des sauvegardes de données">
+            <SectionCard title="Sessions actives" description="Contrôlez les connexions à votre compte">
               <div className="flex items-center gap-3 rounded-lg bg-secondary/50 p-4">
-                <DatabaseBackup className="h-8 w-8 text-primary" />
-                <div><p className="text-sm font-medium text-foreground">Dernière sauvegarde</p><p className="text-xs text-muted-foreground">10 juin 2026 à 03:00 · Automatique quotidienne</p></div>
+                <MonitorSmartphone className="h-8 w-8 text-primary" />
+                <div><p className="text-sm font-medium text-foreground">{sessions.length} session{sessions.length > 1 ? "s" : ""} active{sessions.length > 1 ? "s" : ""}</p><p className="text-xs text-muted-foreground">Révoquez les jetons actifs sur les autres appareils</p></div>
               </div>
-              <Button variant="outline" className="mt-4 w-full gap-1.5" onClick={() => toast.success("Sauvegarde lancée")}>
-                <DatabaseBackup className="h-4 w-4" /> Sauvegarder maintenant
-              </Button>
+              <Button variant="outline" className="mt-4 w-full" onClick={revokeSessions}>Déconnecter les autres sessions</Button>
             </SectionCard>
           </div>
         </TabsContent>
 
         <TabsContent value="log">
-          <SectionCard title="Journal d'activité" description="Historique des actions récentes">
+          <SectionCard title="Journal d'activité" description={logDescription} action={<Input type="date" value={logDate} onChange={(e) => setLogDate(e.target.value || today())} className="w-auto" aria-label="Filtrer le journal par date" />}>
             <div className="space-y-1">
-              {activity.map((a) => (
-                <div key={a.t} className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-white">
-                    {a.a.split(" ").map((w) => w[0]).join("")}
-                  </span>
-                  <p className="flex-1 text-sm text-foreground"><span className="font-medium">{a.a}</span> <span className="text-muted-foreground">{a.t}</span></p>
-                  <span className="text-xs text-muted-foreground">{a.time}</span>
-                </div>
-              ))}
+              {audits.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Aucune activité pour cette date.</p>}
+              {audits.map((audit) => {
+                const actor = audit.utilisateur ? `${audit.utilisateur.prenom} ${audit.utilisateur.nom}` : "Système";
+                return <div key={audit.id} className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-white">{actor.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>
+                  <p className="min-w-0 flex-1 text-sm text-foreground"><span className="font-medium">{actor}</span> <span className="text-muted-foreground">{audit.action} · {audit.module}</span></p>
+                  <span className="shrink-0 text-xs text-muted-foreground">{new Date(audit.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                </div>;
+              })}
             </div>
           </SectionCard>
         </TabsContent>
       </Tabs>
     </>
   );
+}
+
+function Field({ label, value, onChange, disabled, type = "text" }: { label: string; value: string; onChange?: (value: string) => void; disabled?: boolean; type?: string }) {
+  return <div className="space-y-1.5"><Label>{label}</Label><Input type={type} value={value} disabled={disabled} onChange={(event) => onChange?.(event.target.value)} /></div>;
+}
+
+function Setting({ label, description, checked, onChange, disabled }: { label: string; description: string; checked: boolean; onChange: (value: boolean) => void; disabled?: boolean }) {
+  return <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3.5"><div><p className="text-sm font-medium text-foreground">{label}</p><p className="text-xs text-muted-foreground">{description}</p></div><Switch checked={checked} disabled={disabled} onCheckedChange={onChange} /></div>;
 }

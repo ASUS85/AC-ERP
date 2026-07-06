@@ -48,5 +48,8 @@ export async function logout(refreshToken = localStorage.getItem("erp_refresh_to
 
 export const refreshToken = (token: string) => api.post("/auth/refresh", { refreshToken: token });
 export const getMe = () => api.get("/auth/me");
+export const updateProfile = (data: Record<string, unknown>) => api.put("/auth/me", data);
+export const getSessions = () => api.get("/auth/sessions");
+export const revokeOtherSessions = () => api.delete("/auth/sessions/others", { data: { refreshToken: localStorage.getItem("erp_refresh_token") } });
 export const changePassword = (ancienPassword: string, nouveauPassword: string) =>
   api.put("/auth/change-password", { ancienPassword, nouveauPassword });

@@ -269,6 +269,32 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model ParametreEntreprise {
+  id            String   @id @default("default") @db.VarChar(36)
+  raisonSociale String   @default("AC ERP") @map("raison_sociale") @db.VarChar(255)
+  numeroFiscal  String?  @map("numero_fiscal") @db.VarChar(100)
+  adresse       String?  @db.Text
+  telephone     String?  @db.VarChar(30)
+  email         String?  @db.VarChar(255)
+  devise        String   @default("XAF") @db.VarChar(10)
+  fuseauHoraire String   @default("Africa/Douala") @map("fuseau_horaire") @db.VarChar(100)
+  logo          String?  @db.VarChar(500)
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("parametres_entreprise")
+}
+
+model ParametreSysteme {
+  id                     String   @id @default("default") @db.VarChar(36)
+  notificationsEmail     Boolean  @default(true) @map("notifications_email")
+  alertesIa              Boolean  @default(true) @map("alertes_ia")
+  facturationAutomatique Boolean  @default(true) @map("facturation_automatique")
+  modeMaintenance        Boolean  @default(false) @map("mode_maintenance")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("parametres_systeme")
+}
+
 model Categorie {
   id                String       @id @default(uuid()) @db.Char(36)
   nom               String       @db.VarChar(100)

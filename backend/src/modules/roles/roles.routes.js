@@ -4,6 +4,7 @@ import { rolesController } from "./roles.controller.js";
 
 const router = Router();
 router.use(authenticate);
+router.get("/permissions", rolesController.permissionsCatalog);
 router.get("/", rolesController.list);
 router.get("/:id/permissions", rolesController.permissions);
 router.put("/:id/permissions", rolesController.setPermissions);
@@ -13,4 +14,3 @@ router.put("/:id", rolesController.update);
 router.delete("/:id", rolesController.remove);
 
 export default router;
-

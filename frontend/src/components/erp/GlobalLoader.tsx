@@ -66,7 +66,8 @@ export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
 
       const requestId = activeIdRef.current + 1;
       activeIdRef.current = requestId;
-      const maxDurationMs = options.maxDurationMs ?? DEFAULT_MAX_DURATION_MS;
+      /* const maxDurationMs = options.maxDurationMs ?? DEFAULT_MAX_DURATION_MS; */
+      const maxDurationMs = DEFAULT_MAX_DURATION_MS;
 
       setLoader({
         visible: true,

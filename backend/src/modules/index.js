@@ -15,6 +15,7 @@ import notificationsRoutes from "./notifications/notifications.routes.js";
 import dashboardRoutes from "./dashboard/dashboard.routes.js";
 import rapportsRoutes from "./rapports/rapports.routes.js";
 import iaRoutes from "./ia/ia.routes.js";
+import parametresRoutes from "./parametres/parametres.routes.js";
 
 const router = Router();
 
@@ -34,6 +35,6 @@ router.use("/notifications", notificationsRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/rapports", rapportsRoutes);
 router.use("/ia", iaRoutes);
+router.use("/parametres", parametresRoutes);
 
 export default router;
-

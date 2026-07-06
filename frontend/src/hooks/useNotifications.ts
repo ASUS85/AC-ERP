@@ -6,6 +6,8 @@ export type Notification = {
   id: string;
   titre: string;
   message: string;
+  typeNotif: string;
+  entityType?: string | null;
   isLue: boolean;
   createdAt: string;
 };
@@ -48,4 +50,3 @@ export function useNotifications() {
 
   return { notifications, unreadCount, markAsRead };
 }
-

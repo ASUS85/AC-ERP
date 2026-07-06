@@ -97,7 +97,7 @@ function ReportsPage() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-4">
                 {[
-                  { k: "Total", v: "284 750 €" },
+                  { k: "Total", v: "284 750 f" },
                   { k: "Croissance", v: "+12,4 %" },
                   { k: "Transactions", v: "1 248" },
                 ].map((s) => (

@@ -84,11 +84,11 @@ export const fmtNumber = (n: number) => new Intl.NumberFormat("fr-FR").format(n)
 
 /* ---------- Dashboard data ---------- */
 export const kpis = [
-  { label: "Chiffre d'affaires", value: "284 750 €", delta: "+12,4 %", up: true, sub: "vs mois dernier", icon: "revenue" },
+  { label: "Chiffre d'affaires", value: "284 750 f", delta: "+12,4 %", up: true, sub: "vs mois dernier", icon: "revenue" },
   { label: "Ventes", value: "1 248", delta: "+8,1 %", up: true, sub: "commandes ce mois", icon: "sales" },
   { label: "Clients actifs", value: "642", delta: "+3,5 %", up: true, sub: "24 nouveaux", icon: "customers" },
   { label: "Produits", value: "1 894", delta: "+1,2 %", up: true, sub: "en catalogue", icon: "products" },
-  { label: "Valeur du stock", value: "512 300 €", delta: "-2,8 %", up: false, sub: "vs mois dernier", icon: "stock" },
+  { label: "Valeur du stock", value: "512 300 f", delta: "-2,8 %", up: false, sub: "vs mois dernier", icon: "stock" },
   { label: "Fournisseurs actifs", value: "87", delta: "+2", up: true, sub: "ce trimestre", icon: "suppliers" },
 ] as const;
 
@@ -147,7 +147,7 @@ export const recentPayments = [
 
 export const alerts = [
   { type: "warning", title: "Stock faible", text: "12 produits sous le seuil minimum", icon: "stock" },
-  { type: "destructive", title: "Factures impayées", text: "5 factures en retard (18 420 €)", icon: "invoice" },
+  { type: "destructive", title: "Factures impayées", text: "5 factures en retard (18 420 f)", icon: "invoice" },
   { type: "info", title: "Alerte IA", text: "Rupture probable sur « Écran 27\" 4K » sous 8 jours", icon: "ai" },
   { type: "success", title: "Objectif atteint", text: "CA mensuel dépassé de 12 %", icon: "goal" },
 ];
@@ -256,10 +256,10 @@ export const permMatrix: Record<string, Record<string, boolean>> = {
 };
 
 export const notifications = [
-  { type: "destructive", titre: "Facture en retard", texte: "FAC-2026-146 — InfoCorp (980 €) a dépassé son échéance.", temps: "Il y a 12 min", lu: false },
+  { type: "destructive", titre: "Facture en retard", texte: "FAC-2026-146 — InfoCorp (980 f) a dépassé son échéance.", temps: "Il y a 12 min", lu: false },
   { type: "warning", titre: "Stock faible", texte: "« Écran 27\" 4K » est passé sous le seuil minimum (5 unités).", temps: "Il y a 40 min", lu: false },
   { type: "info", titre: "Prévision IA", texte: "Pic de demande attendu sur « Casque sans fil ANC » la semaine prochaine.", temps: "Il y a 1 h", lu: false },
-  { type: "success", titre: "Paiement reçu", texte: "TechnoPlus SARL a réglé 4 280 € par virement.", temps: "Il y a 2 h", lu: true },
+  { type: "success", titre: "Paiement reçu", texte: "TechnoPlus SARL a réglé 4 280 f par virement.", temps: "Il y a 2 h", lu: true },
   { type: "info", titre: "Nouvelle commande", texte: "Digital Store a passé la commande VTE-2047.", temps: "Il y a 3 h", lu: true },
   { type: "warning", titre: "Rupture imminente", texte: "Routeur Wi-Fi 6 en rupture de stock.", temps: "Hier", lu: true },
 ];

@@ -61,7 +61,7 @@ function CustomersPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Clients" value="642" sub="au total" icon={<Users className="h-5 w-5" />} />
         <StatCard label="Actifs" value="588" sub="ce trimestre" icon={<Contact className="h-5 w-5" />} />
-        <StatCard label="Encours total" value="48 200 €" sub="à recouvrer" icon={<Wallet className="h-5 w-5" />} />
+        <StatCard label="Encours total" value="48 200 f" sub="à recouvrer" icon={<Wallet className="h-5 w-5" />} />
         <StatCard label="Nouveaux" value="24" delta="+12 %" up sub="ce mois" icon={<Users className="h-5 w-5" />} />
       </div>
       <SectionCard title="Liste des clients" description="642 clients">

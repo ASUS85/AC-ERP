@@ -25,9 +25,9 @@ const history = ["Analyse des ventes Q2", "Prévision de trésorerie", "Top clie
 
 function aiReply(q: string): string {
   const t = q.toLowerCase();
-  if (t.includes("chiffre") || t.includes("ca")) return "Le chiffre d'affaires de juin 2026 s'élève à **284 750 €**, en hausse de **+12,4 %** par rapport au mois précédent. Les ventes d'informatique représentent 58 % du total.";
+  if (t.includes("chiffre") || t.includes("ca")) return "Le chiffre d'affaires de juin 2026 s'élève à **284 750 f**, en hausse de **+12,4 %** par rapport au mois précédent. Les ventes d'informatique représentent 58 % du total.";
   if (t.includes("rupture") || t.includes("stock")) return "4 produits sont à risque : « Routeur Wi-Fi 6 » (rupture immédiate), « Écran 27\" 4K » (~8 jours), « Clavier mécanique RGB » (~14 jours). Je recommande un réapprovisionnement prioritaire.";
-  if (t.includes("impayée") || t.includes("facture")) return "5 factures sont impayées pour un total de **18 420 €**. La plus en retard est FAC-2026-146 (InfoCorp, 980 €), échue depuis le 1er juin.";
+  if (t.includes("impayée") || t.includes("facture")) return "5 factures sont impayées pour un total de **18 420 f**. La plus en retard est FAC-2026-146 (InfoCorp, 980 f), échue depuis le 1er juin.";
   return "D'après les données de l'ERP, voici une synthèse : les performances commerciales sont en croissance ce trimestre (+9 %), avec une bonne maîtrise des achats. Souhaitez-vous un rapport détaillé ?";
 }
 

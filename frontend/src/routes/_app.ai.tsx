@@ -31,7 +31,7 @@ function AiPage() {
     <>
       <PageHeader title="Prévisions & intelligence artificielle" description="Anticipez ventes, stocks et risques" breadcrumb={["Intelligence", "Prévisions IA"]} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="CA prévu (juil.)" value="98 200 €" delta="+6,2 %" up sub="vs juin" icon={<TrendingUp className="h-5 w-5" />} />
+        <StatCard label="CA prévu (juil.)" value="98 200 f" delta="+6,2 %" up sub="vs juin" icon={<TrendingUp className="h-5 w-5" />} />
         <StatCard label="Fiabilité du modèle" value="92 %" sub="précision" icon={<BrainCircuit className="h-5 w-5" />} />
         <StatCard label="Produits à risque" value="4" sub="rupture probable" icon={<AlertTriangle className="h-5 w-5" />} />
         <StatCard label="Recommandations" value="12" sub="actions suggérées" icon={<Lightbulb className="h-5 w-5" />} />

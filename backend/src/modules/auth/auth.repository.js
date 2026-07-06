@@ -33,6 +33,19 @@ export const authRepository = {
       data: { isRevoked: true },
     });
   },
+  revokeOtherRefreshTokens(idUtilisateur, currentToken) {
+    return prisma.refreshToken.updateMany({
+      where: { idUtilisateur, isRevoked: false, ...(currentToken ? { token: { not: currentToken } } : {}) },
+      data: { isRevoked: true },
+    });
+  },
+  listRefreshTokens(idUtilisateur) {
+    return prisma.refreshToken.findMany({
+      where: { idUtilisateur, isRevoked: false, expiresAt: { gt: new Date() } },
+      select: { id: true, createdAt: true, expiresAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+  },
   createPasswordResetToken(data) {
     return prisma.passwordResetToken.create({ data });
   },

@@ -50,7 +50,7 @@ function InventoryPage() {
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Valeur du stock" value="512 300 €" delta="-2,8 %" sub="vs mois dernier" icon={<Warehouse className="h-5 w-5" />} />
+        <StatCard label="Valeur du stock" value="512 300 f" delta="-2,8 %" sub="vs mois dernier" icon={<Warehouse className="h-5 w-5" />} />
         <StatCard label="Entrées (30j)" value="1 240" sub="unités reçues" icon={<ArrowDownToLine className="h-5 w-5" />} />
         <StatCard label="Sorties (30j)" value="982" sub="unités expédiées" icon={<ArrowUpFromLine className="h-5 w-5" />} />
         <StatCard label="Alertes rupture" value="3" sub="produits critiques" icon={<AlertTriangle className="h-5 w-5" />} />

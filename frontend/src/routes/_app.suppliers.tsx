@@ -42,7 +42,7 @@ function SuppliersPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Fournisseurs" value="87" sub="actifs" icon={<Truck className="h-5 w-5" />} />
         <StatCard label="Commandes" value="152" sub="ce trimestre" icon={<ShoppingCart className="h-5 w-5" />} />
-        <StatCard label="Volume d'achats" value="555 600 €" sub="cumulé" icon={<Package className="h-5 w-5" />} />
+        <StatCard label="Volume d'achats" value="555 600 f" sub="cumulé" icon={<Package className="h-5 w-5" />} />
         <StatCard label="Délai moyen" value="4,2 j" sub="de livraison" icon={<Truck className="h-5 w-5" />} />
       </div>
       <SectionCard title="Liste des fournisseurs">

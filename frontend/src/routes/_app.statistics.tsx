@@ -32,8 +32,8 @@ function StatsPage() {
     <>
       <PageHeader title="Statistiques & analyses" description="Indicateurs ventes, achats, stocks et finances" breadcrumb={["Intelligence", "Statistiques"]} />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Ventes (an)" value="780 300 €" delta="+14 %" up sub="cumulé 2026" icon={<TrendingUp className="h-5 w-5" />} />
-        <StatCard label="Achats (an)" value="439 400 €" delta="+9 %" up sub="cumulé 2026" icon={<ShoppingCart className="h-5 w-5" />} />
+        <StatCard label="Ventes (an)" value="780 300 f" delta="+14 %" up sub="cumulé 2026" icon={<TrendingUp className="h-5 w-5" />} />
+        <StatCard label="Achats (an)" value="439 400 f" delta="+9 %" up sub="cumulé 2026" icon={<ShoppingCart className="h-5 w-5" />} />
         <StatCard label="Marge brute" value="43,7 %" delta="+2,1 pts" up sub="moyenne" icon={<Banknote className="h-5 w-5" />} />
         <StatCard label="Rotation stock" value="6,2x" sub="par an" icon={<Warehouse className="h-5 w-5" />} />
       </div>

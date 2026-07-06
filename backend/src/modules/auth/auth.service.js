@@ -247,6 +247,26 @@ export const authService = {
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
     return publicUser(user);
   },
+  async updateProfile(userId, body) {
+    const user = await authRepository.findUserById(userId);
+    if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+    const fields = ["nom", "prenom", "email", "telephone", "avatar"];
+    const data = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, typeof body[field] === "string" ? body[field].trim() : body[field]]));
+    if (!data.nom && body.nom !== undefined) throw new ApiError(400, "NAME_REQUIRED", "Le nom est requis");
+    if (!data.prenom && body.prenom !== undefined) throw new ApiError(400, "FIRST_NAME_REQUIRED", "Le prenom est requis");
+    if (data.email) {
+      const existing = await authRepository.findUserByEmail(data.email);
+      if (existing && existing.id !== userId) throw new ApiError(409, "EMAIL_EXISTS", "Cette adresse e-mail est deja utilisee");
+    }
+    return publicUser(await authRepository.updateUser(userId, data));
+  },
+  sessions(userId) {
+    return authRepository.listRefreshTokens(userId);
+  },
+  async revokeOtherSessions(userId, currentToken) {
+    const result = await authRepository.revokeOtherRefreshTokens(userId, currentToken);
+    return { revoked: result.count };
+  },
   async changePassword(userId, { ancienPassword, nouveauPassword }) {
     const user = await authRepository.findUserById(userId);
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
