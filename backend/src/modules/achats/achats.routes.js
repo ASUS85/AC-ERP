@@ -3,6 +3,10 @@ import { authenticate } from "../../middlewares/auth.middleware.js";
 import { achatsController } from "./achats.controller.js";
 
 const router = Router();
+router.get("/public/bons-commande/valider", achatsController.fournisseurValider);
+router.get("/public/bons-commande/refuser", achatsController.fournisseurRefuser);
+router.get("/public/bons-commande/telecharger", achatsController.fournisseurTelecharger);
+
 router.use(authenticate);
 router.get("/demandes", achatsController.getDemandes);
 router.post("/demandes", achatsController.createDemande);
@@ -15,4 +19,3 @@ router.patch("/bons-commande/:id/envoyer", achatsController.envoyerBonCommande);
 router.post("/bons-commande/:id/reception", achatsController.reception);
 
 export default router;
-

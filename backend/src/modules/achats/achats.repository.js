@@ -6,11 +6,12 @@ export const achatsRepository = {
   createDemande(data) { return prisma.demandeAchat.create({ data, include: { lignes: true } }); },
   updateDemande(id, data) { return prisma.demandeAchat.update({ where: { id }, data, include: { lignes: true } }); },
   bcf(args = {}) { return prisma.bonCommandeFournisseur.findMany({ ...args, include: { fournisseur: true, lignes: { include: { produit: true } } } }); },
-  bcfById(id) { return prisma.bonCommandeFournisseur.findUnique({ where: { id }, include: { fournisseur: true, lignes: true } }); },
+  bcfById(id) { return prisma.bonCommandeFournisseur.findUnique({ where: { id }, include: { fournisseur: true, lignes: { include: { produit: true } } } }); },
   createBcf(data) { return prisma.bonCommandeFournisseur.create({ data, include: { lignes: true } }); },
   updateBcf(id, data) { return prisma.bonCommandeFournisseur.update({ where: { id }, data, include: { lignes: true } }); },
   createReception(idBcf, userId, lignes) {
     return prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe("SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci");
       const reception = await tx.receptionMarchandise.create({
         data: {
           idBcf,
@@ -46,4 +47,3 @@ export const achatsRepository = {
     });
   },
 };
-
