@@ -2,6 +2,14 @@ import { sendSuccess } from "../../utils/response.util.js";
 import { ventesService } from "./ventes.service.js";
 
 export const ventesController = {
+  async telechargerDevisPublic(req, res, next) {
+    try {
+      const file = await ventesService.telechargerDevisPublic(req.query.token);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+      return res.send(file.buffer);
+    } catch (e) { next(e); }
+  },
   async getDevis(req, res, next) { try { return sendSuccess(res, await ventesService.getDevis(req.query), "Devis recuperes"); } catch (e) { next(e); } },
   async createDevis(req, res, next) { try { return sendSuccess(res, await ventesService.createDevis(req.body, { user: req.user }), "Devis cree", null, 201); } catch (e) { next(e); } },
   async getDevisById(req, res, next) { try { return sendSuccess(res, await ventesService.getDevisById(req.params.id), "Devis recupere"); } catch (e) { next(e); } },
@@ -14,4 +22,3 @@ export const ventesController = {
   async creerLivraison(req, res, next) { try { return sendSuccess(res, await ventesService.creerLivraison(req.params.id, req.body, { user: req.user }), "Livraison creee"); } catch (e) { next(e); } },
   async livraisons(req, res, next) { try { return sendSuccess(res, await ventesService.livraisons(req.params.id), "Livraisons recuperees"); } catch (e) { next(e); } },
 };
-

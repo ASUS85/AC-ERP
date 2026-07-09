@@ -25,7 +25,9 @@ export type RoleItem = {
   }>;
 };
 
-export async function getRoles(params?: Record<string, string | number | undefined>) {
+export async function getRoles(
+  params?: Record<string, string | number | undefined>,
+) {
   const response: any = await api.get("/roles", { params });
   return response;
 }
@@ -50,7 +52,12 @@ export async function deleteRole(id: string) {
   return response;
 }
 
-export async function updateRolePermissions(id: string, permissionIds: string[]) {
-  const response: any = await api.put(`/roles/${id}/permissions`, { permissionIds });
+export async function updateRolePermissions(
+  id: string,
+  permissionIds: string[],
+) {
+  const response: any = await api.put(`/roles/${id}/permissions`, {
+    permissionIds,
+  });
   return response;
 }

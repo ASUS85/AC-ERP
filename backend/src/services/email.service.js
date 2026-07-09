@@ -155,10 +155,20 @@ export const sendFactureEmail = (to, nom, factureNum, pdfBuffer) =>
     attachments: [{ filename: `${factureNum}.pdf`, content: pdfBuffer }],
   });
 
-export const sendDevisEmail = (to, nom, devisNum, pdfBuffer) =>
-  sendMail(to, `Devis ${devisNum}`, layout("Devis", `<p>Bonjour ${nom}, veuillez trouver votre devis en piece jointe.</p>`), {
-    attachments: [{ filename: `${devisNum}.pdf`, content: pdfBuffer }],
-  });
+export const sendDevisEmail = (to, nom, devis, downloadUrl) =>
+  sendMail(
+    to,
+    `Devis ${devis.numeroDevis}`,
+    layout(
+      "Votre devis",
+      `<p>Bonjour <strong>${nom}</strong>,</p>
+      <p>Veuillez trouver votre devis <strong>${devis.numeroDevis}</strong>, valable jusqu'au <strong>${new Date(devis.dateValidite).toLocaleDateString("fr-FR")}</strong>.</p>
+      <p>Total TTC : <strong>${Number(devis.totalTtc || 0).toLocaleString("fr-FR")} XAF</strong></p>
+      <div style="margin:24px 0 8px;">
+        <a href="${downloadUrl}" style="display:inline-flex;align-items:center;gap:8px;color:#2563eb;text-decoration:none;font-size:13px;font-weight:600;"><span style="display:inline-block;background:#fee2e2;border:1px solid #fecaca;border-radius:4px;color:#b91c1c;font-size:10px;font-weight:700;line-height:1;padding:4px 5px;">PDF</span><span>Telecharger le devis</span></a>
+      </div>`
+    )
+  );
 
 export const sendRelanceEmail = (to, nom, factureNum, montant, joursRetard) =>
   sendMail(to, `Relance facture ${factureNum}`, layout("Relance paiement", `<p>Bonjour ${nom}, la facture ${factureNum} presente un solde de ${montant} avec ${joursRetard} jours de retard.</p>`));

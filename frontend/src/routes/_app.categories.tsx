@@ -27,22 +27,44 @@ const cols: Column<C>[] = [
   },
   { key: "desc", header: "Description" },
   { key: "parent", header: "Parent" },
-  { key: "produits", header: "Produits", align: "right", render: (c) => <span className="font-medium text-foreground">{c.produits}</span> },
+  {
+    key: "produits",
+    header: "Produits",
+    align: "right",
+    render: (c) => (
+      <span className="font-medium text-foreground">{c.produits}</span>
+    ),
+  },
 ];
 
 const tree = [
-  { name: "Informatique", count: 642, children: ["Ordinateurs", "Composants", "Réseau"] },
+  {
+    name: "Informatique",
+    count: 642,
+    children: ["Ordinateurs", "Composants", "Réseau"],
+  },
   { name: "Accessoires", count: 458, children: ["Claviers & souris", "Audio"] },
   { name: "Mobilier", count: 214, children: ["Bureaux", "Sièges"] },
-  { name: "Consommables", count: 392, children: ["Encre & toner", "Papeterie"] },
+  {
+    name: "Consommables",
+    count: 392,
+    children: ["Encre & toner", "Papeterie"],
+  },
 ];
 
 function CategoriesPage() {
   return (
     <>
-      <PageHeader title="Catégories" description="Organisation arborescente du catalogue" breadcrumb={["Gestion commerciale", "Catégories"]} />
+      <PageHeader
+        title="Catégories"
+        description="Organisation arborescente du catalogue"
+        breadcrumb={["Gestion commerciale", "Catégories"]}
+      />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <SectionCard title="Arborescence" description="Structure des catégories">
+        <SectionCard
+          title="Arborescence"
+          description="Structure des catégories"
+        >
           <div className="space-y-1">
             {tree.map((t) => (
               <div key={t.name}>
@@ -50,11 +72,16 @@ function CategoriesPage() {
                   <span className="flex items-center gap-2 text-sm font-medium text-foreground">
                     <FolderTree className="h-4 w-4 text-primary" /> {t.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">{t.count}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t.count}
+                  </span>
                 </div>
                 <ul className="ml-4 mt-1 space-y-0.5 border-l border-border pl-3">
                   {t.children.map((ch) => (
-                    <li key={ch} className="flex items-center gap-1.5 py-1 text-sm text-muted-foreground">
+                    <li
+                      key={ch}
+                      className="flex items-center gap-1.5 py-1 text-sm text-muted-foreground"
+                    >
                       <ChevronRight className="h-3.5 w-3.5" /> {ch}
                     </li>
                   ))}
@@ -65,7 +92,11 @@ function CategoriesPage() {
         </SectionCard>
         <SectionCard title="Toutes les catégories" className="lg:col-span-2">
           <div className="mb-4">
-            <Toolbar placeholder="Rechercher une catégorie…" addLabel="Nouvelle catégorie" onAdd={() => toast.info("Ajout de catégorie")} />
+            <Toolbar
+              placeholder="Rechercher une catégorie…"
+              addLabel="Nouvelle catégorie"
+              onAdd={() => toast.info("Ajout de catégorie")}
+            />
           </div>
           <DataTable columns={cols} rows={categories} rowKey={(c) => c.nom} />
         </SectionCard>

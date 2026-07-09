@@ -2,16 +2,34 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Users, UserPlus, Pencil, Trash2, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
-import { SectionCard, Toolbar, Pagination, StatCard } from "@/components/erp/widgets";
+import {
+  SectionCard,
+  Toolbar,
+  Pagination,
+  StatCard,
+} from "@/components/erp/widgets";
 import { DataTable, type Column } from "@/components/erp/DataTable";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import { createUser, deleteUser, getRoles, getUsers, updateUser, type UserPayload } from "@/lib/api/users.service";
+import {
+  createUser,
+  deleteUser,
+  getRoles,
+  getUsers,
+  updateUser,
+  type UserPayload,
+} from "@/lib/api/users.service";
 
 export const Route = createFileRoute("/_app/users")({
   head: () => ({ meta: [{ title: "Utilisateurs — AC ERP" }] }),
@@ -27,7 +45,13 @@ type UserRow = {
   role?: { id: string; nomRole: string; isSystemRole?: boolean } | null;
 };
 
-const initials = (n: string) => n.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+const initials = (n: string) =>
+  n
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
 function UsersPage() {
   const [rows, setRows] = useState<UserRow[]>([]);
@@ -36,7 +60,9 @@ function UsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
-  const [pendingDeleteUser, setPendingDeleteUser] = useState<UserRow | null>(null);
+  const [pendingDeleteUser, setPendingDeleteUser] = useState<UserRow | null>(
+    null,
+  );
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
@@ -55,9 +81,14 @@ function UsersPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [usersResponse, rolesResponse] = await Promise.all([getUsers(), getRoles()]);
+      const [usersResponse, rolesResponse] = await Promise.all([
+        getUsers(),
+        getRoles(),
+      ]);
       const usersData = Array.isArray(usersResponse?.data)
-        ? usersResponse.data.filter((user: UserRow) => !user?.role?.isSystemRole)
+        ? usersResponse.data.filter(
+            (user: UserRow) => !user?.role?.isSystemRole,
+          )
         : [];
       const rolesData = Array.isArray(rolesResponse?.data)
         ? rolesResponse.data.filter((role: any) => !role?.isSystemRole)
@@ -78,7 +109,14 @@ function UsersPage() {
   const openCreateModal = () => {
     setEditingUser(null);
     setErrors({});
-    setForm({ nom: "", prenom: "", email: "", telephone: "", idRole: roles[0]?.id || "", statut: "ACTIF" });
+    setForm({
+      nom: "",
+      prenom: "",
+      email: "",
+      telephone: "",
+      idRole: "",
+      statut: "",
+    });
     setModalOpen(true);
   };
 
@@ -109,7 +147,6 @@ function UsersPage() {
     if (!form.idRole) newErrors.idRole = "Le rôle est obligatoire";
     setErrors(newErrors);
     if (Object.keys(newErrors).length) {
-      toast.error("Veuillez corriger les champs indiqués");
       return;
     }
 
@@ -128,12 +165,16 @@ function UsersPage() {
     } catch (error: any) {
       const message = error?.message || "Échec de l’opération";
       const details = error?.details || {};
-      const fieldErrors = details && typeof details === "object"
-        ? Object.entries(details).reduce<Record<string, string>>((acc, [key, value]) => {
-            if (typeof value === "string") acc[key] = value;
-            return acc;
-          }, {})
-        : {};
+      const fieldErrors =
+        details && typeof details === "object"
+          ? Object.entries(details).reduce<Record<string, string>>(
+              (acc, [key, value]) => {
+                if (typeof value === "string") acc[key] = value;
+                return acc;
+              },
+              {},
+            )
+          : {};
       setErrors(fieldErrors);
       toast.error(message);
     } finally {
@@ -168,7 +209,8 @@ function UsersPage() {
     const normalizedSearch = search.trim().toLowerCase();
     return rows.filter((user) => {
       if (user.role?.isSystemRole) return false;
-      const matchesStatus = statusFilter === "all" || user.statut === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" || user.statut === statusFilter;
       const matchesSearch =
         !normalizedSearch ||
         `${user.prenom} ${user.nom}`.toLowerCase().includes(normalizedSearch) ||
@@ -179,7 +221,10 @@ function UsersPage() {
 
   const pageSize = 8;
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const pagedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
+  const pagedUsers = filteredUsers.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   useEffect(() => {
     setPage(1);
@@ -192,7 +237,9 @@ function UsersPage() {
         header: "Utilisateur",
         render: (u) => (
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-semibold text-white">{initials(`${u.prenom} ${u.nom}`)}</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-semibold text-white">
+              {initials(`${u.prenom} ${u.nom}`)}
+            </span>
             <div>
               <p className="font-medium text-foreground">{`${u.prenom} ${u.nom}`}</p>
               <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -200,18 +247,38 @@ function UsersPage() {
           </div>
         ),
       },
-      { key: "role", header: "Rôle", render: (u) => <span className="text-foreground">{u.role?.nomRole || "—"}</span> },
-      { key: "statut", header: "Statut", render: (u) => <StatusBadge status={u.statut} /> },
+      {
+        key: "role",
+        header: "Rôle",
+        render: (u) => (
+          <span className="text-foreground">{u.role?.nomRole || "—"}</span>
+        ),
+      },
+      {
+        key: "statut",
+        header: "Statut",
+        render: (u) => <StatusBadge status={u.statut} />,
+      },
       {
         key: "act",
         header: "Actions",
         align: "right",
         render: (u) => (
           <div className="flex justify-end gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(u)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => openEditModal(u)}
+            >
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openDeleteModal(u)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive"
+              onClick={() => openDeleteModal(u)}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
@@ -234,10 +301,30 @@ function UsersPage() {
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Utilisateurs" value={String(rows.length)} sub="comptes" icon={<Users className="h-5 w-5" />} />
-        <StatCard label="Actifs" value={String(rows.filter((u) => u.statut === "ACTIF").length)} sub="comptes actifs" icon={<Users className="h-5 w-5" />} />
-        <StatCard label="Rôles" value={String(roles.length)} sub="définis" icon={<Users className="h-5 w-5" />} />
-        <StatCard label="Inactifs" value={String(rows.filter((u) => u.statut !== "ACTIF").length)} sub="comptes non actifs" icon={<UserPlus className="h-5 w-5" />} />
+        <StatCard
+          label="Utilisateurs"
+          value={String(rows.length)}
+          sub="comptes"
+          icon={<Users className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Actifs"
+          value={String(rows.filter((u) => u.statut === "ACTIF").length)}
+          sub="comptes actifs"
+          icon={<Users className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Rôles"
+          value={String(roles.length)}
+          sub="définis"
+          icon={<Users className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Inactifs"
+          value={String(rows.filter((u) => u.statut !== "ACTIF").length)}
+          sub="comptes non actifs"
+          icon={<UserPlus className="h-5 w-5" />}
+        />
       </div>
       <SectionCard title="Liste des utilisateurs">
         <div className="mb-4">
@@ -255,24 +342,46 @@ function UsersPage() {
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Chargement…
           </div>
         ) : (
-          <DataTable columns={cols} rows={pagedUsers} rowKey={(u) => u.id} withActions={false} />
+          <DataTable
+            columns={cols}
+            rows={pagedUsers}
+            rowKey={(u) => u.id}
+            withActions={false}
+          />
         )}
-        <Pagination count={filteredUsers.length} currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination
+          count={filteredUsers.length}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </SectionCard>
 
       <AppModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        title={editingUser ? "Modifier un utilisateur" : "Ajouter un utilisateur"}
-        description={editingUser ? "Mettez à jour les informations de l’utilisateur." : "Créez un nouveau compte utilisateur."}
+        title={
+          editingUser ? "Modifier un utilisateur" : "Ajouter un utilisateur"
+        }
+        description={
+          editingUser
+            ? "Mettez à jour les informations de l’utilisateur."
+            : "Créez un nouveau compte utilisateur."
+        }
         size="lg"
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setModalOpen(false)} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              disabled={submitting}
+            >
               Annuler
             </Button>
             <Button onClick={() => void handleSubmit()} disabled={submitting}>
-              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {submitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               {editingUser ? "Enregistrer" : "Créer"}
             </Button>
           </div>
@@ -280,27 +389,71 @@ function UsersPage() {
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="prenom">Prénom</Label>
-            <Input id="prenom" value={form.prenom} onChange={(e) => { setForm({ ...form, prenom: e.target.value }); if (errors.prenom) setErrors((prev) => ({ ...prev, prenom: "" })); }} />
-            {errors.prenom ? <p className="text-xs text-destructive">{errors.prenom}</p> : null}
+            <Label htmlFor="nom">Nom</Label>
+            <Input
+              id="nom"
+              value={form.nom}
+              onChange={(e) => {
+                setForm({ ...form, nom: e.target.value });
+                if (errors.nom) setErrors((prev) => ({ ...prev, nom: "" }));
+              }}
+              placeholder="Entrez le nom"
+            />
+            {errors.nom ? (
+              <p className="text-xs text-destructive">{errors.nom}</p>
+            ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="nom">Nom</Label>
-            <Input id="nom" value={form.nom} onChange={(e) => { setForm({ ...form, nom: e.target.value }); if (errors.nom) setErrors((prev) => ({ ...prev, nom: "" })); }} />
-            {errors.nom ? <p className="text-xs text-destructive">{errors.nom}</p> : null}
+            <Label htmlFor="prenom">Prénom</Label>
+            <Input
+              id="prenom"
+              value={form.prenom}
+              onChange={(e) => {
+                setForm({ ...form, prenom: e.target.value });
+                if (errors.prenom)
+                  setErrors((prev) => ({ ...prev, prenom: "" }));
+              }}
+              placeholder="Entrez le prénom"
+            />
+            {errors.prenom ? (
+              <p className="text-xs text-destructive">{errors.prenom}</p>
+            ) : null}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); if (errors.email) setErrors((prev) => ({ ...prev, email: "" })); }} />
-            {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
+            <Input
+              id="email"
+              type="email"
+              value={form.email}
+              onChange={(e) => {
+                setForm({ ...form, email: e.target.value });
+                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+              }}
+              placeholder="Entrez l'adresse email"
+            />
+            {errors.email ? (
+              <p className="text-xs text-destructive">{errors.email}</p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="telephone">Téléphone</Label>
-            <Input id="telephone" value={form.telephone || ""} onChange={(e) => setForm({ ...form, telephone: e.target.value })} />
+            <Input
+              id="telephone"
+              value={form.telephone || ""}
+              onChange={(e) => setForm({ ...form, telephone: e.target.value })}
+              placeholder="Entrez le numéro de téléphone"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Rôle</Label>
-            <Select value={form.idRole} onValueChange={(value) => { setForm({ ...form, idRole: value }); if (errors.idRole) setErrors((prev) => ({ ...prev, idRole: "" })); }}>
+            <Select
+              value={form.idRole}
+              onValueChange={(value) => {
+                setForm({ ...form, idRole: value });
+                if (errors.idRole)
+                  setErrors((prev) => ({ ...prev, idRole: "" }));
+              }}
+            >
               <SelectTrigger id="role">
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
@@ -312,11 +465,18 @@ function UsersPage() {
                 ))}
               </SelectContent>
             </Select>
-            {errors.idRole ? <p className="text-xs text-destructive">{errors.idRole}</p> : null}
+            {errors.idRole ? (
+              <p className="text-xs text-destructive">{errors.idRole}</p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="statut">Statut</Label>
-            <Select value={form.statut} onValueChange={(value: UserPayload["statut"]) => setForm({ ...form, statut: value })}>
+            <Select
+              value={form.statut}
+              onValueChange={(value: UserPayload["statut"]) =>
+                setForm({ ...form, statut: value })
+              }
+            >
               <SelectTrigger id="statut">
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>
@@ -338,18 +498,32 @@ function UsersPage() {
         size="sm"
         footer={
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} disabled={deleting}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleting}
+            >
               Annuler
             </Button>
-            <Button variant="destructive" onClick={() => void handleDelete()} disabled={deleting}>
-              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            <Button
+              variant="destructive"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Supprimer
             </Button>
           </div>
         }
       >
         <p className="text-sm text-muted-foreground">
-          Voulez-vous vraiment supprimer <span className="font-semibold text-foreground">{pendingDeleteUser?.prenom} {pendingDeleteUser?.nom}</span> ?
+          Voulez-vous vraiment supprimer{" "}
+          <span className="font-semibold text-foreground">
+            {pendingDeleteUser?.prenom} {pendingDeleteUser?.nom}
+          </span>{" "}
+          ?
         </p>
       </AppModal>
     </>

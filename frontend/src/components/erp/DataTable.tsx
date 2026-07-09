@@ -21,14 +21,21 @@ export function DataTable<T extends Record<string, any>>({
   rowKey: (row: T) => string;
   withActions?: boolean;
 }) {
-  const align = (a?: string) => (a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left");
+  const align = (a?: string) =>
+    a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
             {columns.map((c) => (
-              <th key={c.key} className={cn("px-3 py-2.5 font-medium first:pl-1", align(c.align))}>
+              <th
+                key={c.key}
+                className={cn(
+                  "px-3 py-2.5 font-medium first:pl-1",
+                  align(c.align),
+                )}
+              >
                 {c.header}
               </th>
             ))}
@@ -37,15 +44,32 @@ export function DataTable<T extends Record<string, any>>({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/40">
+            <tr
+              key={rowKey(row)}
+              className="border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/40"
+            >
               {columns.map((c) => (
-                <td key={c.key} className={cn("px-3 py-3.5 first:pl-1", align(c.align), c.className)}>
-                  {c.render ? c.render(row) : <span className="text-muted-foreground">{row[c.key]}</span>}
+                <td
+                  key={c.key}
+                  className={cn(
+                    "px-3 py-3.5 first:pl-1",
+                    align(c.align),
+                    c.className,
+                  )}
+                >
+                  {c.render ? (
+                    c.render(row)
+                  ) : (
+                    <span className="text-muted-foreground">{row[c.key]}</span>
+                  )}
                 </td>
               ))}
               {withActions && (
                 <td className="px-3 py-3.5">
-                  <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label="Actions">
+                  <button
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    aria-label="Actions"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
                 </td>

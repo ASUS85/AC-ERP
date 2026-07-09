@@ -838,3 +838,221 @@ ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(Server
 2026-07-08T15:00:56.966Z info: Arret du serveur
 2026-07-08T15:01:25.668Z info: Base de donnees connectee
 2026-07-08T15:01:25.702Z info: Serveur demarre port 3000
+2026-07-08T15:23:20.379Z info: Base de donnees connectee
+2026-07-08T15:23:20.393Z info: Serveur demarre port 3000
+2026-07-08T15:26:21.805Z info: Socket connecte Yk_C6qSFlVzYdAEeAAAB
+2026-07-08T15:30:02.952Z info: Base de donnees connectee
+2026-07-08T15:30:02.995Z info: Serveur demarre port 3000
+2026-07-08T15:30:03.567Z info: Socket connecte 9sNmL8WkFnduojDMAAAB
+2026-07-08T15:33:48.002Z error: Origine CORS non autorisee {"stack":"Error: Origine CORS non autorisee\n    at origin (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/config/cors.js:11:14)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\cors\\lib\\index.js:219:13\n    at optionsCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\cors\\lib\\index.js:199:9)\n    at corsMiddleware (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\cors\\lib\\index.js:204:7)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at internalNext (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:533:6)\n    at xXssProtectionMiddleware (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:311:3)\n    at internalNext (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:531:6)\n    at xPoweredByMiddleware (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:304:3)\n    at internalNext (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:531:6)\n    at xPermittedCrossDomainPoliciesMiddleware (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:297:3)\n    at internalNext (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/node_modules/helmet/index.mjs:531:6)"}
+2026-07-08T15:34:47.758Z error: Route introuvable: GET /api/v1/ventes/devis/ce4a8643-c720-4f92-88f9-c4d5761cd533/convertir {"stack":"ApiError: Route introuvable: GET /api/v1/ventes/devis/ce4a8643-c720-4f92-88f9-c4d5761cd533/convertir\n    at notFoundHandler (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/error.middleware.js:11:8)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:688:15\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:276:14)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:688:15\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:276:14)\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:19:5)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)","code":"NOT_FOUND"}
+2026-07-08T15:42:44.559Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-07-08T15:42:52.104Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-07-08T15:43:05.417Z error: 
+Invalid `prisma.bonLivraison.create()` invocation:
+
+{
+  data: {
+    numeroBl: "BL-1783525385335",
+    idBcc: "3843ce34-0e44-4a3e-8107-9386a2404914",
+    idUtilisateur: "1755e5cf-ef74-4f80-a1cc-c9f050af0204",
+    lignes: {
+      create: [
+        {
+          idLigneBcc: "01d5eadd-459f-4016-a40e-8097989da217",
+          quantiteLivree: 8
+        },
+        {
+          idLigneBcc: "79b30c43-347d-4b04-b7a2-42ed9f4991d9",
+          quantiteLivree: 8
+        }
+      ]
+    }
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Argument `ligneBcc` is missing. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonLivraison.create()` invocation:\n\n{\n  data: {\n    numeroBl: \"BL-1783525385335\",\n    idBcc: \"3843ce34-0e44-4a3e-8107-9386a2404914\",\n    idUtilisateur: \"1755e5cf-ef74-4f80-a1cc-c9f050af0204\",\n    lignes: {\n      create: [\n        {\n          idLigneBcc: \"01d5eadd-459f-4016-a40e-8097989da217\",\n          quantiteLivree: 8\n        },\n        {\n          idLigneBcc: \"79b30c43-347d-4b04-b7a2-42ed9f4991d9\",\n          quantiteLivree: 8\n        }\n      ]\n    }\n  },\n  include: {\n    lignes: true\n  }\n}\n\nArgument `ligneBcc` is missing.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.repository.js:15:18\n    at async Proxy._transactionWithCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:8120)\n    at async Object.creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.service.js:88:23)\n    at async creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.controller.js:22:72)"}
+2026-07-08T15:55:06.271Z info: Base de donnees connectee
+2026-07-08T15:55:06.320Z info: Serveur demarre port 3000
+2026-07-08T15:55:37.620Z info: Base de donnees connectee
+2026-07-08T15:55:37.657Z info: Serveur demarre port 3000
+2026-07-08T15:57:49.421Z info: Base de donnees connectee
+2026-07-08T15:57:49.444Z info: Serveur demarre port 3000
+2026-07-08T15:59:02.273Z info: Socket connecte fmbtKsM7-pAYn74IAAAB
+2026-07-08T15:59:35.370Z error: 
+Invalid `prisma.bonLivraison.create()` invocation:
+
+{
+  data: {
+    numeroBl: "BL-1783526375234",
+    idBcc: "3843ce34-0e44-4a3e-8107-9386a2404914",
+    idUtilisateur: "1755e5cf-ef74-4f80-a1cc-c9f050af0204",
+    lignes: {
+      create: [
+        {
+          idLigneBcc: "01d5eadd-459f-4016-a40e-8097989da217",
+          quantiteLivree: 8
+        },
+        {
+          idLigneBcc: "79b30c43-347d-4b04-b7a2-42ed9f4991d9",
+          quantiteLivree: 8
+        }
+      ]
+    }
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Argument `ligneBcc` is missing. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonLivraison.create()` invocation:\n\n{\n  data: {\n    numeroBl: \"BL-1783526375234\",\n    idBcc: \"3843ce34-0e44-4a3e-8107-9386a2404914\",\n    idUtilisateur: \"1755e5cf-ef74-4f80-a1cc-c9f050af0204\",\n    lignes: {\n      create: [\n        {\n          idLigneBcc: \"01d5eadd-459f-4016-a40e-8097989da217\",\n          quantiteLivree: 8\n        },\n        {\n          idLigneBcc: \"79b30c43-347d-4b04-b7a2-42ed9f4991d9\",\n          quantiteLivree: 8\n        }\n      ]\n    }\n  },\n  include: {\n    lignes: true\n  }\n}\n\nArgument `ligneBcc` is missing.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.repository.js:15:18\n    at async Proxy._transactionWithCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:8120)\n    at async Object.creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.service.js:151:23)\n    at async creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.controller.js:22:72)"}
+2026-07-08T15:59:40.303Z info: Arret du serveur
+2026-07-08T15:59:50.503Z info: Base de donnees connectee
+2026-07-08T15:59:50.514Z info: Serveur demarre port 3000
+2026-07-08T15:59:52.817Z error: 
+Invalid `prisma.bonLivraison.create()` invocation:
+
+{
+  data: {
+    numeroBl: "BL-1783526392804",
+    idBcc: "3843ce34-0e44-4a3e-8107-9386a2404914",
+    idUtilisateur: "1755e5cf-ef74-4f80-a1cc-c9f050af0204",
+    lignes: {
+      create: [
+        {
+          idLigneBcc: "01d5eadd-459f-4016-a40e-8097989da217",
+          quantiteLivree: 8
+        },
+        {
+          idLigneBcc: "79b30c43-347d-4b04-b7a2-42ed9f4991d9",
+          quantiteLivree: 8
+        }
+      ]
+    }
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Argument `ligneBcc` is missing. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonLivraison.create()` invocation:\n\n{\n  data: {\n    numeroBl: \"BL-1783526392804\",\n    idBcc: \"3843ce34-0e44-4a3e-8107-9386a2404914\",\n    idUtilisateur: \"1755e5cf-ef74-4f80-a1cc-c9f050af0204\",\n    lignes: {\n      create: [\n        {\n          idLigneBcc: \"01d5eadd-459f-4016-a40e-8097989da217\",\n          quantiteLivree: 8\n        },\n        {\n          idLigneBcc: \"79b30c43-347d-4b04-b7a2-42ed9f4991d9\",\n          quantiteLivree: 8\n        }\n      ]\n    }\n  },\n  include: {\n    lignes: true\n  }\n}\n\nArgument `ligneBcc` is missing.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.repository.js:15:18\n    at async Proxy._transactionWithCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:8120)\n    at async Object.creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.service.js:151:23)\n    at async creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.controller.js:22:72)"}
+2026-07-08T15:59:54.331Z info: Socket connecte SXcnlZw73s6YAIM9AAAB
+2026-07-08T16:01:06.590Z info: Base de donnees connectee
+2026-07-08T16:01:06.613Z info: Serveur demarre port 3000
+2026-07-08T16:01:12.219Z info: Socket connecte pcIrOQvARx3DUNqPAAAB
+2026-07-08T16:01:24.539Z error: 
+Invalid `prisma.stock.update()` invocation:
+
+{
+  where: {
+    idProduit: undefined,
+?   id?: String,
+?   AND?: StockWhereInput | StockWhereInput[],
+?   OR?: StockWhereInput[],
+?   NOT?: StockWhereInput | StockWhereInput[],
+?   stockActuel?: IntFilter | Int,
+?   stockReserve?: IntFilter | Int,
+?   updatedAt?: DateTimeFilter | DateTime,
+?   produit?: ProduitScalarRelationFilter | ProduitWhereInput
+  },
+  data: {
+    stockActuel: {
+      decrement: 8
+    },
+    stockReserve: {
+      decrement: 8
+    }
+  },
+  include: {
+    produit: true
+  }
+}
+
+Argument `where` of type StockWhereUniqueInput needs at least one of `id` or `idProduit` arguments. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.stock.update()` invocation:\n\n{\n  where: {\n    idProduit: undefined,\n?   id?: String,\n?   AND?: StockWhereInput | StockWhereInput[],\n?   OR?: StockWhereInput[],\n?   NOT?: StockWhereInput | StockWhereInput[],\n?   stockActuel?: IntFilter | Int,\n?   stockReserve?: IntFilter | Int,\n?   updatedAt?: DateTimeFilter | DateTime,\n?   produit?: ProduitScalarRelationFilter | ProduitWhereInput\n  },\n  data: {\n    stockActuel: {\n      decrement: 8\n    },\n    stockReserve: {\n      decrement: 8\n    }\n  },\n  include: {\n    produit: true\n  }\n}\n\nArgument `where` of type StockWhereUniqueInput needs at least one of `id` or `idProduit` arguments. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.repository.js:59:23\n    at async Proxy._transactionWithCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:8120)\n    at async Object.creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.service.js:151:23)\n    at async creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.controller.js:22:72)"}
+2026-07-08T16:01:35.573Z info: Base de donnees connectee
+2026-07-08T16:01:35.595Z info: Serveur demarre port 3000
+2026-07-08T16:01:36.618Z info: Socket connecte X5hHlGxH1DfnPQ1dAAAB
+2026-07-08T16:01:41.104Z error: 
+Invalid `prisma.stock.update()` invocation:
+
+{
+  where: {
+    idProduit: undefined,
+?   id?: String,
+?   AND?: StockWhereInput | StockWhereInput[],
+?   OR?: StockWhereInput[],
+?   NOT?: StockWhereInput | StockWhereInput[],
+?   stockActuel?: IntFilter | Int,
+?   stockReserve?: IntFilter | Int,
+?   updatedAt?: DateTimeFilter | DateTime,
+?   produit?: ProduitScalarRelationFilter | ProduitWhereInput
+  },
+  data: {
+    stockActuel: {
+      decrement: 8
+    },
+    stockReserve: {
+      decrement: 8
+    }
+  },
+  include: {
+    produit: true
+  }
+}
+
+Argument `where` of type StockWhereUniqueInput needs at least one of `id` or `idProduit` arguments. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.stock.update()` invocation:\n\n{\n  where: {\n    idProduit: undefined,\n?   id?: String,\n?   AND?: StockWhereInput | StockWhereInput[],\n?   OR?: StockWhereInput[],\n?   NOT?: StockWhereInput | StockWhereInput[],\n?   stockActuel?: IntFilter | Int,\n?   stockReserve?: IntFilter | Int,\n?   updatedAt?: DateTimeFilter | DateTime,\n?   produit?: ProduitScalarRelationFilter | ProduitWhereInput\n  },\n  data: {\n    stockActuel: {\n      decrement: 8\n    },\n    stockReserve: {\n      decrement: 8\n    }\n  },\n  include: {\n    produit: true\n  }\n}\n\nArgument `where` of type StockWhereUniqueInput needs at least one of `id` or `idProduit` arguments. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.repository.js:96:23\n    at async Proxy._transactionWithCallback (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:8120)\n    at async Object.creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.service.js:151:23)\n    at async creerLivraison (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ventes/ventes.controller.js:22:72)"}
+2026-07-08T16:02:59.623Z info: Base de donnees connectee
+2026-07-08T16:02:59.642Z info: Serveur demarre port 3000
+2026-07-08T16:03:01.622Z info: Socket connecte EvuFN1T0Xr-f75rDAAAB
+2026-07-08T16:13:22.445Z info: Socket deconnecte EvuFN1T0Xr-f75rDAAAB
+2026-07-09T09:27:16.955Z info: Socket connecte qzF9mVmiUcNw3xBzAAAE
+2026-07-09T09:27:25.871Z info: Socket deconnecte qzF9mVmiUcNw3xBzAAAE
+2026-07-09T13:38:24.520Z info: Base de donnees connectee
+2026-07-09T13:38:24.539Z info: Serveur demarre port 3000
+2026-07-09T13:39:01.217Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-07-09T13:39:01.274Z info: Socket connecte Jp-AHVG0JrpX3yJbAAAB
+2026-07-09T13:39:40.100Z info: Socket deconnecte Jp-AHVG0JrpX3yJbAAAB
+2026-07-09T13:41:05.394Z info: Socket connecte gbDA2lqUdZMzWKmoAAAD
+2026-07-09T13:41:05.410Z error: Token expire {"stack":"ApiError: Token expire\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:22:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"TOKEN_EXPIRED"}
+2026-07-09T13:46:45.425Z info: Socket deconnecte gbDA2lqUdZMzWKmoAAAD
+2026-07-09T13:47:01.662Z info: Socket connecte sar1XbvD6gql75MQAAAF
+2026-07-09T13:52:51.035Z info: Socket deconnecte sar1XbvD6gql75MQAAAF
+2026-07-09T13:52:55.534Z info: Socket connecte OwnbJEdZWw72cp0vAAAH
+2026-07-09T14:04:44.109Z info: Socket deconnecte OwnbJEdZWw72cp0vAAAH
+2026-07-09T14:04:48.881Z info: Socket connecte BkzJ5xPZG64n1R9dAAAJ
+2026-07-09T14:27:00.354Z info: Socket deconnecte BkzJ5xPZG64n1R9dAAAJ
+2026-07-09T15:06:03.396Z info: Socket connecte hbXdXYQxsvPmWDoXAAAL
+2026-07-09T15:06:12.919Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:121:13)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:7:31)","code":"INVALID_CREDENTIALS"}
+2026-07-09T15:06:19.637Z info: Socket deconnecte hbXdXYQxsvPmWDoXAAAL
+2026-07-09T15:06:29.151Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:121:13)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:7:31)","code":"INVALID_CREDENTIALS"}
+2026-07-09T15:07:01.883Z info: Socket connecte EkL8dYQcf7e-2xV8AAAO
+2026-07-09T15:46:24.439Z error: Le nouveau mot de passe doit contenir au moins 8 caracteres {"stack":"ApiError: Le nouveau mot de passe doit contenir au moins 8 caracteres\n    at validateNewPassword (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:56:11)\n    at Object.changePassword (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:273:5)\n    at async changePassword (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:72:31)","code":"PASSWORD_TOO_SHORT"}
+2026-07-09T15:50:29.048Z info: Socket connecte VpqsRle0X21bzPtiAAAR
+2026-07-09T15:50:51.320Z info: Socket deconnecte VpqsRle0X21bzPtiAAAR
+2026-07-09T15:50:53.474Z info: Socket connecte jT8rH1QDZfFKcjJ1AAAT
+2026-07-09T15:50:56.377Z info: Socket deconnecte jT8rH1QDZfFKcjJ1AAAT
+2026-07-09T15:50:57.225Z info: Socket connecte dV8maqrnD4Ew9xR-AAAV
+2026-07-09T15:51:18.858Z info: Socket deconnecte dV8maqrnD4Ew9xR-AAAV
+2026-07-09T16:02:02.317Z error: Le nom est requis {"stack":"ApiError: Le nom est requis\n    at Object.updateProfile (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:255:52)\n    at async updateProfile (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:62:35)","code":"NAME_REQUIRED"}
+2026-07-09T16:30:51.700Z info: Socket deconnecte EkL8dYQcf7e-2xV8AAAO
+2026-07-09T16:31:01.106Z info: Socket connecte velNBQSGTBwUFms_AAAX
+2026-07-09T16:43:01.653Z info: Socket deconnecte velNBQSGTBwUFms_AAAX
+2026-07-09T16:43:04.989Z info: Socket connecte xWvWhbeeUbsTrigHAAAZ
+2026-07-09T16:48:56.647Z info: Base de donnees connectee
+2026-07-09T16:48:56.671Z info: Serveur demarre port 3000
+2026-07-09T16:48:57.968Z info: Socket connecte 45CiPCa92ia55J1IAAAB
+2026-07-09T16:50:12.765Z info: Base de donnees connectee
+2026-07-09T16:50:12.881Z info: Serveur demarre port 3000
+2026-07-09T16:50:37.994Z info: Base de donnees connectee
+2026-07-09T16:50:38.199Z info: Serveur demarre port 3000
+2026-07-09T16:50:38.289Z info: Socket connecte 5ycw58uuE3stRJB0AAAB
+2026-07-09T16:54:35.853Z info: Base de donnees connectee
+2026-07-09T16:54:35.889Z info: Serveur demarre port 3000
+2026-07-09T16:54:37.350Z info: Socket connecte BQDlNVMmn7xbk4qsAAAB
+2026-07-09T16:57:27.207Z info: Socket deconnecte BQDlNVMmn7xbk4qsAAAB
+2026-07-09T17:33:40.408Z info: Socket connecte hqr1ocFyC4QUjlb0AAAD
+2026-07-09T17:34:20.810Z info: Socket deconnecte hqr1ocFyC4QUjlb0AAAD
+2026-07-09T17:34:26.825Z info: Socket connecte YEXmCafB_tcFvY45AAAF

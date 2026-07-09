@@ -17,14 +17,25 @@ let refreshing = false;
 api.interceptors.response.use(
   (response) => response.data,
   async (error: AxiosError<any>) => {
-    const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const original = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
     const code = error.response?.data?.error?.code;
-    if (error.response?.status === 401 && code === "TOKEN_EXPIRED" && original && !original._retry && !refreshing) {
+    if (
+      error.response?.status === 401 &&
+      code === "TOKEN_EXPIRED" &&
+      original &&
+      !original._retry &&
+      !refreshing
+    ) {
       original._retry = true;
       refreshing = true;
       try {
         const refreshToken = localStorage.getItem("erp_refresh_token");
-        const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
+        const response = await axios.post(
+          `${api.defaults.baseURL}/auth/refresh`,
+          { refreshToken },
+        );
         const accessToken = response.data?.data?.accessToken;
         localStorage.setItem("erp_access_token", accessToken);
         original.headers.Authorization = `Bearer ${accessToken}`;
@@ -38,9 +49,14 @@ api.interceptors.response.use(
         refreshing = false;
       }
     }
-    return Promise.reject(error.response?.data?.error || { code: "NETWORK_ERROR", message: error.message, details: null });
+    return Promise.reject(
+      error.response?.data?.error || {
+        code: "NETWORK_ERROR",
+        message: error.message,
+        details: null,
+      },
+    );
   },
 );
 
 export default api;
-

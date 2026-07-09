@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, Package } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
-import { SectionCard, Toolbar, Pagination, StatCard } from "@/components/erp/widgets";
+import {
+  SectionCard,
+  Toolbar,
+  Pagination,
+  StatCard,
+} from "@/components/erp/widgets";
 import { DataTable, type Column } from "@/components/erp/DataTable";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -31,9 +36,28 @@ const cols: Column<P>[] = [
     ),
   },
   { key: "cat", header: "Catégorie" },
-  { key: "prix", header: "Prix", align: "right", render: (p) => <span className="font-medium text-foreground">{fmtCurrency(p.prix)}</span> },
-  { key: "stock", header: "Stock", align: "right", render: (p) => <span className="text-foreground">{fmtNumber(p.stock)}</span> },
-  { key: "statut", header: "Statut", align: "right", render: (p) => <StatusBadge status={p.statut} /> },
+  {
+    key: "prix",
+    header: "Prix",
+    align: "right",
+    render: (p) => (
+      <span className="font-medium text-foreground">{fmtCurrency(p.prix)}</span>
+    ),
+  },
+  {
+    key: "stock",
+    header: "Stock",
+    align: "right",
+    render: (p) => (
+      <span className="text-foreground">{fmtNumber(p.stock)}</span>
+    ),
+  },
+  {
+    key: "statut",
+    header: "Statut",
+    align: "right",
+    render: (p) => <StatusBadge status={p.statut} />,
+  },
 ];
 
 function ProductsPage() {
@@ -50,14 +74,42 @@ function ProductsPage() {
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total produits" value="1 894" sub="en catalogue" icon={<Package className="h-5 w-5" />} />
-        <StatCard label="Actifs" value="1 712" sub="disponibles" icon={<Package className="h-5 w-5" />} />
-        <StatCard label="Stock faible" value="9" sub="à réapprovisionner" icon={<Package className="h-5 w-5" />} />
-        <StatCard label="Ruptures" value="3" sub="indisponibles" icon={<Package className="h-5 w-5" />} />
+        <StatCard
+          label="Total produits"
+          value="1 894"
+          sub="en catalogue"
+          icon={<Package className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Actifs"
+          value="1 712"
+          sub="disponibles"
+          icon={<Package className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Stock faible"
+          value="9"
+          sub="à réapprovisionner"
+          icon={<Package className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Ruptures"
+          value="3"
+          sub="indisponibles"
+          icon={<Package className="h-5 w-5" />}
+        />
       </div>
-      <SectionCard title="Catalogue produits" description="1 894 produits" action={undefined}>
+      <SectionCard
+        title="Catalogue produits"
+        description="1 894 produits"
+        action={undefined}
+      >
         <div className="mb-4">
-          <Toolbar placeholder="Rechercher un produit…" addLabel="Ajouter un produit" onAdd={() => toast.info("Formulaire d'ajout de produit")} />
+          <Toolbar
+            placeholder="Rechercher un produit…"
+            addLabel="Ajouter un produit"
+            onAdd={() => toast.info("Formulaire d'ajout de produit")}
+          />
         </div>
         <DataTable columns={cols} rows={products} rowKey={(p) => p.ref} />
         <Pagination count={1894} />

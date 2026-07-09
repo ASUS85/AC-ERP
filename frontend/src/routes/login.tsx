@@ -1,12 +1,33 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BarChart3, Eye, EyeOff, KeyRound, Lock, Mail, MailCheck, ShieldCheck, Zap, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Lock,
+  Mail,
+  MailCheck,
+  ShieldCheck,
+  Zap,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { forgotPassword, login, resendMfa, verifyMfa } from "@/lib/api/auth.service";
+import {
+  forgotPassword,
+  login,
+  resendMfa,
+  verifyMfa,
+} from "@/lib/api/auth.service";
 import logo from "@/assets/erp-logo.png";
 import illustration from "@/assets/login-illustration.jpg";
 
@@ -23,7 +44,9 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const [show, setShow] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [step, setStep] = useState<"credentials" | "method" | "code" | "resetSent">("credentials");
+  const [step, setStep] = useState<
+    "credentials" | "method" | "code" | "resetSent"
+  >("credentials");
   const [mfaToken, setMfaToken] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [code, setCode] = useState("");
@@ -39,7 +62,10 @@ function LoginPage() {
 
   useEffect(() => {
     if (resendCountdown <= 0) return;
-    const timer = window.setTimeout(() => setResendCountdown((value) => Math.max(0, value - 1)), 1000);
+    const timer = window.setTimeout(
+      () => setResendCountdown((value) => Math.max(0, value - 1)),
+      1000,
+    );
     return () => window.clearTimeout(timer);
   }, [resendCountdown]);
 
@@ -98,14 +124,18 @@ function LoginPage() {
   };
 
   const completeLogin = () => {
-    toast.success("Connexion réussie", { description: "Bienvenue sur AC ERP." });
+    toast.success("Connexion réussie", {
+      description: "Bienvenue sur AC ERP.",
+    });
     navigate({ to: "/" });
   };
 
   const submitMfa = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (code.length !== 6) {
-      toast.error("Code incomplet", { description: "Saisissez les 6 chiffres reçus par email." });
+      toast.error("Code incomplet", {
+        description: "Saisissez les 6 chiffres reçus par email.",
+      });
       return;
     }
     setIsSubmitting(true);
@@ -113,7 +143,9 @@ function LoginPage() {
       await verifyMfa(mfaToken, code);
       completeLogin();
     } catch (error: any) {
-      toast.error("Code refusé", { description: error.message || "Le code est invalide ou expiré." });
+      toast.error("Code refusé", {
+        description: error.message || "Le code est invalide ou expiré.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -126,11 +158,15 @@ function LoginPage() {
       const result = await resendMfa(mfaToken);
       setResendCountdown(result.resendAfter || 30);
       setCode("");
-      toast.success("Code renvoyé", { description: `Un nouveau code a été envoyé à ${maskedEmail}.` });
+      toast.success("Code renvoyé", {
+        description: `Un nouveau code a été envoyé à ${maskedEmail}.`,
+      });
     } catch (error: any) {
       const retryAfter = error.details?.retryAfter;
       if (retryAfter) setResendCountdown(retryAfter);
-      toast.error("Renvoi impossible", { description: error.message || "Veuillez réessayer plus tard." });
+      toast.error("Renvoi impossible", {
+        description: error.message || "Veuillez réessayer plus tard.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +183,8 @@ function LoginPage() {
       await forgotPassword(email.trim());
       setStep("resetSent");
       toast.success("Email envoyé", {
-        description: "Consultez votre boîte mail pour modifier votre mot de passe.",
+        description:
+          "Consultez votre boîte mail pour modifier votre mot de passe.",
       });
     } catch (error: any) {
       toast.error("Envoi impossible", {
@@ -176,8 +213,16 @@ function LoginPage() {
       {/* Brand / illustration panel */}
       <div className="relative hidden overflow-hidden bg-gradient-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="relative z-10 flex items-center gap-3">
-          <img src={logo} alt="Logo AC ERP" width={44} height={44} className="h-11 w-11 rounded-xl bg-white/95 p-1.5" />
-          <span className="font-display text-xl font-bold text-white">AC ERP</span>
+          <img
+            src={logo}
+            alt="Logo AC ERP"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-xl bg-white/95 p-1.5"
+          />
+          <span className="font-display text-xl font-bold text-white">
+            AC ERP
+          </span>
         </div>
         <img
           src={illustration}
@@ -191,11 +236,15 @@ function LoginPage() {
             Pilotez votre entreprise avec intelligence.
           </h2>
           <p className="mt-3 text-white/80">
-            Ventes, achats, stocks et finances réunis dans une plateforme moderne enrichie par l'IA.
+            Ventes, achats, stocks et finances réunis dans une plateforme
+            moderne enrichie par l'IA.
           </p>
           <ul className="mt-8 space-y-3 text-sm text-white/90">
             {[
-              { icon: BarChart3, t: "Tableaux de bord décisionnels en temps réel" },
+              {
+                icon: BarChart3,
+                t: "Tableaux de bord décisionnels en temps réel",
+              },
               { icon: Zap, t: "Prévisions de ventes et de stock par IA" },
               { icon: ShieldCheck, t: "Gestion fine des rôles et permissions" },
             ].map((f) => (
@@ -208,24 +257,42 @@ function LoginPage() {
             ))}
           </ul>
         </div>
-        <p className="relative z-10 text-xs text-white/60">© 2026 AC ERP — Tous droits réservés.</p>
+        <p className="relative z-10 text-xs text-white/60">
+          © 2026 AC ERP — Tous droits réservés.
+        </p>
       </div>
 
       {/* Form panel */}
       <div className="lg:flex lg:flex-col lg:justify-start lg:p-12 items-center justify-center bg-background px-6 py-12">
         <div className="flex flex-col items-center gap-3">
-          <img src={logo} alt="Logo AC ERP" width={80} height={80} className="h-80 w-80" />
+          <img
+            src={logo}
+            alt="Logo AC ERP"
+            width={80}
+            height={80}
+            className="h-80 w-80"
+          />
         </div>
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <img src={logo} alt="Logo AC ERP" width={10} height={10} className="h-10 w-10" />
+            <img
+              src={logo}
+              alt="Logo AC ERP"
+              width={10}
+              height={10}
+              className="h-10 w-10"
+            />
             <span className="font-display text-lg font-bold">AC ERP</span>
           </div>
 
           {step === "credentials" && (
             <>
-              <h1 className="text-2xl font-bold text-foreground text-center">Bienvenue</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground text-center">Accédez à votre espace de gestion.</p>
+              <h1 className="text-2xl font-bold text-foreground text-center">
+                Bienvenue
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground text-center">
+                Accédez à votre espace de gestion.
+              </p>
 
               <form onSubmit={submit} className="mt-8 space-y-4">
                 <div className="space-y-1.5">
@@ -250,15 +317,16 @@ function LoginPage() {
                           }));
                         }
                       }}
-                      className={`h-11 pl-9 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""
-                        }`}
+                      className={`h-11 pl-9 ${
+                        errors.email
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
                   </div>
 
                   {errors.email && (
-                    <p className="text-sm text-red-500">
-                      {errors.email}
-                    </p>
+                    <p className="text-sm text-red-500">{errors.email}</p>
                   )}
                 </div>
                 <div className="space-y-1.5">
@@ -281,8 +349,11 @@ function LoginPage() {
                           }));
                         }
                       }}
-                      className={`h-11 px-9 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""
-                        }`}
+                      className={`h-11 px-9 ${
+                        errors.password
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }`}
                     />
                     <button
                       type="button"
@@ -290,7 +361,11 @@ function LoginPage() {
                       className="absolute right-3 top-[22px] -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       aria-label={show ? "Masquer" : "Afficher"}
                     >
-                      {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {show ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
 
@@ -333,17 +408,31 @@ function LoginPage() {
 
           {step === "resetSent" && (
             <div className="mt-2">
-              <button type="button" onClick={backToCredentials} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={backToCredentials}
+                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="h-4 w-4" /> Retour à la connexion
               </button>
               <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <MailCheck className="h-6 w-6" />
               </span>
-              <h1 className="text-2xl font-bold text-foreground">Vérifiez votre email</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                Vérifiez votre email
+              </h1>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Si un compte AC ERP correspond à <span className="font-medium text-foreground">{email}</span>, un message vient d'être envoyé avec un lien pour modifier votre mot de passe.
+                Si un compte AC ERP correspond à{" "}
+                <span className="font-medium text-foreground">{email}</span>, un
+                message vient d'être envoyé avec un lien pour modifier votre mot
+                de passe.
               </p>
-              <Button type="button" variant="outline" className="mt-8 h-11 w-full" onClick={backToCredentials}>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-8 h-11 w-full"
+                onClick={backToCredentials}
+              >
                 Revenir au formulaire
               </Button>
             </div>
@@ -351,11 +440,19 @@ function LoginPage() {
 
           {step === "method" && (
             <div className="mt-2">
-              <button type="button" onClick={resetMfa} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={resetMfa}
+                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="h-4 w-4" /> Modifier les identifiants
               </button>
-              <h1 className="text-2xl font-bold text-foreground">Double authentification</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">Choisissez comment recevoir votre code de vérification.</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                Double authentification
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Choisissez comment recevoir votre code de vérification.
+              </p>
 
               <button
                 type="button"
@@ -366,12 +463,19 @@ function LoginPage() {
                   <MailCheck className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium text-foreground">Code par email</span>
-                  <span className="block truncate text-sm text-muted-foreground">{maskedEmail}</span>
+                  <span className="block font-medium text-foreground">
+                    Code par email
+                  </span>
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {maskedEmail}
+                  </span>
                 </span>
               </button>
 
-              <Button className="mt-5 h-11 w-full" onClick={() => setStep("code")}>
+              <Button
+                className="mt-5 h-11 w-full"
+                onClick={() => setStep("code")}
+              >
                 Continuer
               </Button>
             </div>
@@ -379,20 +483,38 @@ function LoginPage() {
 
           {step === "code" && (
             <div className="mt-2">
-              <button type="button" onClick={() => setStep("method")} className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={() => setStep("method")}
+                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
                 <ArrowLeft className="h-4 w-4" /> Choisir une autre méthode
               </button>
               <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <KeyRound className="h-6 w-6" />
               </span>
-              <h1 className="text-2xl font-bold text-foreground">Saisir le code</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">Entrez les 6 chiffres envoyés à {maskedEmail}. Le code expire après 10 minutes.</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                Saisir le code
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Entrez les 6 chiffres envoyés à {maskedEmail}. Le code expire
+                après 10 minutes.
+              </p>
 
               <form onSubmit={submitMfa} className="mt-8 space-y-5">
-                <InputOTP maxLength={6} value={code} onChange={setCode} containerClassName="justify-between">
+                <InputOTP
+                  maxLength={6}
+                  value={code}
+                  onChange={setCode}
+                  containerClassName="justify-between"
+                >
                   <InputOTPGroup className="gap-2">
                     {Array.from({ length: 6 }).map((_, index) => (
-                      <InputOTPSlot key={index} index={index} className="h-12 w-11 rounded-lg border text-lg" />
+                      <InputOTPSlot
+                        key={index}
+                        index={index}
+                        className="h-12 w-11 rounded-lg border text-lg"
+                      />
                     ))}
                   </InputOTPGroup>
                 </InputOTP>
@@ -420,7 +542,9 @@ function LoginPage() {
                   disabled={isSubmitting || resendCountdown > 0}
                   className="font-medium text-primary disabled:text-muted-foreground"
                 >
-                  {resendCountdown > 0 ? `Renvoyer le code dans ${resendCountdown}s` : "Renvoyer le code"}
+                  {resendCountdown > 0
+                    ? `Renvoyer le code dans ${resendCountdown}s`
+                    : "Renvoyer le code"}
                 </button>
               </div>
             </div>

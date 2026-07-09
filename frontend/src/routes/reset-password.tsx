@@ -13,7 +13,10 @@ export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
       { title: "Réinitialiser le mot de passe — AC ERP" },
-      { name: "description", content: "Choisissez un nouveau mot de passe pour votre compte AC ERP." },
+      {
+        name: "description",
+        content: "Choisissez un nouveau mot de passe pour votre compte AC ERP.",
+      },
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
@@ -49,7 +52,8 @@ function ResetPasswordPage() {
       newErrors.password = "Champ requis";
       hasError = true;
     } else if (password.length < 8) {
-      newErrors.password = "Le mot de passe doit contenir au moins 8 caractères";
+      newErrors.password =
+        "Le mot de passe doit contenir au moins 8 caractères";
       hasError = true;
     }
 
@@ -65,7 +69,9 @@ function ResetPasswordPage() {
     if (hasError) return;
 
     if (!token) {
-      toast.error("Lien invalide", { description: "Demandez un nouveau lien de réinitialisation." });
+      toast.error("Lien invalide", {
+        description: "Demandez un nouveau lien de réinitialisation.",
+      });
       return;
     }
 
@@ -74,7 +80,8 @@ function ResetPasswordPage() {
       await resetPassword(token, password);
       setDone(true);
       toast.success("Mot de passe modifié", {
-        description: "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+        description:
+          "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
       });
     } catch (error: any) {
       toast.error("Réinitialisation impossible", {
@@ -89,8 +96,16 @@ function ResetPasswordPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden overflow-hidden bg-gradient-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="relative z-10 flex items-center gap-3">
-          <img src={logo} alt="Logo AC ERP" width={44} height={44} className="h-11 w-11 rounded-xl bg-white/95 p-1.5" />
-          <span className="font-display text-xl font-bold text-white">AC ERP</span>
+          <img
+            src={logo}
+            alt="Logo AC ERP"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-xl bg-white/95 p-1.5"
+          />
+          <span className="font-display text-xl font-bold text-white">
+            AC ERP
+          </span>
         </div>
         <img
           src={illustration}
@@ -100,19 +115,35 @@ function ResetPasswordPage() {
           className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-luminosity"
         />
         <div className="relative z-10 max-w-md">
-          <h2 className="font-display text-3xl font-bold leading-tight text-white">Sécurisez votre accès AC ERP.</h2>
-          <p className="mt-3 text-white/80">Choisissez un nouveau mot de passe robuste pour protéger vos données de gestion.</p>
+          <h2 className="font-display text-3xl font-bold leading-tight text-white">
+            Sécurisez votre accès AC ERP.
+          </h2>
+          <p className="mt-3 text-white/80">
+            Choisissez un nouveau mot de passe robuste pour protéger vos données
+            de gestion.
+          </p>
         </div>
-        <p className="relative z-10 text-xs text-white/60">© 2026 AC ERP — Tous droits réservés.</p>
+        <p className="relative z-10 text-xs text-white/60">
+          © 2026 AC ERP — Tous droits réservés.
+        </p>
       </div>
 
       <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 py-12 lg:p-12">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex flex-col items-center gap-3">
-            <img src={logo} alt="Logo AC ERP" width={96} height={96} className="h-24 w-24" />
+            <img
+              src={logo}
+              alt="Logo AC ERP"
+              width={96}
+              height={96}
+              className="h-24 w-24"
+            />
           </div>
 
-          <Link to="/login" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/login"
+            className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" /> Retour à la connexion
           </Link>
 
@@ -121,22 +152,33 @@ function ResetPasswordPage() {
               <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </span>
-              <h1 className="text-2xl font-bold text-foreground">Mot de passe modifié</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                Mot de passe modifié
+              </h1>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Votre mot de passe a été réinitialisé avec succès. Connectez-vous avec vos nouveaux identifiants.
+                Votre mot de passe a été réinitialisé avec succès.
+                Connectez-vous avec vos nouveaux identifiants.
               </p>
-              <Button className="mt-8 h-11 w-full" onClick={() => navigate({ to: "/login" })}>
+              <Button
+                className="mt-8 h-11 w-full"
+                onClick={() => navigate({ to: "/login" })}
+              >
                 Se connecter
               </Button>
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-foreground">Nouveau mot de passe</h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">Saisissez et confirmez votre nouveau mot de passe.</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                Nouveau mot de passe
+              </h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Saisissez et confirmez votre nouveau mot de passe.
+              </p>
 
               {!token && (
                 <p className="mt-5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
-                  Lien de réinitialisation invalide. Retournez à la connexion pour demander un nouveau lien.
+                  Lien de réinitialisation invalide. Retournez à la connexion
+                  pour demander un nouveau lien.
                 </p>
               )}
 
@@ -150,7 +192,8 @@ function ResetPasswordPage() {
                   onToggleShow={() => setShowPassword((value) => !value)}
                   onChange={(value) => {
                     setPassword(value);
-                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                    if (errors.password)
+                      setErrors((prev) => ({ ...prev, password: "" }));
                   }}
                 />
 
@@ -163,12 +206,19 @@ function ResetPasswordPage() {
                   onToggleShow={() => setShowConfirmPassword((value) => !value)}
                   onChange={(value) => {
                     setConfirmPassword(value);
-                    if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                    if (errors.confirmPassword)
+                      setErrors((prev) => ({ ...prev, confirmPassword: "" }));
                   }}
                 />
 
-                <Button type="submit" className="h-11 w-full text-base" disabled={isSubmitting || !token}>
-                  {isSubmitting ? "Modification..." : "Modifier le mot de passe"}
+                <Button
+                  type="submit"
+                  className="h-11 w-full text-base"
+                  disabled={isSubmitting || !token}
+                >
+                  {isSubmitting
+                    ? "Modification..."
+                    : "Modifier le mot de passe"}
                 </Button>
               </form>
             </>
@@ -189,7 +239,15 @@ type PasswordFieldProps = {
   onChange: (value: string) => void;
 };
 
-function PasswordField({ id, label, value, show, error, onToggleShow, onChange }: PasswordFieldProps) {
+function PasswordField({
+  id,
+  label,
+  value,
+  show,
+  error,
+  onToggleShow,
+  onChange,
+}: PasswordFieldProps) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>

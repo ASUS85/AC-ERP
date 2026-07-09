@@ -1,8 +1,15 @@
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SidebarNav } from "@/components/erp/Sidebar";
 import { Topbar } from "@/components/erp/Topbar";
-import { GlobalLoaderSlot, useGlobalLoader } from "@/components/erp/GlobalLoader";
+import {
+  GlobalLoaderSlot,
+  useGlobalLoader,
+} from "@/components/erp/GlobalLoader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/_app")({
@@ -11,7 +18,9 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
   const { showLoader } = useGlobalLoader();
 
   useEffect(() => {

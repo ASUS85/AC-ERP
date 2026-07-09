@@ -49,7 +49,9 @@ export function useAuth() {
   return useMemo(
     () => ({
       user,
-      isAuthenticated: Boolean(user && localStorage.getItem("erp_access_token")),
+      isAuthenticated: Boolean(
+        user && localStorage.getItem("erp_access_token"),
+      ),
       isLoading,
       login,
       logout,
@@ -58,4 +60,3 @@ export function useAuth() {
     [user, isLoading, login, logout, hasPermission],
   );
 }
-

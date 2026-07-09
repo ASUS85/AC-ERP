@@ -1,9 +1,20 @@
 import type { ReactNode } from "react";
-import { ArrowDownRight, ArrowUpRight, Filter, Plus, Search } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Filter,
+  Plus,
+  Search,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export function StatCard({
@@ -24,15 +35,30 @@ export function StatCard({
   return (
     <Card className="flex flex-col gap-3 p-5 shadow-card transition-shadow hover:shadow-pop">
       <div className="flex items-start justify-between">
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {label}
+        </span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </span>
       </div>
       <div>
-        <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
+        <p className="text-2xl font-bold tracking-tight text-foreground">
+          {value}
+        </p>
         <div className="mt-1 flex items-center gap-1.5 text-xs">
           {delta && (
-            <span className={cn("inline-flex items-center gap-0.5 font-semibold", up ? "text-success" : "text-destructive")}>
-              {up ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+            <span
+              className={cn(
+                "inline-flex items-center gap-0.5 font-semibold",
+                up ? "text-success" : "text-destructive",
+              )}
+            >
+              {up ? (
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5" />
+              )}
               {delta}
             </span>
           )}
@@ -61,7 +87,11 @@ export function SectionCard({
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
-          {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
+          {description && (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {description}
+            </p>
+          )}
         </div>
         {action}
       </div>
@@ -105,12 +135,17 @@ export function Toolbar({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
-                <Filter className="h-4 w-4" /> {filterOptions.find((option) => option.value === selectedFilter)?.label || "Filtre"}
+                <Filter className="h-4 w-4" />{" "}
+                {filterOptions.find((option) => option.value === selectedFilter)
+                  ?.label || "Filtre"}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[180px]">
               {filterOptions.map((option) => (
-                <DropdownMenuItem key={option.value} onClick={() => onFilterChange(option.value)}>
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => onFilterChange(option.value)}
+                >
                   {option.label}
                 </DropdownMenuItem>
               ))}
@@ -148,11 +183,16 @@ export function Pagination({
   return (
     <div className="flex flex-col items-center justify-between gap-3 pt-4 sm:flex-row">
       <p className="text-xs text-muted-foreground">
-        Page <span className="font-medium text-foreground">{currentPage}</span> sur{" "}
-        <span className="font-medium text-foreground">{total}</span>
+        Page <span className="font-medium text-foreground">{currentPage}</span>{" "}
+        sur <span className="font-medium text-foreground">{total}</span>
       </p>
       <div className="flex items-center gap-1">
-        <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => onPageChange?.(currentPage - 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange?.(currentPage - 1)}
+        >
           Précédent
         </Button>
         {pages.map((page) => (
@@ -166,7 +206,12 @@ export function Pagination({
             {page}
           </Button>
         ))}
-        <Button variant="outline" size="sm" disabled={currentPage >= total} onClick={() => onPageChange?.(currentPage + 1)}>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage >= total}
+          onClick={() => onPageChange?.(currentPage + 1)}
+        >
           Suivant
         </Button>
       </div>

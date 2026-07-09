@@ -21,19 +21,30 @@ const suggestions = [
   "Quels clients ont des factures impayées ?",
 ];
 
-const history = ["Analyse des ventes Q2", "Prévision de trésorerie", "Top clients 2026", "Optimisation des stocks"];
+const history = [
+  "Analyse des ventes Q2",
+  "Prévision de trésorerie",
+  "Top clients 2026",
+  "Optimisation des stocks",
+];
 
 function aiReply(q: string): string {
   const t = q.toLowerCase();
-  if (t.includes("chiffre") || t.includes("ca")) return "Le chiffre d'affaires de juin 2026 s'élève à **284 750 f**, en hausse de **+12,4 %** par rapport au mois précédent. Les ventes d'informatique représentent 58 % du total.";
-  if (t.includes("rupture") || t.includes("stock")) return "4 produits sont à risque : « Routeur Wi-Fi 6 » (rupture immédiate), « Écran 27\" 4K » (~8 jours), « Clavier mécanique RGB » (~14 jours). Je recommande un réapprovisionnement prioritaire.";
-  if (t.includes("impayée") || t.includes("facture")) return "5 factures sont impayées pour un total de **18 420 f**. La plus en retard est FAC-2026-146 (InfoCorp, 980 f), échue depuis le 1er juin.";
+  if (t.includes("chiffre") || t.includes("ca"))
+    return "Le chiffre d'affaires de juin 2026 s'élève à **284 750 f**, en hausse de **+12,4 %** par rapport au mois précédent. Les ventes d'informatique représentent 58 % du total.";
+  if (t.includes("rupture") || t.includes("stock"))
+    return '4 produits sont à risque : « Routeur Wi-Fi 6 » (rupture immédiate), « Écran 27" 4K » (~8 jours), « Clavier mécanique RGB » (~14 jours). Je recommande un réapprovisionnement prioritaire.';
+  if (t.includes("impayée") || t.includes("facture"))
+    return "5 factures sont impayées pour un total de **18 420 f**. La plus en retard est FAC-2026-146 (InfoCorp, 980 f), échue depuis le 1er juin.";
   return "D'après les données de l'ERP, voici une synthèse : les performances commerciales sont en croissance ce trimestre (+9 %), avec une bonne maîtrise des achats. Souhaitez-vous un rapport détaillé ?";
 }
 
 function AssistantPage() {
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "ai", text: "Bonjour Sophie 👋 Je suis l'assistant AC ERP. Posez-moi une question sur vos ventes, stocks, clients ou finances." },
+    {
+      role: "ai",
+      text: "Bonjour Sophie 👋 Je suis l'assistant AC ERP. Posez-moi une question sur vos ventes, stocks, clients ou finances.",
+    },
   ]);
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -46,19 +57,31 @@ function AssistantPage() {
     if (!text.trim()) return;
     setMessages((m) => [...m, { role: "user", text }]);
     setInput("");
-    setTimeout(() => setMessages((m) => [...m, { role: "ai", text: aiReply(text) }]), 500);
+    setTimeout(
+      () => setMessages((m) => [...m, { role: "ai", text: aiReply(text) }]),
+      500,
+    );
   };
 
   return (
     <>
-      <PageHeader title="Assistant conversationnel ERP" description="Interrogez vos données en langage naturel" breadcrumb={["Intelligence", "Assistant ERP"]} />
+      <PageHeader
+        title="Assistant conversationnel ERP"
+        description="Interrogez vos données en langage naturel"
+        breadcrumb={["Intelligence", "Assistant ERP"]}
+      />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <aside className="hidden lg:block">
           <div className="rounded-xl border border-border bg-card p-3 shadow-card">
-            <Button className="w-full gap-1.5" onClick={() => setMessages(messages.slice(0, 1))}>
+            <Button
+              className="w-full gap-1.5"
+              onClick={() => setMessages(messages.slice(0, 1))}
+            >
               <Plus className="h-4 w-4" /> Nouvelle conversation
             </Button>
-            <p className="mt-4 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Historique</p>
+            <p className="mt-4 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Historique
+            </p>
             <ul className="mt-2 space-y-0.5">
               {history.map((h) => (
                 <li key={h}>
@@ -76,12 +99,40 @@ function AssistantPage() {
           <div className="flex h-[68vh] flex-col rounded-xl border border-border bg-card shadow-card">
             <div className="flex-1 space-y-5 overflow-y-auto p-5">
               {messages.map((m, i) => (
-                <div key={i} className={cn("flex gap-3", m.role === "user" && "flex-row-reverse")}>
-                  <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full", m.role === "ai" ? "bg-primary/10 text-primary" : "bg-gradient-primary text-white")}>
-                    {m.role === "ai" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                <div
+                  key={i}
+                  className={cn(
+                    "flex gap-3",
+                    m.role === "user" && "flex-row-reverse",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                      m.role === "ai"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-gradient-primary text-white",
+                    )}
+                  >
+                    {m.role === "ai" ? (
+                      <Bot className="h-4 w-4" />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </span>
-                  <div className={cn("max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed", m.role === "ai" ? "bg-secondary text-foreground" : "bg-primary text-primary-foreground")}>
-                    {m.text.split("**").map((part, j) => (j % 2 === 1 ? <strong key={j}>{part}</strong> : part))}
+                  <div
+                    className={cn(
+                      "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      m.role === "ai"
+                        ? "bg-secondary text-foreground"
+                        : "bg-primary text-primary-foreground",
+                    )}
+                  >
+                    {m.text
+                      .split("**")
+                      .map((part, j) =>
+                        j % 2 === 1 ? <strong key={j}>{part}</strong> : part,
+                      )}
                   </div>
                 </div>
               ))}
@@ -91,7 +142,11 @@ function AssistantPage() {
             {messages.length <= 1 && (
               <div className="flex flex-wrap gap-2 px-5 pb-3">
                 {suggestions.map((s) => (
-                  <button key={s} onClick={() => send(s)} className="rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5">
+                  <button
+                    key={s}
+                    onClick={() => send(s)}
+                    className="rounded-full border border-border bg-secondary/50 px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                  >
                     {s}
                   </button>
                 ))}
@@ -105,9 +160,25 @@ function AssistantPage() {
               }}
               className="flex items-center gap-2 border-t border-border p-3"
             >
-              <img src={logo} alt="" width={28} height={28} className="h-7 w-7 shrink-0" />
-              <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Posez votre question…" className="h-10 flex-1" />
-              <Button type="submit" size="icon" className="h-10 w-10 shrink-0" disabled={!input.trim()}>
+              <img
+                src={logo}
+                alt=""
+                width={28}
+                height={28}
+                className="h-7 w-7 shrink-0"
+              />
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Posez votre question…"
+                className="h-10 flex-1"
+              />
+              <Button
+                type="submit"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                disabled={!input.trim()}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </form>

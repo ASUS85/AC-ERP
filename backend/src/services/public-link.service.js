@@ -23,6 +23,20 @@ export function verifyBcfSupplierToken(token, expectedAction) {
   return payload;
 }
 
+export function signDevisClientToken(idDevis) {
+  assertSecret();
+  return jwt.sign({ scope: "devis_client", idDevis, action: "download" }, PUBLIC_LINK_SECRET, { expiresIn: PUBLIC_LINK_EXPIRES });
+}
+
+export function verifyDevisClientToken(token) {
+  assertSecret();
+  const payload = jwt.verify(token, PUBLIC_LINK_SECRET);
+  if (payload.scope !== "devis_client" || payload.action !== "download" || !payload.idDevis) {
+    throw new Error("Invalid public link token");
+  }
+  return payload;
+}
+
 export function publicApiBaseUrl() {
   const explicitUrl = process.env.PUBLIC_API_URL || process.env.BACKEND_PUBLIC_URL || process.env.API_PUBLIC_URL;
   if (explicitUrl) return explicitUrl.replace(/\/$/, "");

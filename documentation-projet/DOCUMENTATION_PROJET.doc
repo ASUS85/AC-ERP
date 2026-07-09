@@ -1,0 +1,134 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>Documentation générale du projet AC ERP</title>
+  <style>
+    body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.45; color: #1f2933; }
+    h1 { font-size: 22pt; color: #17324d; }
+    h2 { font-size: 16pt; color: #1f4e79; margin-top: 22px; }
+    h3 { font-size: 13pt; color: #2f5f8f; margin-top: 16px; }
+    ul { margin-top: 4px; }
+    li { margin-bottom: 4px; }
+    .muted { color: #52616f; }
+  </style>
+</head>
+<body>
+  <h1>Documentation générale du projet AC ERP</h1>
+  <p class="muted">Synthèse technique et fonctionnelle du projet.</p>
+
+  <h2>Présentation</h2>
+  <p>AC ERP est une application de gestion d'entreprise orientée gestion commerciale, stocks, achats, ventes, facturation, paiements, reporting et aide à la décision. Le projet est organisé en deux grandes parties : un backend pour l'API, la logique métier et la base de données, et un frontend pour l'interface utilisateur.</p>
+  <p>L'objectif est de centraliser les opérations courantes d'une entreprise : catalogue produits, clients, fournisseurs, stocks, achats, ventes, factures, paiements, utilisateurs, rôles, notifications, tableaux de bord et fonctionnalités d'intelligence artificielle.</p>
+
+  <h2>Technologies utilisées</h2>
+  <h3>Backend</h3>
+  <ul>
+    <li>Node.js : environnement d'exécution JavaScript côté serveur.</li>
+    <li>Express 5 : framework utilisé pour exposer les routes HTTP de l'API.</li>
+    <li>Prisma ORM : accès aux données et génération du client de base de données.</li>
+    <li>MySQL : base de données relationnelle.</li>
+    <li>JWT : authentification par jetons d'accès et jetons de rafraîchissement.</li>
+    <li>RBAC : rôles et permissions pour contrôler les accès.</li>
+    <li>Zod : validation des données entrantes.</li>
+    <li>Socket.IO : notifications et événements temps réel.</li>
+    <li>Swagger / OpenAPI : documentation technique de l'API.</li>
+    <li>Winston et Morgan : journalisation applicative et logs HTTP.</li>
+    <li>Helmet, CORS et rate limiting : sécurité HTTP et limitation des requêtes.</li>
+    <li>Nodemailer : envoi d'e-mails.</li>
+    <li>Puppeteer : génération de documents PDF.</li>
+    <li>ExcelJS : exports Excel.</li>
+    <li>Anthropic SDK : assistant IA lorsque la clé API est configurée.</li>
+  </ul>
+
+  <h3>Frontend</h3>
+  <ul>
+    <li>React 19 : construction de l'interface utilisateur.</li>
+    <li>TypeScript : typage du code frontend.</li>
+    <li>TanStack Start et TanStack Router : architecture web moderne et routage.</li>
+    <li>TanStack React Query : gestion des requêtes et du cache.</li>
+    <li>Vite : serveur de développement et outil de build.</li>
+    <li>Tailwind CSS 4 : stylisation utilitaire et responsive.</li>
+    <li>Radix UI : composants accessibles et robustes.</li>
+    <li>Lucide React : icônes.</li>
+    <li>Recharts : graphiques.</li>
+    <li>Axios : communication HTTP avec l'API.</li>
+    <li>Socket.IO Client : notifications temps réel.</li>
+    <li>React Hook Form et Zod : formulaires et validation.</li>
+    <li>Sonner : notifications visuelles.</li>
+  </ul>
+
+  <h2>Langages utilisés</h2>
+  <ul>
+    <li>JavaScript : backend Node.js/Express.</li>
+    <li>TypeScript : frontend React.</li>
+    <li>SQL : scripts et gestion de la base via Prisma.</li>
+    <li>CSS : styles globaux et Tailwind CSS.</li>
+    <li>HTML : rendu web et documents.</li>
+  </ul>
+
+  <h2>Architecture générale</h2>
+  <p>Le backend expose une API versionnée sous <code>/api/v1</code>. Il est organisé par modules métier : authentification, utilisateurs, rôles, catégories, produits, clients, fournisseurs, stocks, achats, ventes, factures, paiements, notifications, tableau de bord, rapports, intelligence artificielle et paramètres.</p>
+  <p>Chaque module backend suit une approche proche de routes, controller, service et repository. Cette organisation isole la logique de chaque domaine et rend le projet plus facile à maintenir.</p>
+  <p>Le frontend est organisé autour de routes applicatives correspondant aux principaux écrans de l'ERP : tableau de bord, produits, catégories, clients, fournisseurs, stocks, achats, ventes, factures, paiements, notifications, utilisateurs, rôles, paramètres, rapports, statistiques et assistant IA.</p>
+
+  <h2>Approche fonctionnelle</h2>
+  <p>AC ERP adopte une approche modulaire. Les ventes peuvent entraîner la génération de factures, des mouvements de stock et des notifications. Les achats sont liés aux fournisseurs, aux bons de commande et aux réceptions. Les stocks sont liés au catalogue produits, aux mouvements et aux alertes. Les rôles et permissions contrôlent les accès aux fonctionnalités sensibles.</p>
+
+  <h2>Sécurité et contrôle d'accès</h2>
+  <ul>
+    <li>Authentification JWT avec access token et refresh token.</li>
+    <li>Middlewares d'authentification pour protéger les routes privées.</li>
+    <li>Gestion des rôles et permissions.</li>
+    <li>Protection HTTP avec Helmet.</li>
+    <li>Configuration CORS.</li>
+    <li>Rate limiting.</li>
+    <li>Journalisation des activités importantes.</li>
+    <li>Gestion des sessions, changement et réinitialisation de mot de passe.</li>
+  </ul>
+  <p>Le modèle RBAC est cohérent pour un ERP, car les utilisateurs n'ont pas tous les mêmes responsabilités.</p>
+
+  <h2>Base de données</h2>
+  <p>Le projet utilise MySQL avec Prisma. Ce choix permet de travailler avec une base relationnelle adaptée aux données métier structurées, un schéma centralisé, un client Prisma généré, des migrations et des scripts de seed.</p>
+  <p>Le modèle de données couvre les besoins classiques d'un ERP : utilisateurs, rôles, permissions, produits, catégories, clients, fournisseurs, stocks, achats, ventes, factures, paiements, notifications, rapports et éléments liés à l'IA.</p>
+
+  <h2>Documentation API</h2>
+  <p>Le backend intègre Swagger / OpenAPI pour consulter les endpoints, les paramètres, les réponses attendues et les règles d'authentification. Cela facilite les tests, la collaboration entre frontend et backend, et l'intégration future avec d'autres applications.</p>
+
+  <h2>Temps réel et événements</h2>
+  <p>Socket.IO et le système d'événements backend permettent d'envoyer des notifications aux utilisateurs lorsqu'un événement métier se produit : vente, paiement, alerte de stock ou notification administrative.</p>
+
+  <h2>Intelligence artificielle</h2>
+  <p>Le projet contient un module IA avec prévisions, assistant conversationnel et rapports IA. L'intégration Anthropic est prévue lorsque la variable d'environnement correspondante est disponible. L'IA sert principalement d'aide à la décision.</p>
+
+  <h2>Génération de documents et rapports</h2>
+  <ul>
+    <li>PDF avec Puppeteer pour des documents comme les devis ou bons de commande.</li>
+    <li>Excel avec ExcelJS pour des exports et rapports.</li>
+    <li>Rapports de ventes, achats, stocks, balances clients et fournisseurs.</li>
+  </ul>
+
+  <h2>Interface utilisateur</h2>
+  <p>L'interface est pensée comme un tableau de bord de gestion avec navigation latérale, pages métier, tableaux de données, cartes d'indicateurs, formulaires, graphiques, notifications et vues d'administration.</p>
+
+  <h2>Possibilité de conversion en application mobile</h2>
+  <p>Le projet peut évoluer vers le mobile, car le frontend React est séparé de l'API backend.</p>
+  <h3>Application web responsive</h3>
+  <p>Cette option consiste à adapter l'interface aux téléphones et tablettes. Elle permet de garder une seule base de code, accessible depuis un navigateur mobile.</p>
+  <h3>Progressive Web App</h3>
+  <p>Une PWA permettrait d'installer l'application web sur un téléphone avec une icône et un affichage proche d'une application native.</p>
+  <h3>Wrapper mobile avec Capacitor</h3>
+  <p>Capacitor permettrait d'encapsuler le frontend React dans une application Android ou iOS, avec possibilité d'accéder à certaines fonctionnalités natives.</p>
+  <h3>Application mobile dédiée</h3>
+  <p>Une application séparée avec React Native ou Flutter offrirait une expérience native plus poussée, mais demanderait plus de développement et de maintenance.</p>
+  <p><strong>Recommandation :</strong> commencer par une interface responsive solide, évoluer vers une PWA, puis utiliser Capacitor si une publication mobile devient nécessaire.</p>
+
+  <h2>Choix techniques et justification</h2>
+  <p>Express est simple et adapté à une API REST modulaire. Prisma facilite la gestion d'une base relationnelle complexe. MySQL est approprié pour les données métier structurées. React et TypeScript apportent une interface riche et maintenable. TanStack structure la navigation et les échanges avec l'API. Tailwind CSS facilite une interface responsive. Socket.IO répond au besoin de notifications en temps réel. Swagger facilite la documentation. JWT et RBAC répondent aux besoins de sécurité.</p>
+
+  <h2>Conclusion</h2>
+  <p>AC ERP est un projet ERP web complet, structuré autour d'une API backend modulaire et d'une interface frontend moderne. Les choix techniques sont adaptés à une application de gestion : base relationnelle, API REST, sécurité par rôles, documentation OpenAPI, temps réel, rapports, génération de documents et modules d'aide à la décision.</p>
+  <p>Le projet peut évoluer vers une application mobile grâce à son frontend React et à son architecture séparée entre interface et API. La voie la plus progressive serait : responsive design, PWA, puis éventuellement Capacitor.</p>
+</body>
+</html>

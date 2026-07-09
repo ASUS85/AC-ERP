@@ -10,7 +10,9 @@ export type UserPayload = {
   motDePasseTemp?: string;
 };
 
-export async function getUsers(params?: Record<string, string | number | undefined>) {
+export async function getUsers(
+  params?: Record<string, string | number | undefined>,
+) {
   const response: any = await api.get("/utilisateurs", { params });
   return response;
 }

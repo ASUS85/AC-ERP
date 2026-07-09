@@ -3,6 +3,7 @@ import { authenticate } from "../../middlewares/auth.middleware.js";
 import { ventesController } from "./ventes.controller.js";
 
 const router = Router();
+router.get("/public/devis/telecharger", ventesController.telechargerDevisPublic);
 router.use(authenticate);
 router.get("/devis", ventesController.getDevis);
 router.post("/devis", ventesController.createDevis);
@@ -17,4 +18,3 @@ router.post("/commandes/:id/livraison", ventesController.creerLivraison);
 router.get("/commandes/:id/livraisons", ventesController.livraisons);
 
 export default router;
-
