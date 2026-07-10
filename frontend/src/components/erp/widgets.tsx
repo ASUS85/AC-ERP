@@ -171,22 +171,35 @@ export function Pagination({
   currentPage = 1,
   totalPages,
   onPageChange,
+  pageSize = 10,
 }: {
   count?: number;
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  pageSize?: number;
 }) {
-  const total = totalPages ?? Math.max(1, Math.ceil(count / 10));
-  const pages = Array.from({ length: total }, (_, index) => index + 1);
+  const total = totalPages ?? Math.max(1, Math.ceil(count / pageSize));
+  const pages = Array.from(
+    new Set(
+      [
+        1,
+        currentPage - 1,
+        currentPage,
+        currentPage + 1,
+        total,
+      ].filter((page) => page >= 1 && page <= total),
+    ),
+  );
 
   return (
     <div className="flex flex-col items-center justify-between gap-3 pt-4 sm:flex-row">
       <p className="text-xs text-muted-foreground">
         Page <span className="font-medium text-foreground">{currentPage}</span>{" "}
         sur <span className="font-medium text-foreground">{total}</span>
+        <span className="ml-2">({count} éléments)</span>
       </p>
-      <div className="flex items-center gap-1">
+      <div className="flex max-w-full items-center gap-1 overflow-x-auto">
         <Button
           variant="outline"
           size="sm"
@@ -195,16 +208,20 @@ export function Pagination({
         >
           Précédent
         </Button>
-        {pages.map((page) => (
-          <Button
-            key={page}
-            variant={page === currentPage ? "default" : "outline"}
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => onPageChange?.(page)}
-          >
-            {page}
-          </Button>
+        {pages.map((page, index) => (
+          <span key={page} className="flex items-center gap-1">
+            {index > 0 && page - pages[index - 1] > 1 ? (
+              <span className="px-1 text-xs text-muted-foreground">…</span>
+            ) : null}
+            <Button
+              variant={page === currentPage ? "default" : "outline"}
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => onPageChange?.(page)}
+            >
+              {page}
+            </Button>
+          </span>
         ))}
         <Button
           variant="outline"

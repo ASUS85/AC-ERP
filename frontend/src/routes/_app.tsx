@@ -43,7 +43,7 @@ function AppLayout() {
 
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Topbar onMenu={() => setOpen(true)} />
-        <main className="relative flex-1 p-4 md:p-6 lg:p-8">
+        <main className="main-scrollbar relative flex-1 p-4 md:p-6 lg:p-8">
           <Outlet />
           <GlobalLoaderSlot target="main" />
         </main>

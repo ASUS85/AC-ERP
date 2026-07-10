@@ -66,7 +66,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+      <nav className="sidebar-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-4">
         {visibleGroups.map((group) => (
           <div key={group.label}>
             <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">

@@ -32,6 +32,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { logout } from "@/lib/api/auth.service";
 import { resolveAvatarUrl } from "@/lib/avatar";
 import { useNotifications } from "@/hooks/useNotifications";
+import { navGroups } from "@/lib/erp-data";
+import { cn } from "@/lib/utils";
 
 type StoredUser = {
   nom?: string;
@@ -72,6 +74,8 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<StoredUser | null>(null);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const { notifications, unreadCount } = useNotifications();
 
   useEffect(() => {
@@ -100,6 +104,39 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
     () => notifications.slice(0, 4),
     [notifications],
   );
+  const menuResults = useMemo(() => {
+    const permissions = user?.permissions || [];
+    const canSee = (permission?: string) =>
+      !permission || permissions.includes(permission);
+    const normalize = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    const query = normalize(searchQuery.trim());
+
+    return navGroups
+      .flatMap((group) =>
+        group.items
+          .filter((item) => canSee(item.permission))
+          .map((item) => ({ ...item, group: group.label })),
+      )
+      .filter((item) => {
+        if (!query) return true;
+        return (
+          normalize(item.title).includes(query) ||
+          normalize(item.group).includes(query)
+        );
+      })
+      .slice(0, 8);
+  }, [searchQuery, user?.permissions]);
+  const showMenuResults = searchFocused && searchQuery.trim().length > 0;
+
+  const goToMenu = (url: string) => {
+    setSearchQuery("");
+    setSearchFocused(false);
+    navigate({ to: url });
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -122,9 +159,59 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <div className="relative hidden max-w-md flex-1 md:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Rechercher produits, clients, factures…"
+            placeholder="Rechercher un menu…"
             className="h-9 bg-secondary/60 pl-9"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && menuResults[0]) {
+                event.preventDefault();
+                goToMenu(menuResults[0].url);
+              }
+              if (event.key === "Escape") {
+                setSearchQuery("");
+                setSearchFocused(false);
+              }
+            }}
           />
+          {showMenuResults && (
+            <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-lg border border-border bg-popover shadow-pop">
+              {menuResults.length > 0 ? (
+                <div className="py-1">
+                  {menuResults.map((item) => (
+                    <button
+                      key={item.url}
+                      type="button"
+                      className={cn(
+                        "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors",
+                        "hover:bg-secondary focus:bg-secondary focus:outline-none",
+                      )}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        goToMenu(item.url);
+                      }}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">
+                          {item.title}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {item.group}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="px-3 py-3 text-sm text-muted-foreground">
+                  Aucun menu trouvé
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="ml-auto flex items-center gap-1.5">

@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export type Column<T> = {
   key: string;
@@ -15,11 +21,18 @@ export function DataTable<T extends Record<string, any>>({
   rows,
   rowKey,
   withActions = true,
+  rowActions,
 }: {
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   withActions?: boolean;
+  rowActions?: (row: T) => Array<{
+    label: string;
+    icon?: ReactNode;
+    destructive?: boolean;
+    onClick: () => void;
+  }>;
 }) {
   const align = (a?: string) =>
     a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
@@ -65,13 +78,41 @@ export function DataTable<T extends Record<string, any>>({
                 </td>
               ))}
               {withActions && (
-                <td className="px-3 py-3.5">
-                  <button
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    aria-label="Actions"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
+                <td className="px-3 py-3.5 text-right">
+                  {rowActions ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          aria-label="Actions"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-40">
+                        {rowActions(row).map((action) => (
+                          <DropdownMenuItem
+                            key={action.label}
+                            className={cn(
+                              action.destructive &&
+                                "text-destructive focus:text-destructive",
+                            )}
+                            onClick={action.onClick}
+                          >
+                            {action.icon}
+                            {action.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <button
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      aria-label="Actions"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  )}
                 </td>
               )}
             </tr>

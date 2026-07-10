@@ -1056,3 +1056,165 @@ Argument `where` of type StockWhereUniqueInput needs at least one of `id` or `id
 2026-07-09T17:33:40.408Z info: Socket connecte hqr1ocFyC4QUjlb0AAAD
 2026-07-09T17:34:20.810Z info: Socket deconnecte hqr1ocFyC4QUjlb0AAAD
 2026-07-09T17:34:26.825Z info: Socket connecte YEXmCafB_tcFvY45AAAF
+2026-07-09T18:50:21.996Z info: Base de donnees connectee
+2026-07-09T18:50:22.014Z info: Serveur demarre port 3000
+2026-07-09T18:50:47.604Z info: Socket connecte HiG3IzJK76HCtWYQAAAC
+2026-07-09T18:50:51.307Z info: Socket deconnecte HiG3IzJK76HCtWYQAAAC
+2026-07-09T18:50:55.966Z info: Socket connecte 4UWWAf69gMeFrEKjAAAF
+2026-07-09T18:51:04.336Z info: Base de donnees connectee
+2026-07-09T18:51:04.362Z info: Serveur demarre port 3000
+2026-07-09T18:51:04.858Z info: Socket connecte UnRKCREol5qKZuGpAAAB
+2026-07-09T18:51:32.161Z info: Base de donnees connectee
+2026-07-09T18:51:32.214Z info: Serveur demarre port 3000
+2026-07-09T18:51:32.795Z info: Socket connecte 1aTQ688EIbpt442uAAAB
+2026-07-09T18:51:35.103Z info: Socket deconnecte 1aTQ688EIbpt442uAAAB
+2026-07-09T18:52:13.538Z info: Socket connecte eZPcUMRB7XbyZ2P8AAAE
+2026-07-09T18:52:20.747Z info: Socket deconnecte eZPcUMRB7XbyZ2P8AAAE
+2026-07-09T18:55:46.500Z info: Socket connecte vt-HzCFEJOV-2QRuAAAG
+2026-07-09T18:55:47.112Z error: 
+Invalid `prisma.facture.aggregate()` invocation:
+
+{
+  select: {
+    _sum: {
+      select: {
+        totalTtc: true
+      }
+    }
+  },
+  where: {
+    typeFacture: "CLIENT",
+                 ~~~~~~~~
+    dateEmission: {
+      gte: new Date("2026-06-30T23:00:00.000Z")
+    }
+  }
+}
+
+Invalid value for argument `typeFacture`. Expected TypeFacture. {"stack":"PrismaClientValidationError: \nInvalid `prisma.facture.aggregate()` invocation:\n\n{\n  select: {\n    _sum: {\n      select: {\n        totalTtc: true\n      }\n    }\n  },\n  where: {\n    typeFacture: \"CLIENT\",\n                 ~~~~~~~~\n    dateEmission: {\n      gte: new Date(\"2026-06-30T23:00:00.000Z\")\n    }\n  }\n}\n\nInvalid value for argument `typeFacture`. Expected TypeFacture.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.kpis (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:74:9)\n    at async Promise.all (index 0)\n    at async Object.overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:44:7)\n    at async overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.controller.js:9:9)"}
+2026-07-09T18:55:51.333Z info: Socket deconnecte vt-HzCFEJOV-2QRuAAAG
+2026-07-09T18:55:54.943Z error: 
+Invalid `prisma.facture.aggregate()` invocation:
+
+{
+  select: {
+    _sum: {
+      select: {
+        totalTtc: true
+      }
+    }
+  },
+  where: {
+    typeFacture: "CLIENT",
+                 ~~~~~~~~
+    dateEmission: {
+      gte: new Date("2026-06-30T23:00:00.000Z")
+    }
+  }
+}
+
+Invalid value for argument `typeFacture`. Expected TypeFacture. {"stack":"PrismaClientValidationError: \nInvalid `prisma.facture.aggregate()` invocation:\n\n{\n  select: {\n    _sum: {\n      select: {\n        totalTtc: true\n      }\n    }\n  },\n  where: {\n    typeFacture: \"CLIENT\",\n                 ~~~~~~~~\n    dateEmission: {\n      gte: new Date(\"2026-06-30T23:00:00.000Z\")\n    }\n  }\n}\n\nInvalid value for argument `typeFacture`. Expected TypeFacture.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.kpis (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:74:9)\n    at async Promise.all (index 0)\n    at async Object.overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:44:7)\n    at async overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.controller.js:9:9)"}
+2026-07-09T18:55:55.000Z info: Socket connecte Prlq9c3dZRTWahd1AAAI
+2026-07-09T18:56:34.725Z error: 
+Invalid `prisma.facture.aggregate()` invocation:
+
+{
+  select: {
+    _sum: {
+      select: {
+        totalTtc: true
+      }
+    }
+  },
+  where: {
+    typeFacture: "CLIENT",
+                 ~~~~~~~~
+    dateEmission: {
+      gte: new Date("2026-05-31T23:00:00.000Z"),
+      lte: new Date("2026-06-29T23:00:00.000Z")
+    }
+  }
+}
+
+Invalid value for argument `typeFacture`. Expected TypeFacture. {"stack":"PrismaClientValidationError: \nInvalid `prisma.facture.aggregate()` invocation:\n\n{\n  select: {\n    _sum: {\n      select: {\n        totalTtc: true\n      }\n    }\n  },\n  where: {\n    typeFacture: \"CLIENT\",\n                 ~~~~~~~~\n    dateEmission: {\n      gte: new Date(\"2026-05-31T23:00:00.000Z\"),\n      lte: new Date(\"2026-06-29T23:00:00.000Z\")\n    }\n  }\n}\n\nInvalid value for argument `typeFacture`. Expected TypeFacture.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.kpis (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:74:9)\n    at async Promise.all (index 0)\n    at async Object.overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:44:7)\n    at async overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.controller.js:9:9)"}
+2026-07-09T18:56:34.825Z error: 
+Invalid `prisma.facture.aggregate()` invocation:
+
+{
+  select: {
+    _sum: {
+      select: {
+        totalTtc: true
+      }
+    }
+  },
+  where: {
+    typeFacture: "CLIENT",
+                 ~~~~~~~~
+    dateEmission: {
+      gte: new Date("2026-06-30T23:00:00.000Z")
+    }
+  }
+}
+
+Invalid value for argument `typeFacture`. Expected TypeFacture. {"stack":"PrismaClientValidationError: \nInvalid `prisma.facture.aggregate()` invocation:\n\n{\n  select: {\n    _sum: {\n      select: {\n        totalTtc: true\n      }\n    }\n  },\n  where: {\n    typeFacture: \"CLIENT\",\n                 ~~~~~~~~\n    dateEmission: {\n      gte: new Date(\"2026-06-30T23:00:00.000Z\")\n    }\n  }\n}\n\nInvalid value for argument `typeFacture`. Expected TypeFacture.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.kpis (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:74:9)\n    at async Promise.all (index 0)\n    at async Object.overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:44:7)\n    at async overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.controller.js:9:9)"}
+2026-07-09T18:56:49.611Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-07-09T18:56:49.879Z error: Route introuvable: GET /favicon.ico {"stack":"ApiError: Route introuvable: GET /favicon.ico\n    at notFoundHandler (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/error.middleware.js:11:8)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at auditActivity (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/audit.middleware.js:12:46)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at maintenanceGuard (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/maintenance.middleware.js:10:137)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9","code":"NOT_FOUND"}
+2026-07-09T18:57:04.930Z info: Socket deconnecte Prlq9c3dZRTWahd1AAAI
+2026-07-09T18:57:06.927Z error: 
+Invalid `prisma.facture.aggregate()` invocation:
+
+{
+  select: {
+    _sum: {
+      select: {
+        totalTtc: true
+      }
+    }
+  },
+  where: {
+    typeFacture: "CLIENT",
+                 ~~~~~~~~
+    dateEmission: {
+      gte: new Date("2026-06-30T23:00:00.000Z")
+    }
+  }
+}
+
+Invalid value for argument `typeFacture`. Expected TypeFacture. {"stack":"PrismaClientValidationError: \nInvalid `prisma.facture.aggregate()` invocation:\n\n{\n  select: {\n    _sum: {\n      select: {\n        totalTtc: true\n      }\n    }\n  },\n  where: {\n    typeFacture: \"CLIENT\",\n                 ~~~~~~~~\n    dateEmission: {\n      gte: new Date(\"2026-06-30T23:00:00.000Z\")\n    }\n  }\n}\n\nInvalid value for argument `typeFacture`. Expected TypeFacture.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.kpis (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:74:9)\n    at async Promise.all (index 0)\n    at async Object.overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.repository.js:44:7)\n    at async overview (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/dashboard/dashboard.controller.js:9:9)"}
+2026-07-09T18:57:06.971Z info: Socket connecte BswHayX3Nd7N7C9-AAAK
+2026-07-09T19:02:00.441Z info: Base de donnees connectee
+2026-07-09T19:02:00.462Z info: Serveur demarre port 3000
+2026-07-09T19:02:04.355Z info: Socket connecte y7kml61z9gjxcTFyAAAB
+2026-07-09T19:02:16.220Z info: Base de donnees connectee
+2026-07-09T19:02:16.239Z info: Serveur demarre port 3000
+2026-07-09T19:02:16.765Z info: Socket connecte XKuvtcjciLWL24YJAAAB
+2026-07-09T19:02:21.100Z info: Socket deconnecte XKuvtcjciLWL24YJAAAB
+2026-07-09T19:02:24.629Z info: Socket connecte C-1srKZcZD__pQL1AAAD
+2026-07-09T19:06:10.799Z info: Arret du serveur
+2026-07-10T10:20:59.030Z info: Base de donnees connectee
+2026-07-10T10:20:59.084Z info: Serveur demarre port 3000
+2026-07-10T10:20:59.201Z info: Socket connecte mJYTsZ2N67in-kifAAAB
+2026-07-10T10:59:34.971Z info: Socket deconnecte mJYTsZ2N67in-kifAAAB
+2026-07-10T10:59:45.738Z info: Socket connecte 9St7AADDoGiifx6ZAAAD
+2026-07-10T11:10:48.014Z info: Base de donnees connectee
+2026-07-10T11:10:48.051Z info: Serveur demarre port 3000
+2026-07-10T11:10:48.206Z info: Socket connecte qjW0mTtYGx6i8kHkAAAB
+2026-07-10T11:14:47.839Z info: Socket deconnecte qjW0mTtYGx6i8kHkAAAB
+2026-07-10T11:14:47.941Z info: Socket connecte d5StHML4d-mfFP1rAAAD
+2026-07-10T11:27:17.073Z info: Socket deconnecte d5StHML4d-mfFP1rAAAD
+2026-07-10T11:27:20.335Z info: Socket connecte mpKSa3X9EI62sA-8AAAF
+2026-07-10T11:27:30.756Z info: Socket deconnecte mpKSa3X9EI62sA-8AAAF
+2026-07-10T11:27:40.111Z info: Socket connecte WPS4NE0QOyRSoIUBAAAH
+2026-07-10T11:44:39.644Z info: Socket deconnecte WPS4NE0QOyRSoIUBAAAH
+2026-07-10T11:44:47.755Z info: Socket connecte uDb5hIo8I8QwWwciAAAJ
+2026-07-10T11:46:11.528Z info: Socket deconnecte uDb5hIo8I8QwWwciAAAJ
+2026-07-10T11:46:14.443Z info: Socket connecte J5RysTORIGhqh3WgAAAL
+2026-07-10T11:46:34.564Z info: Socket deconnecte J5RysTORIGhqh3WgAAAL
+2026-07-10T11:46:36.935Z info: Socket connecte yujBbvB9Bw7-5q0rAAAN
+2026-07-10T11:48:11.236Z info: Socket deconnecte yujBbvB9Bw7-5q0rAAAN
+2026-07-10T11:48:13.437Z info: Socket connecte Lww7c420N5HS3rbWAAAP
+2026-07-10T11:55:41.685Z info: Socket deconnecte Lww7c420N5HS3rbWAAAP
+2026-07-10T11:55:45.394Z info: Socket connecte -0LpOHnc1Ol8u_BtAAAR
+2026-07-10T11:56:07.997Z info: Socket deconnecte -0LpOHnc1Ol8u_BtAAAR
+2026-07-10T11:56:13.726Z info: Socket connecte CsL5BqizfB9CZiZCAAAT

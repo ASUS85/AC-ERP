@@ -1,39 +1,51 @@
 import { cn } from "@/lib/utils";
 
 const map: Record<string, string> = {
-  // success-like
-  Payée: "bg-success/12 text-success border-success/20",
-  Reçue: "bg-success/12 text-success border-success/20",
-  Reçu: "bg-success/12 text-success border-success/20",
-  Actif: "bg-success/12 text-success border-success/20",
-  Validée: "bg-success/12 text-success border-success/20",
-  // warning-like
-  "En attente": "bg-warning/15 text-warning-foreground border-warning/30",
-  "En transit": "bg-warning/15 text-warning-foreground border-warning/30",
-  "Stock faible": "bg-warning/15 text-warning-foreground border-warning/30",
-  "En pause": "bg-warning/15 text-warning-foreground border-warning/30",
-  Moyen: "bg-warning/15 text-warning-foreground border-warning/30",
-  // destructive-like
-  "En retard": "bg-destructive/10 text-destructive border-destructive/20",
-  Annulée: "bg-destructive/10 text-destructive border-destructive/20",
-  Rupture: "bg-destructive/10 text-destructive border-destructive/20",
-  Critique: "bg-destructive/10 text-destructive border-destructive/20",
-  Élevé: "bg-destructive/10 text-destructive border-destructive/20",
-  // info / neutral
-  Émis: "bg-info/12 text-info border-info/20",
-  Brouillon: "bg-muted text-muted-foreground border-border",
-  Inactif: "bg-muted text-muted-foreground border-border",
-  Entrée: "bg-success/12 text-success border-success/20",
-  Sortie: "bg-info/12 text-info border-info/20",
-  Faible: "bg-muted text-muted-foreground border-border",
+  actif: "bg-success/12 text-success border-success/20",
+  valide: "bg-success/12 text-success border-success/20",
+  validee: "bg-success/12 text-success border-success/20",
+  payee: "bg-success/12 text-success border-success/20",
+  recue: "bg-success/12 text-success border-success/20",
+  recu: "bg-success/12 text-success border-success/20",
+
+  "en attente": "bg-warning/15 text-warning-foreground border-warning/30",
+  "en transit": "bg-warning/15 text-warning-foreground border-warning/30",
+  "stock faible": "bg-warning/15 text-warning-foreground border-warning/30",
+  "en pause": "bg-warning/15 text-warning-foreground border-warning/30",
+  moyen: "bg-warning/15 text-warning-foreground border-warning/30",
+
+  "en retard": "bg-destructive/10 text-destructive border-destructive/20",
+  annulee: "bg-destructive/10 text-destructive border-destructive/20",
+  annulée: "bg-destructive/10 text-destructive border-destructive/20",
+  rupture: "bg-destructive/10 text-destructive border-destructive/20",
+  critique: "bg-destructive/10 text-destructive border-destructive/20",
+  eleve: "bg-destructive/10 text-destructive border-destructive/20",
+  élevé: "bg-destructive/10 text-destructive border-destructive/20",
+  inactif: "bg-destructive/10 text-destructive border-destructive/20",
+
+  emis: "bg-info/12 text-info border-info/20",
+  émis: "bg-info/12 text-info border-info/20",
+  brouillon: "bg-muted text-muted-foreground border-border",
+  archive: "bg-secondary text-secondary-foreground border-border",
+  archivé: "bg-secondary text-secondary-foreground border-border",
+  entree: "bg-success/12 text-success border-success/20",
+  entrée: "bg-success/12 text-success border-success/20",
+  sortie: "bg-info/12 text-info border-info/20",
+  faible: "bg-muted text-muted-foreground border-border",
 };
 
 export function StatusBadge({ status }: { status: string }) {
+  const key = status
+    ?.trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-        map[status] ?? "bg-muted text-muted-foreground border-border",
+        map[key] ?? "bg-muted text-muted-foreground border-border",
       )}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />

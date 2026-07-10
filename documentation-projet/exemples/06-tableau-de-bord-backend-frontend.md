@@ -1,10 +1,99 @@
-# 06 - Exemple concret : lier le tableau de bord backend et frontend
+# 06 - Dynamiser le tableau de bord backend/frontend
 
-Le backend du tableau de bord existe deja.
+Objectif : remplacer les donnees statiques du dashboard par les donnees de l'API, sans changer le rendu visuel du frontend.
 
-Routes disponibles :
+La page concernee est :
 
 ```txt
+frontend/src/routes/_app.index.tsx
+```
+
+Aujourd'hui, cette page affiche les donnees venant de :
+
+```txt
+frontend/src/lib/erp-data.ts
+```
+
+Pour garder exactement le meme rendu, le backend doit renvoyer des donnees avec la meme forme que ces constantes frontend.
+
+## 1. Contrat attendu par le frontend
+
+Le dashboard affiche 6 zones :
+
+```ts
+type DashboardKpi = {
+  label: string;
+  value: string;
+  delta?: string;
+  up?: boolean;
+  sub?: string;
+  icon: "revenue" | "sales" | "customers" | "products" | "stock" | "suppliers";
+};
+
+type SalesTrendItem = {
+  mois: string;
+  ventes: number;
+  achats: number;
+};
+
+type TopProductItem = {
+  nom: string;
+  ventes: number;
+};
+
+type StockSplitItem = {
+  name: string;
+  value: number;
+};
+
+type AlertItem = {
+  type: "warning" | "destructive" | "info" | "success";
+  title: string;
+  text: string;
+  icon: "stock" | "invoice" | "ai" | "goal";
+};
+
+type RecentSaleItem = {
+  ref: string;
+  client: string;
+  montant: number;
+  statut: string;
+  date: string;
+};
+
+type DashboardOverview = {
+  kpis: DashboardKpi[];
+  salesTrend: SalesTrendItem[];
+  topProducts: TopProductItem[];
+  stockSplit: StockSplitItem[];
+  alerts: AlertItem[];
+  recentSales: RecentSaleItem[];
+};
+```
+
+Le frontend peut ensuite continuer a utiliser les composants existants :
+
+```tsx
+<StatCard key={k.label} {...k} icon={kpiIcons[k.icon]} />
+<AreaChart data={salesTrend}>...</AreaChart>
+<Pie data={stockSplit} dataKey="value" nameKey="name">...</Pie>
+<BarChart data={topProducts}>...</BarChart>
+{alerts.map(...)}
+{recentSales.map(...)}
+```
+
+## 2. Backend : routes a exposer
+
+Les routes existantes peuvent rester, mais pour charger tout le tableau sans multiplier les appels, ajouter une route globale :
+
+```txt
+GET /api/v1/dashboard/overview
+```
+
+Routes recommandees :
+
+```txt
+GET /api/v1/dashboard/overview
 GET /api/v1/dashboard/kpis
 GET /api/v1/dashboard/evolution-ventes
 GET /api/v1/dashboard/top-produits
@@ -12,68 +101,326 @@ GET /api/v1/dashboard/top-clients
 GET /api/v1/dashboard/repartition-categories
 ```
 
-Le frontend a deja un fichier service :
+Le frontend du dashboard peut utiliser seulement `/overview`. Les autres routes restent utiles pour les tests ou les futurs widgets.
 
-```txt
-frontend/src/lib/api/dashboard.service.ts
-```
+## 3. Backend : repository
 
-Mais la page du tableau de bord utilise encore des donnees statiques venant de :
+Le repository doit transformer les resultats Prisma dans la forme attendue par le frontend.
 
-```txt
-frontend/src/lib/erp-data.ts
-```
+Points importants :
 
-L'objectif est donc de remplacer progressivement les donnees statiques par les donnees de l'API.
+- convertir les `Decimal` Prisma avec `Number(...)`;
+- renvoyer des montants numeriques pour les graphiques;
+- renvoyer des `value` deja formatees en texte pour les KPI;
+- renvoyer les mois sous forme `Jan`, `Fev`, `Mar`, etc.;
+- renvoyer les pourcentages de stock avec `value` entre `0` et `100`;
+- limiter `topProducts` a 5 elements;
+- limiter `recentSales` a 5 ventes/factures recentes.
 
-## 1. Backend : repository
-
-Le repository interroge la base :
+Exemple de structure :
 
 ```js
 // backend/src/modules/dashboard/dashboard.repository.js
 import prisma from "../../config/database.js";
 
+const monthLabels = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Avr",
+  "Mai",
+  "Juin",
+  "Juil",
+  "Aout",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const money = (value) =>
+  new Intl.NumberFormat("fr-FR", {
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0)) + " f";
+
+const dateFr = (value) =>
+  new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
+
+function invoiceStatusLabel(statut) {
+  const labels = {
+    EMISE: "Emise",
+    PAYEE: "Payee",
+    PARTIELLEMENT_PAYEE: "Partielle",
+    EN_RETARD: "En retard",
+    ANNULEE: "Annulee",
+  };
+  return labels[statut] || statut;
+}
+
 export const dashboardRepository = {
+  async overview() {
+    const [
+      kpis,
+      salesTrend,
+      topProducts,
+      stockSplit,
+      alerts,
+      recentSales,
+    ] = await Promise.all([
+      this.kpis(),
+      this.evolutionVentes(),
+      this.topProduits(),
+      this.repartitionCategories(),
+      this.alertes(),
+      this.dernieresVentes(),
+    ]);
+
+    return { kpis, salesTrend, topProducts, stockSplit, alerts, recentSales };
+  },
+
   async kpis() {
-    const [clients, produits, factures, impayees] = await Promise.all([
-      prisma.client.count(),
-      prisma.produit.count({ where: { statut: "ACTIF" } }),
+    const now = new Date();
+    const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endPreviousMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const [
+      currentSales,
+      previousSales,
+      payments,
+      clients,
+      products,
+      stock,
+      suppliers,
+    ] = await Promise.all([
       prisma.facture.aggregate({
-        _sum: { totalTtc: true, montantPaye: true },
+        where: { typeFacture: "CLIENT", dateEmission: { gte: startMonth } },
+        _sum: { totalTtc: true },
+      }),
+      prisma.facture.aggregate({
+        where: {
+          typeFacture: "CLIENT",
+          dateEmission: { gte: startPreviousMonth, lte: endPreviousMonth },
+        },
+        _sum: { totalTtc: true },
+      }),
+      prisma.paiement.aggregate({
+        where: { datePaiement: { gte: startMonth } },
+        _sum: { montant: true },
+      }),
+      prisma.client.count({ where: { statut: "ACTIF" } }),
+      prisma.produit.count({ where: { statut: "ACTIF" } }),
+      prisma.stock.aggregate({ _sum: { stockActuel: true } }),
+      prisma.fournisseur.count({ where: { statut: "ACTIF" } }),
+    ]);
+
+    const currentAmount = Number(currentSales._sum.totalTtc || 0);
+    const previousAmount = Number(previousSales._sum.totalTtc || 0);
+    const delta =
+      previousAmount > 0
+        ? ((currentAmount - previousAmount) / previousAmount) * 100
+        : 0;
+
+    return [
+      {
+        label: "Chiffre d'affaires",
+        value: money(currentAmount),
+        delta: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} %`,
+        up: delta >= 0,
+        sub: "vs mois dernier",
+        icon: "revenue",
+      },
+      {
+        label: "Ventes",
+        value: money(currentAmount),
+        delta: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} %`,
+        up: delta >= 0,
+        sub: "ce mois",
+        icon: "sales",
+      },
+      {
+        label: "Clients",
+        value: String(clients),
+        sub: "actifs",
+        icon: "customers",
+      },
+      {
+        label: "Produits",
+        value: String(products),
+        sub: "references actives",
+        icon: "products",
+      },
+      {
+        label: "Stock",
+        value: String(stock._sum.stockActuel || 0),
+        sub: "unites disponibles",
+        icon: "stock",
+      },
+      {
+        label: "Fournisseurs",
+        value: String(suppliers),
+        sub: "actifs",
+        icon: "suppliers",
+      },
+    ];
+  },
+
+  async evolutionVentes(annee = new Date().getFullYear()) {
+    const start = new Date(annee, 0, 1);
+    const end = new Date(annee, 11, 31, 23, 59, 59, 999);
+
+    const factures = await prisma.facture.findMany({
+      where: { dateEmission: { gte: start, lte: end } },
+      select: { typeFacture: true, dateEmission: true, totalTtc: true },
+    });
+
+    const months = monthLabels.map((mois) => ({ mois, ventes: 0, achats: 0 }));
+
+    for (const facture of factures) {
+      const index = new Date(facture.dateEmission).getMonth();
+      const amount = Number(facture.totalTtc || 0);
+      if (facture.typeFacture === "CLIENT") months[index].ventes += amount;
+      if (facture.typeFacture === "FOURNISSEUR") months[index].achats += amount;
+    }
+
+    return months;
+  },
+
+  async topProduits() {
+    const rows = await prisma.ligneFacture.groupBy({
+      by: ["idProduit"],
+      where: { idProduit: { not: null } },
+      _sum: { quantite: true },
+      orderBy: { _sum: { quantite: "desc" } },
+      take: 5,
+    });
+
+    const products = await prisma.produit.findMany({
+      where: { id: { in: rows.map((row) => row.idProduit).filter(Boolean) } },
+      select: { id: true, designation: true },
+    });
+
+    const names = new Map(products.map((product) => [product.id, product.designation]));
+
+    return rows.map((row) => ({
+      nom: names.get(row.idProduit) || "Produit inconnu",
+      ventes: Number(row._sum.quantite || 0),
+    }));
+  },
+
+  async repartitionCategories() {
+    const rows = await prisma.stock.findMany({
+      include: { produit: { include: { categorie: true } } },
+    });
+
+    const totals = new Map();
+    let totalStock = 0;
+
+    for (const row of rows) {
+      const name = row.produit.categorie.nom;
+      const quantity = Number(row.stockActuel || 0);
+      totalStock += quantity;
+      totals.set(name, (totals.get(name) || 0) + quantity);
+    }
+
+    if (totalStock === 0) return [];
+
+    return [...totals.entries()]
+      .map(([name, quantity]) => ({
+        name,
+        value: Math.round((quantity / totalStock) * 100),
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  },
+
+  async alertes() {
+    const [products, lateInvoices] = await Promise.all([
+      prisma.produit.findMany({
+        select: {
+          stockMinimum: true,
+          stock: { select: { stockActuel: true } },
+        },
       }),
       prisma.facture.count({
         where: { statut: { in: ["EMISE", "PARTIELLEMENT_PAYEE", "EN_RETARD"] } },
       }),
     ]);
 
-    return {
-      clients,
-      produits,
-      chiffreAffaires: factures._sum.totalTtc || 0,
-      montantPaye: factures._sum.montantPaye || 0,
-      facturesImpayees: impayees,
-    };
+    const lowStock = products.filter(
+      (product) => Number(product.stock?.stockActuel || 0) <= Number(product.stockMinimum || 0),
+    ).length;
+
+    const alerts = [];
+
+    if (lowStock > 0) {
+      alerts.push({
+        type: "warning",
+        title: "Stock faible",
+        text: `${lowStock} produit${lowStock > 1 ? "s" : ""} sous le seuil minimum`,
+        icon: "stock",
+      });
+    }
+
+    if (lateInvoices > 0) {
+      alerts.push({
+        type: "destructive",
+        title: "Factures a suivre",
+        text: `${lateInvoices} facture${lateInvoices > 1 ? "s" : ""} en attente de paiement`,
+        icon: "invoice",
+      });
+    }
+
+    alerts.push({
+      type: "info",
+      title: "Analyse IA",
+      text: "Les tendances du mois sont pretes a etre analysees",
+      icon: "ai",
+    });
+
+    return alerts;
+  },
+
+  async dernieresVentes() {
+    const factures = await prisma.facture.findMany({
+      where: { typeFacture: "CLIENT" },
+      orderBy: { dateEmission: "desc" },
+      take: 5,
+      include: { client: true },
+    });
+
+    return factures.map((facture) => ({
+      ref: facture.numeroFacture,
+      client: facture.client?.nom || "Client inconnu",
+      montant: Number(facture.totalTtc || 0),
+      statut: invoiceStatusLabel(facture.statut),
+      date: dateFr(facture.dateEmission),
+    }));
   },
 };
 ```
 
-## 2. Backend : service
-
-Le service appelle le repository :
+## 4. Backend : service
 
 ```js
 // backend/src/modules/dashboard/dashboard.service.js
 import { dashboardRepository } from "./dashboard.repository.js";
 
 export const dashboardService = {
+  overview: () => dashboardRepository.overview(),
   kpis: () => dashboardRepository.kpis(),
+  evolutionVentes: (annee) => dashboardRepository.evolutionVentes(annee),
+  topProduits: () => dashboardRepository.topProduits(),
+  topClients: () => dashboardRepository.topClients?.() || [],
+  repartitionCategories: () => dashboardRepository.repartitionCategories(),
 };
 ```
 
-## 3. Backend : controller
-
-Le controller renvoie la reponse HTTP :
+## 5. Backend : controller
 
 ```js
 // backend/src/modules/dashboard/dashboard.controller.js
@@ -81,10 +428,33 @@ import { sendSuccess } from "../../utils/response.util.js";
 import { dashboardService } from "./dashboard.service.js";
 
 export const dashboardController = {
+  async overview(_req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await dashboardService.overview(),
+        "Dashboard recupere",
+      );
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async kpis(_req, res, next) {
     try {
-      const data = await dashboardService.kpis();
-      return sendSuccess(res, data, "KPIs recuperes");
+      return sendSuccess(res, await dashboardService.kpis(), "KPIs recuperes");
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async evolutionVentes(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await dashboardService.evolutionVentes(Number(req.query.annee) || undefined),
+        "Evolution des ventes recuperee",
+      );
     } catch (error) {
       next(error);
     }
@@ -92,9 +462,9 @@ export const dashboardController = {
 };
 ```
 
-## 4. Backend : route
+Garder les autres methodes deja presentes pour `topProduits`, `topClients` et `repartitionCategories`.
 
-La route expose l'endpoint :
+## 6. Backend : routes
 
 ```js
 // backend/src/modules/dashboard/dashboard.routes.js
@@ -105,155 +475,165 @@ import { dashboardController } from "./dashboard.controller.js";
 const router = Router();
 
 router.use(authenticate);
+router.get("/overview", dashboardController.overview);
 router.get("/kpis", dashboardController.kpis);
+router.get("/evolution-ventes", dashboardController.evolutionVentes);
+router.get("/top-produits", dashboardController.topProduits);
+router.get("/top-clients", dashboardController.topClients);
+router.get("/repartition-categories", dashboardController.repartitionCategories);
 
 export default router;
 ```
 
-## 5. Frontend : service API TypeScript
+## 7. Frontend : service API
 
-Ajouter ou completer les types :
+Completer le service existant :
 
 ```ts
 // frontend/src/lib/api/dashboard.service.ts
 import api from "./client";
 
-export type DashboardKpis = {
-  clients: number;
-  produits: number;
-  chiffreAffaires: number;
-  montantPaye: number;
-  facturesImpayees: number;
+export type DashboardOverview = {
+  kpis: Array<{
+    label: string;
+    value: string;
+    delta?: string;
+    up?: boolean;
+    sub?: string;
+    icon: "revenue" | "sales" | "customers" | "products" | "stock" | "suppliers";
+  }>;
+  salesTrend: Array<{ mois: string; ventes: number; achats: number }>;
+  topProducts: Array<{ nom: string; ventes: number }>;
+  stockSplit: Array<{ name: string; value: number }>;
+  alerts: Array<{
+    type: "warning" | "destructive" | "info" | "success";
+    title: string;
+    text: string;
+    icon: "stock" | "invoice" | "ai" | "goal";
+  }>;
+  recentSales: Array<{
+    ref: string;
+    client: string;
+    montant: number;
+    statut: string;
+    date: string;
+  }>;
 };
 
+export const getDashboardOverview = () => api.get("/dashboard/overview");
 export const getKPIs = () => api.get("/dashboard/kpis");
+export const getEvolutionVentes = (annee?: number) =>
+  api.get("/dashboard/evolution-ventes", { params: { annee } });
+export const getTopProduits = (periode?: string) =>
+  api.get("/dashboard/top-produits", { params: { periode } });
+export const getTopClients = (periode?: string) =>
+  api.get("/dashboard/top-clients", { params: { periode } });
 ```
 
-Version plus typee :
+Dans ce projet, l'intercepteur Axios renvoie deja l'enveloppe API `success/message/data`. Il faut donc lire `response.data`.
 
-```ts
-export const getKPIs = () =>
-  api.get<unknown, { data: DashboardKpis }>("/dashboard/kpis");
-```
+## 8. Frontend : modification minimale de `_app.index.tsx`
 
-Dans ce projet, l'intercepteur Axios renvoie directement `response.data`. Il faut donc souvent lire `response.data` pour recuperer la vraie donnee metier.
-
-## 6. Frontend : utiliser les KPI dans la page
-
-Exemple simple a integrer dans `frontend/src/routes/_app.index.tsx`.
+Ne pas changer le JSX des cartes, graphiques et tableaux. Remplacer seulement les constantes statiques par un state rempli par l'API.
 
 ```tsx
-import { useEffect, useMemo, useState } from "react";
-import { getKPIs, type DashboardKpis } from "@/lib/api/dashboard.service";
+import { useEffect, useState } from "react";
+import {
+  getDashboardOverview,
+  type DashboardOverview,
+} from "@/lib/api/dashboard.service";
+import {
+  kpis as fallbackKpis,
+  salesTrend as fallbackSalesTrend,
+  topProducts as fallbackTopProducts,
+  stockSplit as fallbackStockSplit,
+  recentSales as fallbackRecentSales,
+  alerts as fallbackAlerts,
+  fmtCurrency,
+} from "@/lib/erp-data";
 
 function Dashboard() {
-  const [kpiData, setKpiData] = useState<DashboardKpis | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardOverview>({
+    kpis: [...fallbackKpis],
+    salesTrend: fallbackSalesTrend,
+    topProducts: fallbackTopProducts,
+    stockSplit: fallbackStockSplit,
+    recentSales: fallbackRecentSales,
+    alerts: fallbackAlerts,
+  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
         setLoading(true);
-        const response: any = await getKPIs();
-        setKpiData(response.data);
-      } catch (err: any) {
-        setError(err.message || "Impossible de charger le tableau de bord");
+        const response = await getDashboardOverview();
+        if (response?.data) setDashboard(response.data);
       } finally {
         setLoading(false);
       }
     }
 
-    loadDashboard();
+    void loadDashboard();
   }, []);
 
-  const cards = useMemo(() => {
-    if (!kpiData) return [];
+  const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
+    dashboard;
 
-    return [
-      {
-        label: "Chiffre d'affaires",
-        value: fmtCurrency(kpiData.chiffreAffaires),
-        sub: "Total facture",
-        icon: "revenue",
-      },
-      {
-        label: "Montant paye",
-        value: fmtCurrency(kpiData.montantPaye),
-        sub: "Paiements recus",
-        icon: "sales",
-      },
-      {
-        label: "Clients",
-        value: String(kpiData.clients),
-        sub: "clients enregistres",
-        icon: "customers",
-      },
-      {
-        label: "Produits",
-        value: String(kpiData.produits),
-        sub: "produits actifs",
-        icon: "products",
-      },
-      {
-        label: "Factures impayees",
-        value: String(kpiData.facturesImpayees),
-        sub: "a suivre",
-        icon: "invoice",
-      },
-    ];
-  }, [kpiData]);
-
-  if (loading) return <p>Chargement du tableau de bord...</p>;
-  if (error) return <p>{error}</p>;
-
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      {cards.map((k) => (
-        <StatCard key={k.label} {...k} icon={kpiIcons[k.icon]} />
-      ))}
-    </div>
-  );
+  // Garder le return actuel.
 }
 ```
 
-## 7. Adapter les icones
+Le fallback permet de ne rien casser si l'API est momentanement indisponible pendant le developpement.
 
-Dans `_app.index.tsx`, `kpiIcons` contient seulement certaines cles. Si tu ajoutes `invoice`, ajoute aussi l'icone :
+## 9. Points a respecter pour garder le meme rendu
 
-```tsx
-import { FileWarning } from "lucide-react";
+- `kpis` doit contenir 6 elements pour conserver la grille `xl:grid-cols-6`.
+- `icon` doit rester dans les cles deja utilisees par `kpiIcons`.
+- `salesTrend` doit contenir `mois`, `ventes`, `achats`, sinon le graphique `AreaChart` sera vide.
+- `stockSplit` doit contenir `name` et `value`, sinon le graphique circulaire sera vide.
+- `topProducts` doit contenir `nom` et `ventes`, sinon le `BarChart` ne trouvera pas ses axes.
+- `alerts.type` doit etre `warning`, `destructive`, `info` ou `success`.
+- `alerts.icon` doit etre `stock`, `invoice`, `ai` ou `goal`.
+- `recentSales.statut` doit etre une chaine compatible avec `StatusBadge`.
+- `recentSales.montant` doit rester numerique, car le frontend applique `fmtCurrency`.
 
-const kpiIcons: Record<string, React.ReactNode> = {
-  revenue: <Banknote className="h-5 w-5" />,
-  sales: <Receipt className="h-5 w-5" />,
-  customers: <Users className="h-5 w-5" />,
-  products: <Package className="h-5 w-5" />,
-  invoice: <FileWarning className="h-5 w-5" />,
-};
-```
-
-## 8. Tester
+## 10. Tests
 
 1. Demarrer le backend.
-2. Se connecter dans le frontend pour avoir un token JWT.
-3. Ouvrir le tableau de bord.
-4. Verifier dans l'onglet reseau du navigateur que l'appel part vers :
+2. Se connecter dans le frontend.
+3. Tester dans le navigateur :
 
 ```txt
-GET http://localhost:3000/api/v1/dashboard/kpis
+GET http://localhost:3000/api/v1/dashboard/overview
 ```
 
-5. Si la reponse est `401`, le token est absent ou expire.
-6. Si la reponse est `500`, regarder les logs backend.
-7. Si l'ecran reste vide, verifier le format de `response.data`.
+4. Verifier que la reponse contient :
+
+```json
+{
+  "success": true,
+  "data": {
+    "kpis": [],
+    "salesTrend": [],
+    "topProducts": [],
+    "stockSplit": [],
+    "alerts": [],
+    "recentSales": []
+  }
+}
+```
+
+5. Ouvrir le tableau de bord.
+6. Verifier que le rendu visuel reste identique : memes cartes, memes graphiques, meme table "Dernieres ventes".
+7. Verifier que les valeurs changent quand on ajoute une facture, un paiement, un produit ou un stock.
 
 ## Resume
 
-Le backend fournit les donnees. Le frontend ne fait que :
+Pour dynamiser le dashboard sans casser le frontend :
 
-- appeler le service API ;
-- stocker les donnees dans un state ;
-- afficher un chargement ;
-- afficher une erreur si besoin ;
-- transformer les donnees pour les composants visuels.
+- le backend doit renvoyer la meme forme que les anciennes constantes statiques;
+- le frontend doit seulement remplacer la source des donnees;
+- le JSX du dashboard peut rester quasiment identique;
+- l'endpoint recommande est `GET /api/v1/dashboard/overview`;
+- les anciennes routes dashboard peuvent rester disponibles.

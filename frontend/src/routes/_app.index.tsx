@@ -32,15 +32,14 @@ import { PageHeader } from "@/components/erp/PageHeader";
 import { StatCard, SectionCard } from "@/components/erp/widgets";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import {
-  kpis,
-  salesTrend,
-  topProducts,
-  stockSplit,
-  recentSales,
-  alerts,
-  fmtCurrency,
-} from "@/lib/erp-data";
+  getDashboardPdf,
+  getDashboardOverview,
+  type DashboardOverview,
+} from "@/lib/api/dashboard.service";
+import { fmtCurrency } from "@/lib/erp-data";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Tableau de bord — AC ERP" }] }),
@@ -103,15 +102,72 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function Dashboard() {
+  const [dashboard, setDashboard] = useState<DashboardOverview>({
+    kpis: [],
+    salesTrend: [],
+    topProducts: [],
+    stockSplit: [],
+    recentSales: [],
+    alerts: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        setLoading(true);
+        const response = await getDashboardOverview();
+        if (response?.data) setDashboard(response.data);
+      } catch {
+        toast.error("Impossible de charger le tableau de bord");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadDashboard();
+  }, []);
+
+  const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
+    dashboard;
+
+  const exportDashboard = async () => {
+    try {
+      setExporting(true);
+      const blob = (await getDashboardPdf()) as Blob;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `dashboard-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("PDF du dashboard exporté");
+    } catch {
+      toast.error("Export PDF impossible");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <>
       <PageHeader
         title="Tableau de bord"
-        description="Vue décisionnelle de votre activité commerciale — Juin 2026"
+        description="Vue décisionnelle de votre activité commerciale"
         actions={
           <>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <Download className="h-4 w-4" /> Exporter
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={exportDashboard}
+              disabled={loading || exporting}
+            >
+              <Download className="h-4 w-4" />{" "}
+              {exporting ? "Export..." : "Exporter"}
             </Button>
             <Button size="sm" className="gap-1.5" asChild>
               <Link to="/sales">
@@ -124,9 +180,16 @@ function Dashboard() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {kpis.map((k) => (
-          <StatCard key={k.label} {...k} icon={kpiIcons[k.icon]} />
-        ))}
+        {loading
+          ? Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-32 animate-pulse rounded-lg border border-border bg-muted/40"
+              />
+            ))
+          : kpis.map((k) => (
+              <StatCard key={k.label} {...k} icon={kpiIcons[k.icon]} />
+            ))}
       </div>
 
       {/* Charts row 1 */}
