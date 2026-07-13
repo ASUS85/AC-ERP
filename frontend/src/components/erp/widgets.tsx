@@ -1,22 +1,14 @@
 import type { ReactNode } from "react";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Filter,
-  Plus,
-  Search,
-} from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Plus, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 
+// ─────────────────────────────────────────────────────────────
+// StatCard
+// ─────────────────────────────────────────────────────────────
 export function StatCard({
   label,
   value,
@@ -69,6 +61,9 @@ export function StatCard({
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// SectionCard
+// ─────────────────────────────────────────────────────────────
 export function SectionCard({
   title,
   description,
@@ -100,6 +95,9 @@ export function SectionCard({
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// Toolbar
+// ─────────────────────────────────────────────────────────────
 export function Toolbar({
   placeholder = "Rechercher…",
   addLabel,
@@ -109,6 +107,8 @@ export function Toolbar({
   filterOptions,
   selectedFilter,
   onFilterChange,
+  filterPlaceholder = "Filtrer…",
+  filterSearchPlaceholder = "Rechercher…",
 }: {
   placeholder?: string;
   addLabel?: string;
@@ -118,47 +118,48 @@ export function Toolbar({
   filterOptions?: Array<{ label: string; value: string }>;
   selectedFilter?: string;
   onFilterChange?: (value: string) => void;
+  /** Texte affiché dans le select quand rien n'est sélectionné */
+  filterPlaceholder?: string;
+  /** Placeholder de l'input de recherche à l'intérieur du select */
+  filterSearchPlaceholder?: string;
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Barre de recherche */}
       <div className="relative w-full sm:max-w-xs">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder={placeholder}
           className="h-9 pl-9"
           value={searchValue ?? ""}
-          onChange={(event) => onSearchChange?.(event.target.value)}
+          onChange={(e) => onSearchChange?.(e.target.value)}
         />
       </div>
+
+      {/* Actions droite */}
       <div className="flex items-center gap-2">
-        {filterOptions && onFilterChange ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Filter className="h-4 w-4" />{" "}
-                {filterOptions.find((option) => option.value === selectedFilter)
-                  ?.label || "Filtre"}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px]">
-              {filterOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onClick={() => onFilterChange(option.value)}
-                >
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Filter className="h-4 w-4" /> Filtres
-          </Button>
+        {/* Filtre avec recherche intégrée */}
+        {filterOptions && onFilterChange && (
+          <SearchableSelect
+            value={selectedFilter}
+            onValueChange={onFilterChange}
+            options={filterOptions}
+            placeholder={filterPlaceholder}
+            searchPlaceholder={filterSearchPlaceholder}
+            emptyMessage="Aucun filtre trouvé"
+            className="w-[200px]"
+          />
         )}
+
+        {/* Bouton d'ajout */}
         {addLabel && (
-          <Button size="sm" className="gap-1.5" onClick={onAdd}>
-            <Plus className="h-4 w-4" /> {addLabel}
+          <Button
+            size="sm"
+            className="gap-1.5 whitespace-nowrap"
+            onClick={onAdd}
+          >
+            <Plus className="h-4 w-4" />
+            {addLabel}
           </Button>
         )}
       </div>
@@ -166,8 +167,11 @@ export function Toolbar({
   );
 }
 
+// ─────────────────────────────────────────────────────────────
+// Pagination
+// ─────────────────────────────────────────────────────────────
 export function Pagination({
-  count = 48,
+  count = 0,
   currentPage = 1,
   totalPages,
   onPageChange,
@@ -180,15 +184,13 @@ export function Pagination({
   pageSize?: number;
 }) {
   const total = totalPages ?? Math.max(1, Math.ceil(count / pageSize));
+
+  // Pages visibles : 1, currentPage-1, currentPage, currentPage+1, total
   const pages = Array.from(
     new Set(
-      [
-        1,
-        currentPage - 1,
-        currentPage,
-        currentPage + 1,
-        total,
-      ].filter((page) => page >= 1 && page <= total),
+      [1, currentPage - 1, currentPage, currentPage + 1, total].filter(
+        (p) => p >= 1 && p <= total,
+      ),
     ),
   );
 
@@ -197,8 +199,11 @@ export function Pagination({
       <p className="text-xs text-muted-foreground">
         Page <span className="font-medium text-foreground">{currentPage}</span>{" "}
         sur <span className="font-medium text-foreground">{total}</span>
-        <span className="ml-2">({count} éléments)</span>
+        <span className="ml-2">
+          ({count} élément{count > 1 ? "s" : ""})
+        </span>
       </p>
+
       <div className="flex max-w-full items-center gap-1 overflow-x-auto">
         <Button
           variant="outline"
@@ -208,11 +213,13 @@ export function Pagination({
         >
           Précédent
         </Button>
+
         {pages.map((page, index) => (
           <span key={page} className="flex items-center gap-1">
-            {index > 0 && page - pages[index - 1] > 1 ? (
+            {/* Ellipsis si saut de pages */}
+            {index > 0 && page - pages[index - 1] > 1 && (
               <span className="px-1 text-xs text-muted-foreground">…</span>
-            ) : null}
+            )}
             <Button
               variant={page === currentPage ? "default" : "outline"}
               size="icon"
@@ -223,6 +230,7 @@ export function Pagination({
             </Button>
           </span>
         ))}
+
         <Button
           variant="outline"
           size="sm"

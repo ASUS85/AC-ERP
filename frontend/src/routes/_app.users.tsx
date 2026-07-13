@@ -42,6 +42,7 @@ type UserRow = {
   prenom: string;
   email: string;
   statut: string;
+  telephone: string;
   role?: { id: string; nomRole: string; isSystemRole?: boolean } | null;
 };
 
@@ -132,7 +133,7 @@ function UsersPage() {
       nom: user.nom,
       prenom: user.prenom,
       email: user.email,
-      telephone: "",
+      telephone: user.telephone || "",
       idRole: user.role?.id || "",
       statut: (user.statut as UserPayload["statut"]) || "ACTIF",
     });

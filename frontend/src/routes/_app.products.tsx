@@ -39,6 +39,7 @@ import {
   updateProduit,
   type ProduitPayload,
 } from "@/lib/api/produits.service";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 export const Route = createFileRoute("/_app/products")({
   head: () => ({ meta: [{ title: "Produits — AC ERP" }] }),
@@ -72,14 +73,14 @@ const emptyForm: ProduitPayload = {
   reference: "",
   designation: "",
   description: "",
-  uniteMesure: "PIECE",
-  prixAchatHt: 0,
-  prixVenteHt: 0,
-  tauxTva: 18,
-  stockMinimum: 0,
-  stockInitial: 0,
+  uniteMesure: "",
+  prixAchatHt: "",
+  prixVenteHt: "",
+  tauxTva: "",
+  stockMinimum: "",
+  stockInitial: "",
   idCategorie: "",
-  statut: "ACTIF",
+  statut: "",
 };
 
 const units: Array<{ label: string; value: ProduitPayload["uniteMesure"] }> = [
@@ -206,13 +207,13 @@ function ProductsPage() {
       reference: product.reference || "",
       designation: product.designation || "",
       description: product.description || "",
-      uniteMesure: product.uniteMesure || "PIECE",
-      prixAchatHt: Number(product.prixAchatHt || 0),
-      prixVenteHt: Number(product.prixVenteHt || 0),
-      tauxTva: Number(product.tauxTva || 18),
-      stockMinimum: Number(product.stockMinimum || 0),
+      uniteMesure: product.uniteMesure || "",
+      prixAchatHt: Number(product.prixAchatHt || ""),
+      prixVenteHt: Number(product.prixVenteHt || ""),
+      tauxTva: Number(product.tauxTva || ""),
+      stockMinimum: Number(product.stockMinimum || ""),
       idCategorie: product.idCategorie || product.categorie?.id || "",
-      statut: product.statut || "ACTIF",
+      statut: product.statut || "",
     });
     setModalOpen(true);
   };
@@ -229,6 +230,8 @@ function ProductsPage() {
     if (!form.uniteMesure) nextErrors.uniteMesure = "L’unité est obligatoire";
     if (!form.idCategorie)
       nextErrors.idCategorie = "La catégorie est obligatoire";
+    if (Number(form.tauxTva) <= 0)
+      nextErrors.tauxTva = "La TVA est obligatoire";
     if (Number(form.prixAchatHt) < 0)
       nextErrors.prixAchatHt = "Le prix d’achat doit être positif";
     if (Number(form.prixVenteHt) <= 0)
@@ -237,8 +240,13 @@ function ProductsPage() {
       nextErrors.tauxTva = "La TVA doit être positive";
     if (Number(form.stockMinimum || 0) < 0)
       nextErrors.stockMinimum = "Le stock minimum doit être positif";
+    if (Number(form.stockMinimum) <= 0)
+      nextErrors.stockMinimum = "Le stock minimum est obligatoire";
     if (!editingProduct && Number(form.stockInitial || 0) < 0)
       nextErrors.stockInitial = "Le stock initial doit être positif";
+    if (!form.stockInitial)
+      nextErrors.stockInitial = "Le stock initial est obligatoire";
+    if (!form.statut) nextErrors.statut = "Le statut est obligatoire";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -477,6 +485,8 @@ function ProductsPage() {
             filterOptions={filterOptions}
             selectedFilter={categoryFilter}
             onFilterChange={setCategoryFilter}
+            filterPlaceholder="Toutes les catégories"
+            filterSearchPlaceholder="Rechercher une catégorie…"
             onAdd={openCreateModal}
           />
         </div>
@@ -520,7 +530,7 @@ function ProductsPage() {
         description="Renseignez les informations du catalogue."
         size="xl"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}
@@ -563,21 +573,17 @@ function ProductsPage() {
             htmlFor="categorie"
             error={errors.idCategorie}
           >
-            <Select
+            <SearchableSelect
               value={form.idCategorie}
               onValueChange={(value) => setField("idCategorie", value)}
-            >
-              <SelectTrigger id="categorie">
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.nom}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Sélectionner une catégorie"
+              searchPlaceholder="Rechercher une catégorie..."
+              emptyMessage="Aucune catégorie trouvée"
+              options={categories.map((cat) => ({
+                value: cat.id,
+                label: cat.nom,
+              }))}
+            />
           </Field>
           <Field label="Unité" htmlFor="uniteMesure" error={errors.uniteMesure}>
             <Select
@@ -609,6 +615,7 @@ function ProductsPage() {
               min="0"
               value={form.prixAchatHt}
               onChange={(e) => setField("prixAchatHt", Number(e.target.value))}
+              placeholder="Entrez un prix de d'achat"
             />
           </Field>
           <Field
@@ -622,6 +629,7 @@ function ProductsPage() {
               min="0"
               value={form.prixVenteHt}
               onChange={(e) => setField("prixVenteHt", Number(e.target.value))}
+              placeholder="Entrez un prix de vente"
             />
           </Field>
           <Field label="Taux TVA (%)" htmlFor="tauxTva" error={errors.tauxTva}>
@@ -631,6 +639,7 @@ function ProductsPage() {
               min="0"
               value={form.tauxTva}
               onChange={(e) => setField("tauxTva", Number(e.target.value))}
+              placeholder="Entrez la TVA(%)"
             />
           </Field>
           <Field
@@ -644,6 +653,7 @@ function ProductsPage() {
               min="0"
               value={form.stockMinimum}
               onChange={(e) => setField("stockMinimum", Number(e.target.value))}
+              placeholder="Entrez le stock minimum"
             />
           </Field>
           {!editingProduct ? (
@@ -660,12 +670,13 @@ function ProductsPage() {
                 onChange={(e) =>
                   setField("stockInitial", Number(e.target.value))
                 }
+                placeholder="Entrez le stock initial"
               />
             </Field>
           ) : null}
           <Field label="Statut" htmlFor="statut" error={errors.statut}>
             <Select
-              value={form.statut || "ACTIF"}
+              value={form.statut || ""}
               onValueChange={(value: ProduitPayload["statut"]) =>
                 setField("statut", value)
               }

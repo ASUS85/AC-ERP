@@ -430,6 +430,25 @@ function Dashboard() {
                     </td>
                   </tr>
                 ))}
+                {recentSales.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="py-5 text-center text-sm text-muted-foreground"
+                    >
+                      <div className="flex flex-col items-center justify-center py-5 text-center">
+                        <img
+                          src="/src/assets/sorry.svg"
+                          alt="Aucun élément"
+                          className="mb-3 w-28 opacity-90"
+                        />
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Aucun élément à afficher
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

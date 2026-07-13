@@ -1,22 +1,84 @@
 import { ApiError } from "../../utils/response.util.js";
-import { createCrudService } from "../_shared/service.factory.js";
+import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { clientsRepository } from "./clients.repository.js";
 
 export const clientsService = {
-  ...createCrudService(clientsRepository, {
-    buildWhere: (query) => ({
-      ...(query.search ? { OR: [{ nom: { contains: query.search } }, { email: { contains: query.search } }, { codeClient: { contains: query.search } }] } : {}),
+  async list(query) {
+    const { page, limit, offset } = getPagination(query);
+
+    const where = {
+      ...(query.search
+        ? {
+            OR: [
+              { nom: { contains: query.search } },
+              { email: { contains: query.search } },
+              { codeClient: { contains: query.search } },
+            ],
+          }
+        : {}),
       ...(query.statut ? { statut: query.statut } : {}),
-    }),
-    beforeCreate: async (data) => ({
+      ...(query.type ? { type: query.type } : {}),
+      ...(query.ville ? { ville: query.ville } : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      clientsRepository.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      clientsRepository.count(where),
+    ]);
+
+    return {
+      data,
+      meta: buildMeta(total, page, limit),
+    };
+  },
+
+  async getById(id) {
+    const client = await clientsRepository.findById(id);
+
+    if (!client) {
+      throw new ApiError(404, "NOT_FOUND", "Client introuvable");
+    }
+
+    return client;
+  },
+
+  async create(data) {
+    const codeClient =
+      data.codeClient ||
+      `CLI-${String((await clientsRepository.countAll()) + 1).padStart(4, "0")}`;
+
+    return clientsRepository.create({
       ...data,
-      codeClient: data.codeClient || `CLI-${String((await clientsRepository.countAll()) + 1).padStart(4, "0")}`,
-    }),
-  }),
+      codeClient,
+    });
+  },
+
+  async update(id, data) {
+    await this.getById(id);
+    return clientsRepository.update(id, data);
+  },
+
+  async remove(id) {
+    await this.getById(id);
+    // Archivage plutôt que suppression physique
+    return clientsRepository.update(id, {
+      statut: "ARCHIVE",
+    });
+  },
+
   async historique(id) {
     const client = await clientsRepository.historique(id);
-    if (!client) throw new ApiError(404, "NOT_FOUND", "Client introuvable");
+
+    if (!client) {
+      throw new ApiError(404, "NOT_FOUND", "Client introuvable");
+    }
     return client;
   },
 };
-

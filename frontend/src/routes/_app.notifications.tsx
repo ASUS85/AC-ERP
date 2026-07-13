@@ -207,9 +207,16 @@ function NotificationsPage() {
             </div>
           )}
           {!loading && visibleItems.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Aucune notification pour cette date.
-            </p>
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <img
+                src="/src/assets/sorry.svg"
+                alt="Aucun élément"
+                className="mb-3 w-28 opacity-90"
+              />
+              <p className="mt-1 text-xs text-muted-foreground/70">
+                Aucune notification pour cette date.
+              </p>
+            </div>
           )}
           {!loading &&
             visibleItems.map((n) => {

@@ -20,6 +20,7 @@ export function AppModal({
   footer,
   size = "md",
   position = "center",
+  closeOnOutsideClick = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,6 +30,7 @@ export function AppModal({
   footer?: ReactNode;
   size?: ModalSize;
   position?: ModalPosition;
+  closeOnOutsideClick?: boolean;
 }) {
   const sizeClasses: Record<ModalSize, string> = {
     sm: "sm:max-w-sm",
@@ -46,6 +48,21 @@ export function AppModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        onPointerDownOutside={(e) => {
+          if (!closeOnOutsideClick) {
+            e.preventDefault();
+          }
+        }}
+        onInteractOutside={(e) => {
+          if (!closeOnOutsideClick) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (!closeOnOutsideClick) {
+            e.preventDefault();
+          }
+        }}
         className={cn(
           "max-h-[90vh] overflow-hidden p-0",
           sizeClasses[size],

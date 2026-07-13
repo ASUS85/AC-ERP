@@ -635,9 +635,16 @@ function SettingsPage() {
           >
             <div className="space-y-1">
               {audits.length === 0 && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Aucune activité pour cette date.
-                </p>
+                <div className="flex flex-col items-center justify-center py-5 text-center">
+                  <img
+                    src="/src/assets/sorry.svg"
+                    alt="Aucun élément"
+                    className="mb-3 w-28 opacity-90"
+                  />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Aucun élément à afficher
+                  </p>
+                </div>
               )}
               {audits.map((audit) => {
                 const actor = audit.utilisateur

@@ -5,7 +5,14 @@ import { clientsService } from "./clients.service.js";
 export const clientsController = {
   ...createCrudController(clientsService, "Client"),
   async historique(req, res, next) {
-    try { return sendSuccess(res, await clientsService.historique(req.params.id), "Historique client recupere"); } catch (e) { next(e); }
+    try {
+      return sendSuccess(
+        res,
+        await clientsService.historique(req.params.id),
+        "Historique client recupere",
+      );
+    } catch (e) {
+      next(e);
+    }
   },
 };
-
