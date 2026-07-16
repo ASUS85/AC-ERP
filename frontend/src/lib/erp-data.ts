@@ -19,6 +19,7 @@ import {
   Settings,
   type LucideIcon,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 export type NavItem = {
   title: string;
@@ -166,12 +167,7 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-export const fmtCurrency = (n: number) =>
-  new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(n);
+export const fmtCurrency = (n: number) => formatCurrency(n);
 
 export const fmtNumber = (n: number) =>
   new Intl.NumberFormat("fr-FR").format(n);

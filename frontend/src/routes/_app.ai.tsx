@@ -43,7 +43,7 @@ function AiPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="CA prévu (juil.)"
-          value="98 200 f"
+          value={fmtCurrency(98200)}
           delta="+6,2 %"
           up
           sub="vs juin"

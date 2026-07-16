@@ -24,25 +24,51 @@ export async function ensureSettingsTables() {
     mode_maintenance BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
   )`);
-  await prisma.$executeRawUnsafe("INSERT IGNORE INTO parametres_entreprise (id) VALUES ('default')");
-  await prisma.$executeRawUnsafe("INSERT IGNORE INTO parametres_systeme (id) VALUES ('default')");
+  await prisma.$executeRawUnsafe(
+    "INSERT IGNORE INTO parametres_entreprise (id) VALUES ('default')",
+  );
+  await prisma.$executeRawUnsafe(
+    "INSERT IGNORE INTO parametres_systeme (id) VALUES ('default')",
+  );
   initialized = true;
 }
 
 const companyFromDb = (row) => ({
-  id: row.id, raisonSociale: row.raison_sociale, numeroFiscal: row.numero_fiscal, adresse: row.adresse,
-  telephone: row.telephone, email: row.email, devise: row.devise, fuseauHoraire: row.fuseau_horaire,
-  logo: row.logo, updatedAt: row.updated_at,
+  id: row.id,
+  raisonSociale: row.raison_sociale,
+  numeroFiscal: row.numero_fiscal,
+  adresse: row.adresse,
+  telephone: row.telephone,
+  email: row.email,
+  devise: row.devise,
+  fuseauHoraire: row.fuseau_horaire,
+  logo: row.logo,
+  updatedAt: normalizeDbDate(row.updated_at),
 });
 const systemFromDb = (row) => ({
-  id: row.id, notificationsEmail: Boolean(row.notifications_email), alertesIa: Boolean(row.alertes_ia),
-  facturationAutomatique: Boolean(row.facturation_automatique), modeMaintenance: Boolean(row.mode_maintenance), updatedAt: row.updated_at,
+  id: row.id,
+  notificationsEmail: Boolean(row.notifications_email),
+  alertesIa: Boolean(row.alertes_ia),
+  facturationAutomatique: Boolean(row.facturation_automatique),
+  modeMaintenance: Boolean(row.mode_maintenance),
+  updatedAt: normalizeDbDate(row.updated_at),
 });
+
+function normalizeDbDate(value) {
+  if (!value) return null;
+  const raw = String(value);
+  if (raw.startsWith("0000-00-00")) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
 
 export const parametresRepository = {
   async entreprise() {
     await ensureSettingsTables();
-    const [row] = await prisma.$queryRawUnsafe("SELECT * FROM parametres_entreprise WHERE id = 'default'");
+    const [row] =
+      await prisma.$queryRawUnsafe(`SELECT id, raison_sociale, numero_fiscal, adresse, telephone, email, devise, fuseau_horaire, logo,
+      DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s.%f') AS updated_at
+      FROM parametres_entreprise WHERE id = 'default'`);
     return companyFromDb(row);
   },
   async updateEntreprise(data) {
@@ -51,14 +77,23 @@ export const parametresRepository = {
     const value = { ...current, ...data };
     await prisma.$executeRawUnsafe(
       "UPDATE parametres_entreprise SET raison_sociale=?, numero_fiscal=?, adresse=?, telephone=?, email=?, devise=?, fuseau_horaire=?, logo=? WHERE id='default'",
-      value.raisonSociale, value.numeroFiscal || null, value.adresse || null, value.telephone || null,
-      value.email || null, value.devise, value.fuseauHoraire, value.logo || null,
+      value.raisonSociale,
+      value.numeroFiscal || null,
+      value.adresse || null,
+      value.telephone || null,
+      value.email || null,
+      value.devise,
+      value.fuseauHoraire,
+      value.logo || null,
     );
     return this.entreprise();
   },
   async systeme() {
     await ensureSettingsTables();
-    const [row] = await prisma.$queryRawUnsafe("SELECT * FROM parametres_systeme WHERE id = 'default'");
+    const [row] =
+      await prisma.$queryRawUnsafe(`SELECT id, notifications_email, alertes_ia, facturation_automatique, mode_maintenance,
+      DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s.%f') AS updated_at
+      FROM parametres_systeme WHERE id = 'default'`);
     return systemFromDb(row);
   },
   async updateSysteme(data) {
@@ -67,14 +102,21 @@ export const parametresRepository = {
     const value = { ...current, ...data };
     await prisma.$executeRawUnsafe(
       "UPDATE parametres_systeme SET notifications_email=?, alertes_ia=?, facturation_automatique=?, mode_maintenance=? WHERE id='default'",
-      value.notificationsEmail, value.alertesIa, value.facturationAutomatique, value.modeMaintenance,
+      value.notificationsEmail,
+      value.alertesIa,
+      value.facturationAutomatique,
+      value.modeMaintenance,
     );
     return this.systeme();
   },
   audits(where) {
     return prisma.auditLog.findMany({
       where,
-      include: { utilisateur: { select: { id: true, nom: true, prenom: true, email: true } } },
+      include: {
+        utilisateur: {
+          select: { id: true, nom: true, prenom: true, email: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
       take: 250,
     });

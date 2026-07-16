@@ -244,8 +244,8 @@ function ProductsPage() {
       nextErrors.stockMinimum = "Le stock minimum est obligatoire";
     if (!editingProduct && Number(form.stockInitial || 0) < 0)
       nextErrors.stockInitial = "Le stock initial doit être positif";
-    if (!form.stockInitial)
-      nextErrors.stockInitial = "Le stock initial est obligatoire";
+    /* if (!form.stockInitial)
+      nextErrors.stockInitial = "Le stock initial est obligatoire"; */
     if (!form.statut) nextErrors.statut = "Le statut est obligatoire";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;

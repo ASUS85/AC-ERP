@@ -74,25 +74,25 @@ function InvoicesPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Total facturé"
-          value="284 750 f"
+          value={fmtCurrency(284750)}
           sub="ce mois"
           icon={<FileText className="h-5 w-5" />}
         />
         <StatCard
           label="Payées"
-          value="248 100 f"
+          value={fmtCurrency(248100)}
           sub="encaissées"
           icon={<FileText className="h-5 w-5" />}
         />
         <StatCard
           label="En attente"
-          value="18 230 f"
+          value={fmtCurrency(18230)}
           sub="à venir"
           icon={<FileText className="h-5 w-5" />}
         />
         <StatCard
           label="En retard"
-          value="18 420 f"
+          value={fmtCurrency(18420)}
           sub="5 factures"
           icon={<FileText className="h-5 w-5" />}
         />

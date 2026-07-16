@@ -77,7 +77,7 @@ function SuppliersPage() {
         />
         <StatCard
           label="Volume d'achats"
-          value="555 600 f"
+          value={fmtCurrency(555600)}
           sub="cumulé"
           icon={<Package className="h-5 w-5" />}
         />

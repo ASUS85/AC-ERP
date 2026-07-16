@@ -11,6 +11,7 @@ enum StatutUtilisateur {
   ACTIF
   INACTIF
   BLOQUE
+  ARCHIVE
 }
 
 enum StatutSimple {
@@ -190,7 +191,7 @@ model Utilisateur {
   id                       String                   @id @default(uuid()) @db.Char(36)
   nom                      String                   @db.VarChar(100)
   prenom                   String                   @db.VarChar(100)
-  email                    String                   @unique(map: "uk_utilisateurs_email") @db.VarChar(255)
+  email                    String                   @unique(map: "uk_utilisateurs_email") @db.VarChar(191)
   passwordHash             String                   @map("password_hash") @db.VarChar(255)
   telephone                String?                  @db.VarChar(20)
   avatar                   String?                  @db.VarChar(500)
@@ -226,7 +227,7 @@ model Utilisateur {
 
 model RefreshToken {
   id            String      @id @default(uuid()) @db.Char(36)
-  token         String      @unique(map: "uk_refresh_token") @db.VarChar(512)
+  token         String      @unique(map: "uk_refresh_token") @db.VarChar(191)
   idUtilisateur String      @map("id_utilisateur") @db.Char(36)
   expiresAt     DateTime    @map("expires_at")
   isRevoked     Boolean     @default(false) @map("is_revoked")
@@ -349,7 +350,7 @@ model Client {
   codeClient          String              @unique(map: "uk_clients_code") @map("code_client") @db.VarChar(20)
   type                TypeClient          @default(ENTREPRISE)
   nom                 String              @db.VarChar(255)
-  email               String              @unique(map: "uk_clients_email") @db.VarChar(255)
+  email               String              @unique(map: "uk_clients_email") @db.VarChar(191)
   telephone           String              @db.VarChar(20)
   adresse             String              @db.Text
   ville               String              @db.VarChar(100)
@@ -371,7 +372,7 @@ model Fournisseur {
   id                       String                   @id @default(uuid()) @db.Char(36)
   codeFournisseur          String                   @unique(map: "uk_fournisseur_code") @map("code_fournisseur") @db.VarChar(20)
   raisonSociale            String                   @map("raison_sociale") @db.VarChar(255)
-  email                    String                   @unique(map: "uk_fournisseur_email") @db.VarChar(255)
+  email                    String                   @unique(map: "uk_fournisseur_email") @db.VarChar(191)
   telephone                String                   @db.VarChar(20)
   adresse                  String                   @db.Text
   ville                    String                   @db.VarChar(100)
@@ -497,7 +498,7 @@ model BonCommandeFournisseur {
   idFournisseur       String                       @map("id_fournisseur") @db.Char(36)
   idUtilisateur       String                       @map("id_utilisateur") @db.Char(36)
   idDa                String?                      @map("id_da") @db.Char(36)
-  dateCommande        DateTime                     @default(now()) @map("date_commande") @db.Date
+  dateCommande        DateTime                     @default(now()) @map("date_commande")
   dateLivraisonPrevue DateTime?                    @map("date_livraison_prevue") @db.Date
   statut              StatutBonCommandeFournisseur @default(BROUILLON)
   totalHt             Decimal                      @default(0.00) @map("total_ht") @db.Decimal(15, 2)
@@ -566,7 +567,7 @@ model Devis {
   numeroDevis         String              @unique(map: "uk_devis_numero") @map("numero_devis") @db.VarChar(30)
   idClient            String              @map("id_client") @db.Char(36)
   idUtilisateur       String              @map("id_utilisateur") @db.Char(36)
-  dateDevis           DateTime            @default(now()) @map("date_devis") @db.Date
+  dateDevis           DateTime            @default(now()) @map("date_devis")
   dateValidite        DateTime            @map("date_validite") @db.Date
   statut              StatutDevis         @default(BROUILLON)
   totalHt             Decimal             @default(0.00) @map("total_ht") @db.Decimal(15, 2)
@@ -608,7 +609,7 @@ model BonCommandeClient {
   idClient            String                  @map("id_client") @db.Char(36)
   idUtilisateur       String                  @map("id_utilisateur") @db.Char(36)
   idDevis             String?                 @map("id_devis") @db.Char(36)
-  dateCommande        DateTime                @default(now()) @map("date_commande") @db.Date
+  dateCommande        DateTime                @default(now()) @map("date_commande")
   dateLivraisonPrevue DateTime?               @map("date_livraison_prevue") @db.Date
   statut              StatutBonCommandeClient @default(EN_ATTENTE)
   totalHt             Decimal                 @default(0.00) @map("total_ht") @db.Decimal(15, 2)
@@ -650,7 +651,7 @@ model BonLivraison {
   numeroBl      String             @unique(map: "uk_bl_numero") @map("numero_bl") @db.VarChar(30)
   idBcc         String             @map("id_bcc") @db.Char(36)
   idUtilisateur String             @map("id_utilisateur") @db.Char(36)
-  dateLivraison DateTime           @default(now()) @map("date_livraison") @db.Date
+  dateLivraison DateTime           @default(now()) @map("date_livraison")
   statut        StatutBonLivraison @default(PREPARATION)
   notes         String?            @db.Text
   createdAt     DateTime           @default(now()) @map("created_at")
@@ -684,7 +685,7 @@ model Facture {
   idFournisseur   String?        @map("id_fournisseur") @db.Char(36)
   idBl            String?        @map("id_bl") @db.Char(36)
   idUtilisateur   String         @map("id_utilisateur") @db.Char(36)
-  dateEmission    DateTime       @default(now()) @map("date_emission") @db.Date
+  dateEmission    DateTime       @default(now()) @map("date_emission")
   dateEcheance    DateTime       @map("date_echeance") @db.Date
   statut          StatutFacture  @default(EMISE)
   totalHt         Decimal        @default(0.00) @map("total_ht") @db.Decimal(15, 2)
@@ -731,7 +732,7 @@ model Avoir {
   numeroAvoir   String       @unique(map: "uk_avoir_numero") @map("numero_avoir") @db.VarChar(30)
   idFacture     String       @map("id_facture") @db.Char(36)
   idUtilisateur String       @map("id_utilisateur") @db.Char(36)
-  dateAvoir     DateTime     @default(now()) @map("date_avoir") @db.Date
+  dateAvoir     DateTime     @default(now()) @map("date_avoir")
   motif         String       @db.Text
   totalHt       Decimal      @default(0.00) @map("total_ht") @db.Decimal(15, 2)
   totalTtc      Decimal      @default(0.00) @map("total_ttc") @db.Decimal(15, 2)
@@ -764,7 +765,7 @@ model Paiement {
   idFacture     String       @map("id_facture") @db.Char(36)
   idUtilisateur String       @map("id_utilisateur") @db.Char(36)
   montant       Decimal      @db.Decimal(15, 2)
-  datePaiement  DateTime     @default(now()) @map("date_paiement") @db.Date
+  datePaiement  DateTime     @default(now()) @map("date_paiement")
   modePaiement  ModePaiement @map("mode_paiement")
   reference     String?      @db.VarChar(100)
   notes         String?      @db.Text

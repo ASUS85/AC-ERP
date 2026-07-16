@@ -11,6 +11,8 @@ import {
   useGlobalLoader,
 } from "@/components/erp/GlobalLoader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { getEntreprise } from "@/lib/api/parametres.service";
+import { setStoredCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
+  const [, setCurrencyVersion] = useState(0);
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -26,6 +29,22 @@ function AppLayout() {
   useEffect(() => {
     return showLoader({ target: "main", maxDurationMs: 2000 });
   }, [pathname, showLoader]);
+
+  useEffect(() => {
+    getEntreprise()
+      .then((response) => setStoredCurrency(response?.data?.devise))
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const handleCurrencyChanged = () => {
+      setCurrencyVersion((version) => version + 1);
+    };
+    window.addEventListener("erp:currency-changed", handleCurrencyChanged);
+    return () => {
+      window.removeEventListener("erp:currency-changed", handleCurrencyChanged);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen w-full bg-background">

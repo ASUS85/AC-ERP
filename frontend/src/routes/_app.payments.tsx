@@ -60,19 +60,19 @@ function PaymentsPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Encaissements"
-          value="248 100 f"
+          value={fmtCurrency(248100)}
           sub="ce mois"
           icon={<ArrowDownLeft className="h-5 w-5" />}
         />
         <StatCard
           label="Décaissements"
-          value="186 500 f"
+          value={fmtCurrency(186500)}
           sub="ce mois"
           icon={<ArrowUpRight className="h-5 w-5" />}
         />
         <StatCard
           label="Trésorerie nette"
-          value="+61 600 f"
+          value={`+${fmtCurrency(61600)}`}
           delta="+8 %"
           up
           sub="solde du mois"

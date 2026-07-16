@@ -49,7 +49,7 @@ function StatsPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Ventes (an)"
-          value="780 300 f"
+          value={fmtCurrency(780300)}
           delta="+14 %"
           up
           sub="cumulé 2026"
@@ -57,7 +57,7 @@ function StatsPage() {
         />
         <StatCard
           label="Achats (an)"
-          value="439 400 f"
+          value={fmtCurrency(439400)}
           delta="+9 %"
           up
           sub="cumulé 2026"

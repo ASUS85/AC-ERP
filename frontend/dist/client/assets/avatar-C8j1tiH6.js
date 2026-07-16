@@ -1,1 +1,0 @@
-const e="http://localhost:3000/api/v1",r=e.replace(/\/api\/v\d+\/?$/,"").replace(/\/$/,"");function i(t){return t?/^(blob:|data:|https?:\/\/)/.test(t)?t:`${r}${t.startsWith("/")?t:`/${t}`}`:""}export{i as r};

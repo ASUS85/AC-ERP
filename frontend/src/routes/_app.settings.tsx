@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   changePassword,
   getMe,
@@ -35,6 +36,11 @@ import {
   updateMaintenance,
   updateSysteme,
 } from "@/lib/api/parametres.service";
+import {
+  AFRICAN_CURRENCIES,
+  getCurrencyMeta,
+  setStoredCurrency,
+} from "@/lib/currency";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -128,7 +134,9 @@ function SettingsPage() {
     Promise.all([getMe(), getEntreprise(), getSysteme(), getSessions()])
       .then(([me, business, settings, activeSessions]) => {
         setProfile(unwrap(me as ApiResponse<Profile>));
-        setCompany(unwrap(business as ApiResponse<Company>));
+        const loadedCompany = unwrap(business as ApiResponse<Company>);
+        setCompany(loadedCompany);
+        setStoredCurrency(loadedCompany?.devise);
         setSystem(unwrap(settings as ApiResponse<SystemSettings>));
         setSessions(unwrap(activeSessions as ApiResponse<Session[]>) || []);
       })
@@ -206,7 +214,9 @@ function SettingsPage() {
 
     try {
       const response = await updateEntreprise(company);
-      setCompany(unwrap(response as ApiResponse<Company>));
+      const updatedCompany = unwrap(response as ApiResponse<Company>);
+      setCompany(updatedCompany);
+      setStoredCurrency(updatedCompany?.devise);
       setCompanyErrors({});
       toast.success("Paramètres entreprise enregistrés");
     } catch {
@@ -465,14 +475,33 @@ function SettingsPage() {
                   placeholder="contact@entreprise.com"
                   onChange={(email) => updateCompanyField("email", email)}
                 />
-                <Field
-                  label="Devise"
-                  value={company.devise}
-                  placeholder="XAF"
-                  required
-                  error={companyErrors.devise}
-                  onChange={(devise) => updateCompanyField("devise", devise)}
-                />
+                <div className="space-y-1.5">
+                  <Label>
+                    Devise
+                    <span className="ml-1 text-destructive">*</span>
+                  </Label>
+                  <SearchableSelect
+                    value={company.devise}
+                    onValueChange={(devise) =>
+                      updateCompanyField("devise", devise)
+                    }
+                    options={AFRICAN_CURRENCIES.map((currency) => ({
+                      value: currency.code,
+                      label: `${currency.code} - ${currency.name} (${currency.symbol})`,
+                    }))}
+                    placeholder="Selectionnez une devise"
+                    searchPlaceholder="Rechercher une devise"
+                    emptyMessage="Aucune devise trouvee"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Symbole utilise: {getCurrencyMeta(company.devise).symbol}
+                  </p>
+                  {companyErrors.devise && (
+                    <p className="text-xs text-destructive">
+                      {companyErrors.devise}
+                    </p>
+                  )}
+                </div>
                 <Field
                   label="Fuseau horaire"
                   value={company.fuseauHoraire}

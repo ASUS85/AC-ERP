@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,18 +31,58 @@ export function SearchableSelect({
   disabled,
   className,
 }: SearchableSelectProps) {
+  const dropdownGap = 4;
+  const dropdownMaxHeight = 240;
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>(
+    {},
+  );
+
+  const updateDropdownPosition = React.useCallback(() => {
+    const trigger = containerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = Math.min(
+      dropdownRef.current?.offsetHeight || dropdownMaxHeight,
+      dropdownMaxHeight,
+    );
+    const availableBelow = viewportHeight - rect.bottom;
+    const availableAbove = rect.top;
+    const shouldOpenUp =
+      availableBelow < dropdownHeight + dropdownGap &&
+      availableAbove > availableBelow;
+
+    setDropdownStyle({
+      position: "fixed",
+      left: rect.left,
+      top: shouldOpenUp
+        ? Math.max(8, rect.top - dropdownGap - dropdownHeight)
+        : rect.bottom + dropdownGap,
+      width: rect.width,
+      maxHeight: Math.max(
+        120,
+        Math.min(
+          dropdownMaxHeight,
+          shouldOpenUp ? availableAbove - 8 : availableBelow - 8,
+        ),
+      ),
+      zIndex: 9999,
+    });
+  }, []);
 
   // Fermer si clic en dehors du conteneur
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Node;
+      const insideTrigger = containerRef.current?.contains(target);
+      const insideDropdown = dropdownRef.current?.contains(target);
+      if (!insideTrigger && !insideDropdown) {
         setOpen(false);
         setSearch("");
       }
@@ -53,10 +94,24 @@ export function SearchableSelect({
   // Focus automatique sur l'input quand le dropdown s'ouvre
   React.useEffect(() => {
     if (open) {
+      updateDropdownPosition();
       // Petit délai pour laisser le DOM se mettre à jour
       setTimeout(() => inputRef.current?.focus(), 10);
     }
-  }, [open]);
+  }, [open, updateDropdownPosition]);
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    const handlePosition = () => updateDropdownPosition();
+    window.addEventListener("resize", handlePosition);
+    window.addEventListener("scroll", handlePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", handlePosition);
+      window.removeEventListener("scroll", handlePosition, true);
+    };
+  }, [open, updateDropdownPosition]);
 
   const filtered = React.useMemo(
     () =>
@@ -108,68 +163,71 @@ export function SearchableSelect({
       </button>
 
       {/* Dropdown */}
-      {open && (
-        <div
-          // Empêche le mousedown du dropdown de propager vers window
-          // ce qui évite la fermeture immédiate au clic sur l'input
-          onMouseDown={(e) => e.stopPropagation()}
-          className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md"
-        >
-          {/* Zone de recherche */}
-          <div className="p-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" /> 
-              <input
-                ref={inputRef}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={searchPlaceholder}
-                className={cn(
-                  "h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm",
-                  "outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                  "placeholder:text-muted-foreground",
-                )}
-                // Empêche la touche Escape de remonter et de fermer d'autres éléments
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setOpen(false);
-                    setSearch("");
-                    e.stopPropagation();
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Liste des options */}
-          <div className="max-h-60 overflow-y-auto py-1">
-            {filtered.length === 0 ? (
-              <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                {emptyMessage}
+      {open &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="rounded-md border bg-popover text-popover-foreground shadow-md"
+            style={dropdownStyle}
+          >
+            <div className="p-2">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  ref={inputRef}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className={cn(
+                    "h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm",
+                    "outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                    "placeholder:text-muted-foreground",
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setOpen(false);
+                      setSearch("");
+                      e.stopPropagation();
+                    }
+                  }}
+                />
               </div>
-            ) : (
-              filtered.map((option) => {
-                const isActive = option.value === value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleSelect(option.value)}
-                    className={cn(
-                      "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      isActive && "bg-accent text-accent-foreground font-medium",
-                    )}
-                  >
-                    <span className="truncate">{option.label}</span>
-                    {isActive && <Check className="ml-2 h-4 w-4 shrink-0" />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+
+            <div
+              className="overflow-y-auto py-1"
+              style={{ maxHeight: dropdownStyle.maxHeight }}
+            >
+              {filtered.length === 0 ? (
+                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  {emptyMessage}
+                </div>
+              ) : (
+                filtered.map((option) => {
+                  const isActive = option.value === value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => handleSelect(option.value)}
+                      className={cn(
+                        "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        isActive &&
+                          "bg-accent text-accent-foreground font-medium",
+                      )}
+                    >
+                      <span className="truncate">{option.label}</span>
+                      {isActive && <Check className="ml-2 h-4 w-4 shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
