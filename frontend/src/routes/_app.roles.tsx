@@ -528,7 +528,9 @@ function RolesPage() {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nomRole">Nom du rôle</Label>
+            <Label htmlFor="nomRole">
+              Nom du rôle <span class="ml-1 text-destructive">*</span>
+            </Label>
             <Input
               id="nomRole"
               value={form.nomRole}

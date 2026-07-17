@@ -390,7 +390,9 @@ function UsersPage() {
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="nom">Nom</Label>
+            <Label htmlFor="nom">
+              Nom <span class="ml-1 text-destructive">*</span>
+            </Label>
             <Input
               id="nom"
               value={form.nom}
@@ -405,7 +407,9 @@ function UsersPage() {
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="prenom">Prénom</Label>
+            <Label htmlFor="prenom">
+              Prénom <span class="ml-1 text-destructive">*</span>
+            </Label>
             <Input
               id="prenom"
               value={form.prenom}
@@ -421,7 +425,9 @@ function UsersPage() {
             ) : null}
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">
+              Email <span class="ml-1 text-destructive">*</span>
+            </Label>
             <Input
               id="email"
               type="email"
@@ -446,7 +452,9 @@ function UsersPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Rôle</Label>
+            <Label htmlFor="role">
+              Rôle <span class="ml-1 text-destructive">*</span>
+            </Label>
             <Select
               value={form.idRole}
               onValueChange={(value) => {

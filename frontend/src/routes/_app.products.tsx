@@ -602,6 +602,7 @@ function ProductsPage() {
             htmlFor="designation"
             error={errors.designation}
           >
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="designation"
               value={form.designation}
@@ -614,6 +615,7 @@ function ProductsPage() {
             htmlFor="categorie"
             error={errors.idCategorie}
           >
+            <span class="ml-1 text-destructive">*</span>
             <SearchableSelect
               value={form.idCategorie}
               onValueChange={(value) => setField("idCategorie", value)}
@@ -627,6 +629,7 @@ function ProductsPage() {
             />
           </Field>
           <Field label="Unité" htmlFor="uniteMesure" error={errors.uniteMesure}>
+            <span class="ml-1 text-destructive">*</span>
             <Select
               value={form.uniteMesure}
               onValueChange={(value: ProduitPayload["uniteMesure"]) =>
@@ -664,6 +667,7 @@ function ProductsPage() {
             htmlFor="prixVenteHt"
             error={errors.prixVenteHt}
           >
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="prixVenteHt"
               type="number"
@@ -674,6 +678,7 @@ function ProductsPage() {
             />
           </Field>
           <Field label="Taux TVA (%)" htmlFor="tauxTva" error={errors.tauxTva}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="tauxTva"
               type="number"
@@ -688,6 +693,7 @@ function ProductsPage() {
             htmlFor="stockMinimum"
             error={errors.stockMinimum}
           >
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="stockMinimum"
               type="number"
@@ -716,6 +722,7 @@ function ProductsPage() {
             </Field>
           ) : null}
           <Field label="Statut" htmlFor="statut" error={errors.statut}>
+            <span class="ml-1 text-destructive">*</span>
             <Select
               value={form.statut || ""}
               onValueChange={(value: ProduitPayload["statut"]) =>

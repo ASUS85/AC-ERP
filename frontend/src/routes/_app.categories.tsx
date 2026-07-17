@@ -447,6 +447,7 @@ function CategoriesPage() {
       >
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Nom" htmlFor="nom" error={errors.nom}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="nom"
               value={form.nom}

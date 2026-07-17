@@ -366,6 +366,7 @@ function SuppliersPage() {
             htmlFor="raisonSociale"
             error={errors.raisonSociale}
           >
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="raisonSociale"
               value={form.raisonSociale}
@@ -374,6 +375,7 @@ function SuppliersPage() {
             />
           </Field>
           <Field label="Email" htmlFor="email" error={errors.email}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="email"
               type="email"
@@ -383,6 +385,7 @@ function SuppliersPage() {
             />
           </Field>
           <Field label="Telephone" htmlFor="telephone" error={errors.telephone}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="telephone"
               value={form.telephone}

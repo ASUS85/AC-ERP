@@ -589,6 +589,7 @@ function CustomersPage() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Nom" htmlFor="nom" error={errors.nom}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="nom"
               value={form.nom}
@@ -598,6 +599,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Email" htmlFor="email" error={errors.email}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="email"
               type="email"
@@ -608,6 +610,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Téléphone" htmlFor="telephone" error={errors.telephone}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="telephone"
               value={form.telephone}
@@ -617,6 +620,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Ville" htmlFor="ville" error={errors.ville}>
+            <span class="ml-1 text-destructive">*</span>
             <Input
               id="ville"
               value={form.ville}
