@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-type ModalSize = "sm" | "md" | "lg" | "xl";
+type ModalSize = "sm" | "md" | "lg" | "xl" | "xxl";
 type ModalPosition = "center" | "top" | "right";
 
 export function AppModal({
@@ -37,6 +37,7 @@ export function AppModal({
     md: "sm:max-w-lg",
     lg: "sm:max-w-2xl",
     xl: "sm:max-w-4xl",
+    xxl: "sm:max-w-6xl",
   };
 
   const positionClasses: Record<ModalPosition, string> = {
@@ -50,11 +51,26 @@ export function AppModal({
       <DialogContent
         onPointerDownOutside={(e) => {
           if (!closeOnOutsideClick) {
+            // Autorise les clics sur le dropdown du SearchableSelect qui est dans un portail
+            if (
+              (e.target as HTMLElement)?.closest(
+                '[data-searchable-dropdown="true"]',
+              )
+            ) {
+              return;
+            }
             e.preventDefault();
           }
         }}
         onInteractOutside={(e) => {
           if (!closeOnOutsideClick) {
+            if (
+              (e.target as HTMLElement)?.closest(
+                '[data-searchable-dropdown="true"]',
+              )
+            ) {
+              return;
+            }
             e.preventDefault();
           }
         }}

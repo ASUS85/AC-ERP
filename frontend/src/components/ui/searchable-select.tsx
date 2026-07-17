@@ -31,52 +31,51 @@ export function SearchableSelect({
   disabled,
   className,
 }: SearchableSelectProps) {
-  const dropdownGap = 4;
   const dropdownMaxHeight = 240;
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>(
-    {},
-  );
+  const [pos, setPos] = React.useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    maxHeight: dropdownMaxHeight,
+  });
 
-  const updateDropdownPosition = React.useCallback(() => {
+  const updatePosition = React.useCallback(() => {
     const trigger = containerRef.current;
     if (!trigger) return;
-
     const rect = trigger.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = Math.min(
-      dropdownRef.current?.offsetHeight || dropdownMaxHeight,
-      dropdownMaxHeight,
+    const vh = window.innerHeight;
+    const below = vh - rect.bottom;
+    const above = rect.top;
+    const up = below < dropdownMaxHeight && above > below;
+    const maxH = Math.max(
+      120,
+      Math.min(dropdownMaxHeight, up ? above - 12 : below - 12),
     );
-    const availableBelow = viewportHeight - rect.bottom;
-    const availableAbove = rect.top;
-    const shouldOpenUp =
-      availableBelow < dropdownHeight + dropdownGap &&
-      availableAbove > availableBelow;
-
-    setDropdownStyle({
-      position: "fixed",
+    const next = {
       left: rect.left,
-      top: shouldOpenUp
-        ? Math.max(8, rect.top - dropdownGap - dropdownHeight)
-        : rect.bottom + dropdownGap,
+      top: up ? Math.max(8, rect.top - 4 - maxH) : rect.bottom + 4,
       width: rect.width,
-      maxHeight: Math.max(
-        120,
-        Math.min(
-          dropdownMaxHeight,
-          shouldOpenUp ? availableAbove - 8 : availableBelow - 8,
-        ),
-      ),
-      zIndex: 9999,
+      maxHeight: maxH,
+    };
+    setPos((prev) => {
+      if (
+        prev.left === next.left &&
+        prev.top === next.top &&
+        prev.width === next.width &&
+        prev.maxHeight === next.maxHeight
+      ) {
+        return prev;
+      }
+      return next;
     });
   }, []);
 
-  // Fermer si clic en dehors du conteneur
+  // Fermer si clic en dehors
   React.useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
@@ -91,27 +90,33 @@ export function SearchableSelect({
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Focus automatique sur l'input quand le dropdown s'ouvre
+  // Position et focus à l'ouverture
   React.useEffect(() => {
     if (open) {
-      updateDropdownPosition();
-      // Petit délai pour laisser le DOM se mettre à jour
+      updatePosition();
       setTimeout(() => inputRef.current?.focus(), 10);
     }
-  }, [open, updateDropdownPosition]);
+  }, [open, updatePosition]);
 
+  // Reposition au scroll/resize
   React.useEffect(() => {
     if (!open) return;
-
-    const handlePosition = () => updateDropdownPosition();
-    window.addEventListener("resize", handlePosition);
-    window.addEventListener("scroll", handlePosition, true);
-
-    return () => {
-      window.removeEventListener("resize", handlePosition);
-      window.removeEventListener("scroll", handlePosition, true);
+    const handleResize = () => updatePosition();
+    const handleScroll = (e: Event) => {
+      // Mettre à jour la position uniquement si le scroll concerne la page (e.target === document).
+      // Cela empêche le repositionnement lors du scroll à l'intérieur du dropdown.
+      if (e.target !== document) {
+        return;
+      }
+      updatePosition();
     };
-  }, [open, updateDropdownPosition]);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      window.removeEventListener("resize", handleResize); // The `true` means it's a capture phase listener.
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [open, updatePosition]);
 
   const filtered = React.useMemo(
     () =>
@@ -123,27 +128,19 @@ export function SearchableSelect({
 
   const selected = options.find((o) => o.value === value);
 
-  const handleToggle = () => {
-    if (disabled) return;
-    setOpen((prev) => {
-      if (prev) setSearch("");
-      return !prev;
-    });
-  };
-
-  const handleSelect = (optionValue: string) => {
-    onValueChange(optionValue);
-    setOpen(false);
-    setSearch("");
-  };
-
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      {/* Bouton déclencheur */}
+      {/* Déclencheur */}
       <button
         type="button"
         disabled={disabled}
-        onClick={handleToggle}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((prev) => {
+            if (prev) setSearch("");
+            return !prev;
+          });
+        }}
         className={cn(
           "flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 text-sm shadow-sm transition-colors",
           "hover:border-primary",
@@ -156,22 +153,30 @@ export function SearchableSelect({
         </span>
         <ChevronDown
           className={cn(
-            "ml-2 h-4 w-4 shrink-0 opacity-60 transition-transform duration-200",
+            "ml-2 h-4 w-4 shrink-0 opacity-60 transition-transform",
             open && "rotate-180",
           )}
         />
       </button>
 
-      {/* Dropdown */}
+      {/* Dropdown porté dans document.body */}
       {open &&
         createPortal(
           <div
             ref={dropdownRef}
-            onMouseDown={(e) => e.stopPropagation()}
-            className="rounded-md border bg-popover text-popover-foreground shadow-md"
-            style={dropdownStyle}
+            className="flex flex-col rounded-md border bg-popover text-popover-foreground shadow-md overflow-hidden"
+            style={{
+              position: "fixed",
+              left: pos.left,
+              top: pos.top,
+              width: pos.width,
+              maxHeight: pos.maxHeight,
+              zIndex: 99999,
+            }}
+            data-searchable-dropdown="true"
+            role="listbox"
           >
-            <div className="p-2">
+            <div className="shrink-0 p-2">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -196,8 +201,8 @@ export function SearchableSelect({
             </div>
 
             <div
-              className="overflow-y-auto py-1"
-              style={{ maxHeight: dropdownStyle.maxHeight }}
+              className="overflow-y-auto flex-1 py-1"
+              style={{ maxHeight: pos.maxHeight - 55 }}
             >
               {filtered.length === 0 ? (
                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
@@ -210,7 +215,11 @@ export function SearchableSelect({
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => handleSelect(option.value)}
+                      onClick={() => {
+                        onValueChange(option.value);
+                        setOpen(false);
+                        setSearch("");
+                      }}
                       className={cn(
                         "flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors",
                         "hover:bg-accent hover:text-accent-foreground",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Download,
+  Eye,
   FileDown,
   Loader2,
   Package,
@@ -36,6 +37,7 @@ import {
   archiveProduit,
   createProduit,
   getProduits,
+  getProduitsPdf,
   updateProduit,
   type ProduitPayload,
 } from "@/lib/api/produits.service";
@@ -123,6 +125,9 @@ function ProductsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const pageSize = 10;
 
@@ -313,6 +318,26 @@ function ProductsPage() {
     }
   };
 
+  const openPreview = async () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewLoading(true);
+    try {
+      const response = await getProduitsPdf({
+        search: search.trim() || undefined,
+        categorieId: categoryFilter === "all" ? undefined : categoryFilter,
+      });
+      const blob = response as unknown as Blob;
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+    } catch {
+      toast.error("Impossible de generer l'apercu PDF");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   const exportProducts = async () => {
     setExporting(true);
     try {
@@ -430,20 +455,36 @@ function ProductsPage() {
         description="Catalogue et gestion des articles"
         breadcrumb={["Gestion commerciale", "Produits"]}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => void exportProducts()}
-            disabled={exporting}
-          >
-            {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            Exporter
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void openPreview()}
+              disabled={previewLoading}
+            >
+              {previewLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              Apercu
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void exportProducts()}
+              disabled={exporting}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Exporter
+            </Button>
+          </>
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -705,6 +746,60 @@ function ProductsPage() {
             />
           </Field>
         </div>
+      </AppModal>
+
+      {/* Modale de prévisualisation PDF */}
+      <AppModal
+        open={previewOpen}
+        onOpenChange={(open) => {
+          if (!open && previewUrl) URL.revokeObjectURL(previewUrl);
+          setPreviewOpen(open);
+        }}
+        title="Apercu PDF"
+        description="Catalogue des produits tel qu'il sera exporte"
+        position="center"
+        size="xxl"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewOpen(false);
+              }}
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={() => {
+                if (!previewUrl) return;
+                const link = document.createElement("a");
+                link.href = previewUrl;
+                link.download = `produits-${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                toast.success("PDF telecharge");
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Telecharger
+            </Button>
+          </div>
+        }
+      >
+        {previewUrl ? (
+          <iframe
+            src={previewUrl}
+            className="h-[70vh] w-full rounded-lg border border-border"
+            title="Apercu PDF produits"
+          />
+        ) : (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generation du PDF...
+          </div>
+        )}
       </AppModal>
 
       <AppModal

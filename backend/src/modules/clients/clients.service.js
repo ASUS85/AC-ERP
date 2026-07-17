@@ -1,6 +1,8 @@
 import { ApiError } from "../../utils/response.util.js";
 import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { clientsRepository } from "./clients.repository.js";
+import { parametresRepository } from "../parametres/parametres.repository.js";
+import { buildClientsPdf } from "../../services/client-document.service.js";
 
 export const clientsService = {
   async list(query) {
@@ -84,5 +86,32 @@ export const clientsService = {
       throw new ApiError(404, "NOT_FOUND", "Client introuvable");
     }
     return client;
+  },
+
+  async exportPdf(query = {}) {
+    const where = {
+      statut: { not: "ARCHIVE" },
+      ...(query.search
+        ? {
+            OR: [
+              { nom: { contains: query.search } },
+              { email: { contains: query.search } },
+              { codeClient: { contains: query.search } },
+            ],
+          }
+        : {}),
+      ...(query.statut ? { statut: query.statut } : {}),
+      ...(query.ville ? { ville: query.ville } : {}),
+    };
+
+    const [clients, entreprise] = await Promise.all([
+      clientsRepository.findMany({ where, orderBy: { nom: "asc" } }),
+      parametresRepository.entreprise(),
+    ]);
+
+    return {
+      filename: `clients-${new Date().toISOString().slice(0, 10)}.pdf`,
+      buffer: await buildClientsPdf(clients, entreprise),
+    };
   },
 };

@@ -15,8 +15,22 @@ export type ClientPayload = {
   statut?: "ACTIF" | "INACTIF" | "ARCHIVE";
 };
 
+export type ApiMeta = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type ApiListResponse<T> = {
+  success: boolean;
+  data: T[];
+  meta: ApiMeta;
+  message: string;
+};
+
 export const getClients = (params?: Record<string, unknown>) =>
-  api.get("/clients", { params });
+  api.get("/clients", { params }) as Promise<{ success: boolean; data: unknown[]; meta: ApiMeta; message: string }>;
 
 export const getClientById = (id: string) => api.get(`/clients/${id}`);
 

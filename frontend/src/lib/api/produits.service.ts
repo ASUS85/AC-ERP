@@ -17,7 +17,10 @@ export type ProduitPayload = {
 export const getProduits = (params?: Record<string, unknown>) =>
   api.get("/produits", { params });
 export const getProduitById = (id: string) => api.get(`/produits/${id}`);
-export const createProduit = (data: ProduitPayload) => api.post("/produits", data);
+export const createProduit = (data: ProduitPayload) =>
+  api.post("/produits", data);
 export const updateProduit = (id: string, data: Partial<ProduitPayload>) =>
   api.put(`/produits/${id}`, data);
 export const archiveProduit = (id: string) => api.delete(`/produits/${id}`);
+export const getProduitsPdf = (params?: Record<string, unknown>) =>
+  api.get("/produits/export.pdf", { params, responseType: "blob" });

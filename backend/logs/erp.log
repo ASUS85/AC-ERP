@@ -1633,3 +1633,86 @@ Raw query failed. Code: `N/A`. Message: `Value out of range error. The column `u
 2026-07-16T17:26:44.642Z info: Socket connecte y1XQeKsjFx5m2WLVAAAF
 2026-07-16T17:36:44.111Z info: Socket deconnecte y1XQeKsjFx5m2WLVAAAF
 2026-07-16T17:36:45.468Z info: Socket connecte BgJEWd0jhwd9b6mlAAAH
+2026-07-16T18:02:52.566Z info: Socket deconnecte BgJEWd0jhwd9b6mlAAAH
+2026-07-16T18:03:01.531Z info: Socket connecte YdLVV7LElSayE-WqAAAJ
+2026-07-16T19:42:52.763Z info: Socket deconnecte YdLVV7LElSayE-WqAAAJ
+2026-07-17T08:29:12.301Z info: Socket connecte I5v1MP0TK-qlGJ5TAAAL
+2026-07-17T08:31:20.960Z info: Socket deconnecte I5v1MP0TK-qlGJ5TAAAL
+2026-07-17T08:31:24.825Z info: Socket connecte Pqpl3g9cht3PzVuVAAAN
+2026-07-17T10:06:47.180Z info: Base de donnees connectee
+2026-07-17T10:06:47.215Z info: Serveur demarre port 3000
+2026-07-17T10:06:49.914Z info: Socket connecte azuNX-m2JNAHlUqQAAAB
+2026-07-17T10:14:11.005Z info: Base de donnees connectee
+2026-07-17T10:14:11.026Z info: Serveur demarre port 3000
+2026-07-17T10:14:14.259Z info: Socket connecte twIiBXB8ZQGM7mEQAAAB
+2026-07-17T10:19:11.382Z info: Base de donnees connectee
+2026-07-17T10:19:11.419Z info: Serveur demarre port 3000
+2026-07-17T10:19:11.562Z info: Socket connecte gkTsbl5quPU7iDE5AAAB
+2026-07-17T10:20:00.937Z info: Base de donnees connectee
+2026-07-17T10:20:00.984Z info: Serveur demarre port 3000
+2026-07-17T10:20:03.903Z info: Socket connecte dLt2QFuQxtqGNxa5AAAB
+2026-07-17T10:21:16.420Z info: Base de donnees connectee
+2026-07-17T10:21:16.453Z info: Serveur demarre port 3000
+2026-07-17T10:21:17.539Z info: Socket connecte XBMScC7C_OgAWIDUAAAB
+2026-07-17T10:22:14.583Z info: Base de donnees connectee
+2026-07-17T10:22:14.620Z info: Serveur demarre port 3000
+2026-07-17T10:22:15.118Z info: Socket connecte cgcD5leVy_2P_puaAAAB
+2026-07-17T10:29:39.039Z info: Socket deconnecte cgcD5leVy_2P_puaAAAB
+2026-07-17T10:29:53.980Z info: Socket connecte EiZGQNEToslbzi3bAAAD
+2026-07-17T10:40:38.484Z info: Socket deconnecte EiZGQNEToslbzi3bAAAD
+2026-07-17T10:41:56.109Z info: Socket connecte MgtxVDR0a7NCr49uAAAF
+2026-07-17T10:50:51.629Z info: Socket deconnecte MgtxVDR0a7NCr49uAAAF
+2026-07-17T10:50:56.495Z info: Socket connecte BoIb8bVhgvhVVNSLAAAH
+2026-07-17T10:52:41.430Z info: Socket deconnecte BoIb8bVhgvhVVNSLAAAH
+2026-07-17T10:52:52.885Z info: Socket connecte dL9w5ZORPfPjn2MMAAAJ
+2026-07-17T11:06:44.771Z info: Base de donnees connectee
+2026-07-17T11:06:44.828Z info: Serveur demarre port 3000
+2026-07-17T11:06:47.848Z info: Socket connecte BHY778XWcK5LR5LBAAAB
+2026-07-17T11:08:23.680Z info: Base de donnees connectee
+2026-07-17T11:08:23.699Z info: Serveur demarre port 3000
+2026-07-17T11:08:24.688Z info: Socket connecte 0xPzp0CDp76iHrprAAAB
+2026-07-17T11:08:53.464Z info: Base de donnees connectee
+2026-07-17T11:08:53.536Z info: Serveur demarre port 3000
+2026-07-17T11:08:53.669Z info: Socket connecte EwAL6teponXhDoRFAAAB
+2026-07-17T11:09:14.456Z info: Base de donnees connectee
+2026-07-17T11:09:14.526Z info: Serveur demarre port 3000
+2026-07-17T11:09:14.706Z info: Socket connecte ldGxs7JvcXWYTj8fAAAB
+2026-07-17T11:09:44.854Z info: Base de donnees connectee
+2026-07-17T11:09:44.879Z info: Serveur demarre port 3000
+2026-07-17T11:09:46.235Z info: Socket connecte CWwlHRvWthqFbXdnAAAB
+2026-07-17T11:37:15.759Z info: Socket deconnecte CWwlHRvWthqFbXdnAAAB
+2026-07-17T11:37:28.801Z info: Socket connecte FA2XXFbL5CSSrLR3AAAD
+2026-07-17T12:00:42.434Z error: 
+Invalid `prisma.produit.findMany()` invocation:
+
+
+Value out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.produit.findMany()` invocation:\n\n\nValue out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/produits/produits.service.js:23:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)","code":"P2020"}
+2026-07-17T12:00:42.648Z error: 
+Invalid `prisma.produit.findMany()` invocation:
+
+
+Value out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.produit.findMany()` invocation:\n\n\nValue out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/produits/produits.service.js:23:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)","code":"P2020"}
+2026-07-17T12:05:32.472Z error: 
+Invalid `prisma.produit.findMany()` invocation:
+
+
+Value out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.produit.findMany()` invocation:\n\n\nValue out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/produits/produits.service.js:23:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)","code":"P2020"}
+2026-07-17T12:05:33.140Z error: 
+Invalid `prisma.produit.findMany()` invocation:
+
+
+Value out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.produit.findMany()` invocation:\n\n\nValue out of range for the type: The column `updated_at` contained an invalid datetime value with either day or month set to zero.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/produits/produits.service.js:23:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)","code":"P2020"}
+2026-07-17T12:27:40.371Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:27:54.781Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:31:53.251Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:32:52.278Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:33:00.444Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:33:08.484Z error: Categorie liee a des produits ou sous-categories {"stack":"ApiError: Categorie liee a des produits ou sous-categories\n    at beforeDelete (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/categories/categories.service.js:20:15)\n    at async Object.remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/service.factory.js:39:25)\n    at async remove (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:36:33)","code":"CATEGORY_NOT_EMPTY"}
+2026-07-17T12:45:34.888Z info: Socket deconnecte FA2XXFbL5CSSrLR3AAAD
+2026-07-17T12:46:06.960Z info: Socket connecte MmEEm2Z0iPH5hxJXAAAF
+2026-07-17T12:56:05.481Z info: Socket deconnecte MmEEm2Z0iPH5hxJXAAAF
+2026-07-17T12:56:10.317Z info: Socket connecte acomzDU0o8fn5U_IAAAH
+2026-07-17T13:14:00.336Z info: Socket deconnecte acomzDU0o8fn5U_IAAAH
+2026-07-17T13:14:03.085Z info: Socket connecte EtWJgFX1WJb1Yvd9AAAJ
+2026-07-17T13:26:47.500Z info: Socket deconnecte EtWJgFX1WJb1Yvd9AAAJ
+2026-07-17T13:28:33.802Z info: Socket connecte B6GI6h4UKkhrWsCiAAAL

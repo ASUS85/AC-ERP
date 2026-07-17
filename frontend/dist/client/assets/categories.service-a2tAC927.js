@@ -1,0 +1,1 @@
+import t from"./client-Dya3o_Oi.js";const r=e=>t.get("/categories",{params:e}),s=e=>t.post("/categories",e),g=(e,a)=>t.put(`/categories/${e}`,a),c=e=>t.delete(`/categories/${e}`),i=()=>t.get("/categories/arbre");export{i as a,s as c,c as d,r as g,g as u};

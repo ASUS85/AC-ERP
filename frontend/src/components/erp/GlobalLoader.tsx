@@ -31,7 +31,7 @@ type GlobalLoaderContextValue = {
   runWithLoader: <T>(task: Promise<T>, options?: LoaderOptions) => Promise<T>;
 };
 
-const DEFAULT_MAX_DURATION_MS = 500;
+const DEFAULT_MAX_DURATION_MS = 1000;
 const DEFAULT_LABEL = "Chargement...";
 
 const GlobalLoaderContext = createContext<GlobalLoaderContextValue | null>(

@@ -15,4 +15,18 @@ export const clientsController = {
       next(e);
     }
   },
+
+  async exportPdf(req, res, next) {
+    try {
+      const pdf = await clientsService.exportPdf(req.query);
+      res.type("application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${pdf.filename}"`,
+      );
+      return res.send(pdf.buffer);
+    } catch (error) {
+      next(error);
+    }
+  },
 };

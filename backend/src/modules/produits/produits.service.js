@@ -2,6 +2,8 @@ import { ApiError } from "../../utils/response.util.js";
 import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { generateSKU } from "../../services/numero.service.js";
 import { produitsRepository } from "./produits.repository.js";
+import { parametresRepository } from "../parametres/parametres.repository.js";
+import { buildProduitsPdf } from "../../services/product-document.service.js";
 
 export const produitsService = {
   async list(query) {
@@ -56,5 +58,30 @@ export const produitsService = {
         "Impossible d'archiver un produit avec stock",
       );
     return produitsRepository.update(id, { statut: "ARCHIVE" });
+  },
+
+  async exportPdf(query = {}) {
+    const where = {
+      ...(query.search
+        ? {
+            OR: [
+              { designation: { contains: query.search } },
+              { reference: { contains: query.search } },
+            ],
+          }
+        : {}),
+      ...(query.categorieId ? { idCategorie: query.categorieId } : {}),
+      ...(query.statut ? { statut: query.statut } : {}),
+    };
+
+    const [produits, entreprise] = await Promise.all([
+      produitsRepository.findMany({ where, orderBy: { designation: "asc" } }),
+      parametresRepository.entreprise(),
+    ]);
+
+    return {
+      filename: `produits-${new Date().toISOString().slice(0, 10)}.pdf`,
+      buffer: await buildProduitsPdf(produits, entreprise),
+    };
   },
 };

@@ -10,6 +10,8 @@ import {
   Wallet,
   FileDown,
   Search,
+  Eye,
+  Printer,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import {
@@ -149,6 +151,10 @@ function CustomersPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [exportingPreview, setExportingPreview] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -165,10 +171,10 @@ function CustomersPage() {
         ville: cityFilter === "all" ? undefined : cityFilter,
       });
 
-      setClients(response?.data || []);
+      setClients((response?.data || []) as Client[]);
 
       setMeta(
-        response?.data?.meta || {
+        response?.meta || {
           page,
           limit: 10,
           total: 0,
@@ -196,12 +202,11 @@ function CustomersPage() {
     const inactifs = clients.filter(
       (c: Client) => c.statut === "INACTIF",
     ).length;
-
-    return {
-      total,
-      actifs,
-      inactifs,
-    };
+    const encours = clients.reduce(
+      (sum, c) => sum + Number(c.plafondCredit || 0),
+      0,
+    );
+    return { total, actifs, inactifs, encours };
   }, [clients, meta]);
 
   const uniqueCities = useMemo(() => {
@@ -300,6 +305,53 @@ function CustomersPage() {
 
   const [form, setForm] = useState<ClientPayload>(emptyForm);
 
+  const openPreview = async () => {
+    setPreviewLoading(true);
+    // liberer l'ancienne URL si elle existe
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    try {
+      const response = await getClientsPdf({
+        search: search || undefined,
+        statut: statusFilter === "all" ? undefined : statusFilter,
+        ville: cityFilter === "all" ? undefined : cityFilter,
+      });
+      const blob = response as unknown as Blob;
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+    } catch {
+      toast.error("Impossible de generer l'apercu PDF");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleExportFromPreview = async () => {
+    setExportingPreview(true);
+    try {
+      const response = await getClientsPdf({
+        search: search || undefined,
+        statut: statusFilter === "all" ? undefined : statusFilter,
+        ville: cityFilter === "all" ? undefined : cityFilter,
+      });
+      const blob = response as unknown as Blob;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `clients-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Liste des clients exportee en PDF");
+    } catch {
+      toast.error("Export PDF impossible");
+    } finally {
+      setExportingPreview(false);
+    }
+  };
+
   const exportClients = async () => {
     setExporting(true);
     try {
@@ -331,20 +383,36 @@ function CustomersPage() {
         description="Fiches, soldes et historique d'achats"
         breadcrumb={["Gestion commerciale", "Clients"]}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => void exportClients()}
-            disabled={exporting}
-          >
-            {exporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-            Exporter
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void openPreview()}
+              disabled={previewLoading}
+            >
+              {previewLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              Apercu
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void exportClients()}
+              disabled={exporting}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Exporter
+            </Button>
+          </>
         }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -356,22 +424,20 @@ function CustomersPage() {
         />
         <StatCard
           label="Actifs"
-          value="588"
-          sub="ce trimestre"
+          value={String(stats.actifs)}
+          sub="sur cette page"
           icon={<Contact className="h-5 w-5" />}
         />
         <StatCard
           label="Encours total"
-          value="48 200 f"
-          sub="à recouvrer"
+          value={fmtCurrency(stats.encours)}
+          sub="plafonds cumulés"
           icon={<Wallet className="h-5 w-5" />}
         />
         <StatCard
-          label="Nouveaux"
-          value="24"
-          delta="+12 %"
-          up
-          sub="ce mois"
+          label="Inactifs"
+          value={String(stats.inactifs)}
+          sub="sur cette page"
           icon={<Users className="h-5 w-5" />}
         />
       </div>
@@ -671,6 +737,60 @@ function CustomersPage() {
             />
           </Field>
         </div>
+      </AppModal>
+
+      {/* Modale de prévisualisation — affiche le PDF genere */}
+      <AppModal
+        open={previewOpen}
+        onOpenChange={(open) => {
+          if (!open && previewUrl) URL.revokeObjectURL(previewUrl);
+          setPreviewOpen(open);
+        }}
+        title="Apercu PDF"
+        description="Visualisation du document tel qu'il sera exporte"
+        position="center"
+        size="xxl"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewOpen(false);
+              }}
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={() => {
+                if (!previewUrl) return;
+                const link = document.createElement("a");
+                link.href = previewUrl;
+                link.download = `clients-${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                toast.success("PDF telecharge");
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Telecharger
+            </Button>
+          </div>
+        }
+      >
+        {previewUrl ? (
+          <iframe
+            src={previewUrl}
+            className="h-[70vh] w-full rounded-lg border border-border"
+            title="Apercu PDF clients"
+          />
+        ) : (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Generation du PDF...
+          </div>
+        )}
       </AppModal>
 
       <AppModal

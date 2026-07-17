@@ -27,10 +27,13 @@ import {
   FileWarning,
   Sparkles,
   Target,
+  Eye,
+  Loader2,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { StatCard, SectionCard } from "@/components/erp/widgets";
 import { StatusBadge } from "@/components/erp/StatusBadge";
+import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import {
@@ -102,7 +105,7 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function Dashboard() {
-  const [dashboard, setDashboard] = useState<DashboardOverview>({
+  const [dashboardData, setDashboardData] = useState<DashboardOverview>({
     kpis: [],
     salesTrend: [],
     topProducts: [],
@@ -112,30 +115,32 @@ function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
         setLoading(true);
         const response = await getDashboardOverview();
-        if (response?.data) setDashboard(response.data);
+        if (response?.data) setDashboardData(response.data);
       } catch {
         toast.error("Impossible de charger le tableau de bord");
       } finally {
         setLoading(false);
       }
     }
-
     void loadDashboard();
   }, []);
 
   const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
-    dashboard;
+    dashboardData;
 
   const exportDashboard = async () => {
     try {
       setExporting(true);
-      const blob = (await getDashboardPdf()) as Blob;
+      const blob = (await getDashboardPdf()) as unknown as Blob;
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -144,7 +149,7 @@ function Dashboard() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      toast.success("PDF du dashboard exporté");
+      toast.success("PDF du dashboard exporte");
     } catch {
       toast.error("Export PDF impossible");
     } finally {
@@ -152,13 +157,43 @@ function Dashboard() {
     }
   };
 
+  const openPreview = async () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewLoading(true);
+    try {
+      const blob = (await getDashboardPdf()) as unknown as Blob;
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+    } catch {
+      toast.error("Impossible de generer l'apercu PDF");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
     <>
       <PageHeader
         title="Tableau de bord"
-        description="Vue décisionnelle de votre activité commerciale"
+        description="Vue decisionnelle de votre activite commerciale"
         actions={
           <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void openPreview()}
+              disabled={previewLoading}
+            >
+              {previewLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              Apercu
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -178,12 +213,11 @@ function Dashboard() {
         }
       />
 
-      {/* KPI grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {loading
-          ? Array.from({ length: 6 }).map((_, index) => (
+          ? Array.from({ length: 6 }).map((_, i) => (
               <div
-                key={index}
+                key={i}
                 className="h-32 animate-pulse rounded-lg border border-border bg-muted/40"
               />
             ))
@@ -192,10 +226,9 @@ function Dashboard() {
             ))}
       </div>
 
-      {/* Charts row 1 */}
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SectionCard
-          title="Évolution des ventes & achats"
+          title="Evolution des ventes & achats"
           description="Chiffre d'affaires mensuel sur 12 mois"
           className="lg:col-span-2"
         >
@@ -272,10 +305,9 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </SectionCard>
-
         <SectionCard
-          title="Répartition des stocks"
-          description="Par catégorie de produits"
+          title="Repartition des stocks"
+          description="Par categorie de produits"
         >
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -307,7 +339,6 @@ function Dashboard() {
         </SectionCard>
       </div>
 
-      {/* Charts row 2 */}
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SectionCard
           title="Produits les plus vendus"
@@ -352,7 +383,7 @@ function Dashboard() {
                 />
                 <Bar
                   dataKey="ventes"
-                  name="Unités vendues"
+                  name="Unites vendues"
                   fill="var(--chart-1)"
                   radius={[0, 6, 6, 0]}
                   barSize={18}
@@ -361,10 +392,9 @@ function Dashboard() {
             </ResponsiveContainer>
           </div>
         </SectionCard>
-
         <SectionCard
           title="Alertes & notifications"
-          description="Éléments nécessitant votre attention"
+          description="Elements necessitant votre attention"
         >
           <div className="space-y-3">
             {alerts.map((a) => (
@@ -389,11 +419,10 @@ function Dashboard() {
         </SectionCard>
       </div>
 
-      {/* Recent activity */}
       <div className="mt-4">
         <SectionCard
-          title="Dernières ventes"
-          description="Activité récente"
+          title="Dernieres ventes"
+          description="Activite recente"
           action={
             <Button variant="ghost" size="sm" asChild>
               <Link to="/sales">Tout voir</Link>
@@ -404,7 +433,7 @@ function Dashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="pb-2 font-medium">Référence</th>
+                  <th className="pb-2 font-medium">Reference</th>
                   <th className="pb-2 font-medium">Client</th>
                   <th className="pb-2 font-medium">Date</th>
                   <th className="pb-2 text-right font-medium">Montant</th>
@@ -439,11 +468,11 @@ function Dashboard() {
                       <div className="flex flex-col items-center justify-center py-5 text-center">
                         <img
                           src="/src/assets/sorry.svg"
-                          alt="Aucun élément"
+                          alt="Aucun element"
                           className="mb-3 w-28 opacity-90"
                         />
                         <p className="text-sm font-medium text-muted-foreground">
-                          Aucun élément à afficher
+                          Aucun element a afficher
                         </p>
                       </div>
                     </td>
@@ -454,6 +483,57 @@ function Dashboard() {
           </div>
         </SectionCard>
       </div>
+
+      <AppModal
+        open={previewOpen}
+        onOpenChange={(open) => {
+          if (!open && previewUrl) URL.revokeObjectURL(previewUrl);
+          setPreviewOpen(open);
+        }}
+        title="Apercu PDF"
+        description="Rapport du tableau de bord"
+        size="xxl"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewOpen(false);
+              }}
+            >
+              Fermer
+            </Button>
+            <Button
+              onClick={() => {
+                if (!previewUrl) return;
+                const link = document.createElement("a");
+                link.href = previewUrl;
+                link.download = `dashboard-${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                toast.success("PDF telecharge");
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" /> Telecharger
+            </Button>
+          </div>
+        }
+      >
+        {previewUrl ? (
+          <iframe
+            src={previewUrl}
+            className="h-[70vh] w-full rounded-lg border border-border"
+            title="Apercu PDF dashboard"
+          />
+        ) : (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generation du
+            PDF...
+          </div>
+        )}
+      </AppModal>
     </>
   );
 }
