@@ -1,4 +1,5 @@
 import prisma from "../../config/database.js";
+import { parametresRepository } from "../parametres/parametres.repository.js";
 
 const monthLabels = [
   "Jan",
@@ -15,10 +16,19 @@ const monthLabels = [
   "Dec",
 ];
 
-const money = (value) =>
-  new Intl.NumberFormat("fr-FR", {
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0)) + " f";
+const money = (value, currency = "XAF") => {
+  try {
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(Number(value || 0));
+  } catch {
+    return `${new Intl.NumberFormat("fr-FR", {
+      maximumFractionDigits: 0,
+    }).format(Number(value || 0))} ${currency}`;
+  }
+};
 
 const dateFr = (value) =>
   new Intl.DateTimeFormat("fr-FR", {
@@ -70,6 +80,8 @@ export const dashboardRepository = {
   },
 
   async kpis() {
+    const entreprise = await parametresRepository.entreprise();
+    const currency = entreprise?.devise || "XAF";
     const now = new Date();
     const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startPreviousMonth = new Date(
@@ -119,7 +131,7 @@ export const dashboardRepository = {
     return [
       {
         label: "Chiffre d'affaires",
-        value: money(currentAmount),
+        value: money(currentAmount, currency),
         delta: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} %`,
         up: delta >= 0,
         sub: "vs mois dernier",
@@ -127,7 +139,7 @@ export const dashboardRepository = {
       },
       {
         label: "Ventes",
-        value: money(currentAmount),
+        value: money(currentAmount, currency),
         delta: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)} %`,
         up: delta >= 0,
         sub: "ce mois",

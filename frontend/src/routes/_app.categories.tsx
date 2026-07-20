@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -456,23 +457,16 @@ function CategoriesPage() {
             />
           </Field>
           <Field label="Categorie parente" htmlFor="parent">
-            <Select
+            <SearchableSelect
               value={form.idCategorieParent || ""}
               onValueChange={(value: string) =>
                 setField("idCategorieParent", value || null)
               }
-            >
-              <SelectTrigger id="parent">
-                <SelectValue placeholder="Aucune (categorie racine)" />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-h-[240px]">
-                {parentOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              options={parentOptions}
+              placeholder="Selectionnez une categorie"
+              searchPlaceholder="Rechercher une categorie"
+              emptyMessage="Aucune categorie trouvee"
+            />
           </Field>
           <Field label="Statut" htmlFor="statut">
             <Select

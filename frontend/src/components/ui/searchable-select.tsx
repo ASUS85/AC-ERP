@@ -37,16 +37,27 @@ export function SearchableSelect({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const getPortalContainer = React.useCallback(() => {
+    if (typeof document === "undefined") return null;
+    return (
+      (containerRef.current?.closest(
+        '[data-searchable-portal-root="true"]',
+      ) as HTMLElement | null) ?? document.body
+    );
+  }, []);
   const [pos, setPos] = React.useState({
     top: 0,
     left: 0,
     width: 0,
     maxHeight: dropdownMaxHeight,
+    strategy: "fixed" as "fixed" | "absolute",
   });
 
   const updatePosition = React.useCallback(() => {
     const trigger = containerRef.current;
     if (!trigger) return;
+    const portalContainer = getPortalContainer();
+    if (!portalContainer) return;
     const rect = trigger.getBoundingClientRect();
     const vh = window.innerHeight;
     const below = vh - rect.bottom;
@@ -56,24 +67,42 @@ export function SearchableSelect({
       120,
       Math.min(dropdownMaxHeight, up ? above - 12 : below - 12),
     );
+    const inCustomContainer = portalContainer !== document.body;
+    const portalRect = inCustomContainer
+      ? portalContainer.getBoundingClientRect()
+      : null;
     const next = {
-      left: rect.left,
-      top: up ? Math.max(8, rect.top - 4 - maxH) : rect.bottom + 4,
+      left:
+        inCustomContainer && portalRect
+          ? rect.left - portalRect.left
+          : rect.left,
+      top:
+        inCustomContainer && portalRect
+          ? up
+            ? rect.top - portalRect.top - 4 - maxH
+            : rect.bottom - portalRect.top + 4
+          : up
+            ? Math.max(8, rect.top - 4 - maxH)
+            : rect.bottom + 4,
       width: rect.width,
       maxHeight: maxH,
+      strategy: inCustomContainer ? "absolute" : "fixed",
     };
     setPos((prev) => {
       if (
         prev.left === next.left &&
         prev.top === next.top &&
         prev.width === next.width &&
-        prev.maxHeight === next.maxHeight
+        prev.maxHeight === next.maxHeight &&
+        prev.strategy === next.strategy
       ) {
         return prev;
       }
       return next;
     });
-  }, []);
+  }, [getPortalContainer]);
+
+  const portalContainer = getPortalContainer();
 
   // Fermer si clic en dehors
   React.useEffect(() => {
@@ -103,9 +132,7 @@ export function SearchableSelect({
     if (!open) return;
     const handleResize = () => updatePosition();
     const handleScroll = (e: Event) => {
-      // Mettre à jour la position uniquement si le scroll concerne la page (e.target === document).
-      // Cela empêche le repositionnement lors du scroll à l'intérieur du dropdown.
-      if (e.target !== document) {
+      if (dropdownRef.current?.contains(e.target as Node)) {
         return;
       }
       updatePosition();
@@ -161,12 +188,13 @@ export function SearchableSelect({
 
       {/* Dropdown porté dans document.body */}
       {open &&
+        portalContainer &&
         createPortal(
           <div
             ref={dropdownRef}
             className="flex flex-col rounded-md border bg-popover text-popover-foreground shadow-md overflow-hidden"
             style={{
-              position: "fixed",
+              position: pos.strategy,
               left: pos.left,
               top: pos.top,
               width: pos.width,
@@ -201,7 +229,7 @@ export function SearchableSelect({
             </div>
 
             <div
-              className="overflow-y-auto flex-1 py-1"
+              className="flex-1 overflow-y-auto overscroll-contain py-1"
               style={{ maxHeight: pos.maxHeight - 55 }}
             >
               {filtered.length === 0 ? (
@@ -235,7 +263,7 @@ export function SearchableSelect({
               )}
             </div>
           </div>,
-          document.body,
+          portalContainer,
         )}
     </div>
   );

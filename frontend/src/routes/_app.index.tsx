@@ -41,6 +41,7 @@ import {
   getDashboardOverview,
   type DashboardOverview,
 } from "@/lib/api/dashboard.service";
+import { getStoredCurrency } from "@/lib/currency";
 import { fmtCurrency } from "@/lib/erp-data";
 import { toast } from "sonner";
 
@@ -105,6 +106,7 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 function Dashboard() {
+  const [currencyCode, setCurrencyCode] = useState(() => getStoredCurrency());
   const [dashboardData, setDashboardData] = useState<DashboardOverview>({
     kpis: [],
     salesTrend: [],
@@ -120,6 +122,11 @@ function Dashboard() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    const handleCurrencyChange = () => setCurrencyCode(getStoredCurrency());
+
+    window.addEventListener("erp:currency-changed", handleCurrencyChange);
+    window.addEventListener("storage", handleCurrencyChange);
+
     async function loadDashboard() {
       try {
         setLoading(true);
@@ -131,8 +138,14 @@ function Dashboard() {
         setLoading(false);
       }
     }
+
     void loadDashboard();
-  }, []);
+
+    return () => {
+      window.removeEventListener("erp:currency-changed", handleCurrencyChange);
+      window.removeEventListener("storage", handleCurrencyChange);
+    };
+  }, [currencyCode]);
 
   const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
     dashboardData;

@@ -49,6 +49,7 @@ export function AppModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        data-searchable-portal-root="true"
         onPointerDownOutside={(e) => {
           if (!closeOnOutsideClick) {
             // Autorise les clics sur le dropdown du SearchableSelect qui est dans un portail

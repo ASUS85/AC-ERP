@@ -167,7 +167,8 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-export const fmtCurrency = (n: number) => formatCurrency(n);
+export const fmtCurrency = (n: number, currencyCode?: string | null) =>
+  formatCurrency(n, currencyCode);
 
 export const fmtNumber = (n: number) =>
   new Intl.NumberFormat("fr-FR").format(n);
