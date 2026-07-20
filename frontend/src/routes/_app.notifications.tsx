@@ -94,14 +94,15 @@ const relativeTime = (value: string) => {
 function NotificationsPage() {
   const [items, setItems] = useState<Notification[]>([]);
   const [tab, setTab] = useState<TabValue>("all");
-  const [selectedDate, setSelectedDate] = useState(localDateValue);
+  const [selectedDate, setSelectedDate] = useState("");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    getNotifications(dateBounds(selectedDate))
+    const params = selectedDate ? dateBounds(selectedDate) : undefined;
+    getNotifications(params)
       .then((response: any) => {
         if (active) setItems(response.data || []);
       })
@@ -187,9 +188,7 @@ function NotificationsPage() {
             <input
               type="date"
               value={selectedDate}
-              onChange={(event) =>
-                setSelectedDate(event.target.value || localDateValue())
-              }
+              onChange={(event) => setSelectedDate(event.target.value)}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none focus:ring-2 focus:ring-ring"
               aria-label="Filtrer les notifications par date"
             />
@@ -198,7 +197,7 @@ function NotificationsPage() {
       </Tabs>
       <SectionCard
         title="Activité"
-        description={`${visibleItems.length} notification${visibleItems.length > 1 ? "s" : ""} pour cette date`}
+        description={`${visibleItems.length} notification${visibleItems.length > 1 ? "s" : ""}${selectedDate ? " pour cette date" : ""}`}
       >
         <div className="space-y-2">
           {loading && (
@@ -214,7 +213,9 @@ function NotificationsPage() {
                 className="mb-3 w-28 opacity-90"
               />
               <p className="mt-1 text-xs text-muted-foreground/70">
-                Aucune notification pour cette date.
+                {selectedDate
+                  ? "Aucune notification pour cette date."
+                  : "Aucune notification disponible."}
               </p>
             </div>
           )}

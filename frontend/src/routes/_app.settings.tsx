@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { useAuth } from "@/hooks/useAuth";
 import {
   changePassword,
   getMe,
@@ -103,6 +104,7 @@ const errorMessage = (error: unknown, fallback: string) => {
 };
 
 function SettingsPage() {
+  const { hasPermission } = useAuth();
   const { runWithLoader } = useGlobalLoader();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -128,29 +130,76 @@ function SettingsPage() {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const canManageSettings = hasPermission("users", "modifier");
   const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
 
   useEffect(() => {
-    Promise.all([getMe(), getEntreprise(), getSysteme(), getSessions()])
-      .then(([me, business, settings, activeSessions]) => {
-        setProfile(unwrap(me as ApiResponse<Profile>));
-        const loadedCompany = unwrap(business as ApiResponse<Company>);
+    let alive = true;
+
+    async function loadInitialData() {
+      const [meResult, sessionsResult, entrepriseResult, systemeResult] =
+        await Promise.allSettled([
+          getMe(),
+          getSessions(),
+          canManageSettings ? getEntreprise() : Promise.resolve(null),
+          canManageSettings ? getSysteme() : Promise.resolve(null),
+        ]);
+
+      if (!alive) return;
+
+      if (meResult.status === "fulfilled") {
+        setProfile(unwrap(meResult.value as ApiResponse<Profile>));
+      }
+
+      if (sessionsResult.status === "fulfilled") {
+        setSessions(
+          unwrap(sessionsResult.value as ApiResponse<Session[]>) || [],
+        );
+      }
+
+      if (canManageSettings && entrepriseResult.status === "fulfilled") {
+        const loadedCompany = unwrap(
+          entrepriseResult.value as ApiResponse<Company>,
+        );
         setCompany(loadedCompany);
         setStoredCurrency(loadedCompany?.devise);
-        setSystem(unwrap(settings as ApiResponse<SystemSettings>));
-        setSessions(unwrap(activeSessions as ApiResponse<Session[]>) || []);
-      })
-      .catch(() => toast.error("Impossible de charger tous les paramètres"))
-      .finally(() => setLoading(false));
-  }, []);
+      }
+
+      if (canManageSettings && systemeResult.status === "fulfilled") {
+        setSystem(unwrap(systemeResult.value as ApiResponse<SystemSettings>));
+      }
+
+      if (
+        meResult.status === "rejected" ||
+        sessionsResult.status === "rejected" ||
+        (canManageSettings && entrepriseResult.status === "rejected") ||
+        (canManageSettings && systemeResult.status === "rejected")
+      ) {
+        toast.error("Certains paramètres n'ont pas pu être chargés");
+      }
+
+      setLoading(false);
+    }
+
+    void loadInitialData();
+
+    return () => {
+      alive = false;
+    };
+  }, [canManageSettings]);
 
   useEffect(() => {
+    if (!canManageSettings) {
+      setAudits([]);
+      return;
+    }
+
     getJournal(bounds(logDate))
       .then((response) =>
         setAudits(unwrap(response as ApiResponse<Audit[]>) || []),
       )
       .catch(() => toast.error("Impossible de charger le journal"));
-  }, [logDate]);
+  }, [logDate, canManageSettings]);
 
   useEffect(() => {
     return () => {
@@ -329,18 +378,24 @@ function SettingsPage() {
           <TabsTrigger value="profile" className="gap-1.5">
             <User className="h-4 w-4" /> Profil
           </TabsTrigger>
-          <TabsTrigger value="company" className="gap-1.5">
-            <Building2 className="h-4 w-4" /> Entreprise
-          </TabsTrigger>
-          <TabsTrigger value="system" className="gap-1.5">
-            <SlidersHorizontal className="h-4 w-4" /> Système
-          </TabsTrigger>
+          {canManageSettings ? (
+            <>
+              <TabsTrigger value="company" className="gap-1.5">
+                <Building2 className="h-4 w-4" /> Entreprise
+              </TabsTrigger>
+              <TabsTrigger value="system" className="gap-1.5">
+                <SlidersHorizontal className="h-4 w-4" /> Système
+              </TabsTrigger>
+            </>
+          ) : null}
           <TabsTrigger value="security" className="gap-1.5">
             <Shield className="h-4 w-4" /> Sécurité
           </TabsTrigger>
-          <TabsTrigger value="log" className="gap-1.5">
-            <ScrollText className="h-4 w-4" /> Journal
-          </TabsTrigger>
+          {canManageSettings ? (
+            <TabsTrigger value="log" className="gap-1.5">
+              <ScrollText className="h-4 w-4" /> Journal
+            </TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="profile">
@@ -429,143 +484,149 @@ function SettingsPage() {
           </SectionCard>
         </TabsContent>
 
-        <TabsContent value="company">
-          <SectionCard
-            title="Paramètres entreprise"
-            description="Informations utilisées sur les documents et rapports"
-          >
-            {company && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Raison sociale"
-                  value={company.raisonSociale}
-                  placeholder="Nom officiel de l’entreprise"
-                  required
-                  error={companyErrors.raisonSociale}
-                  onChange={(raisonSociale) =>
-                    updateCompanyField("raisonSociale", raisonSociale)
-                  }
-                />
-                <Field
-                  label="Identifiant fiscal"
-                  value={company.numeroFiscal || ""}
-                  placeholder="Numéro fiscal ou NIU"
-                  onChange={(numeroFiscal) =>
-                    updateCompanyField("numeroFiscal", numeroFiscal)
-                  }
-                />
-                <Field
-                  label="Adresse"
-                  value={company.adresse || ""}
-                  placeholder="Adresse complète"
-                  onChange={(adresse) => updateCompanyField("adresse", adresse)}
-                />
-                <Field
-                  label="Téléphone"
-                  value={company.telephone || ""}
-                  placeholder="Numéro de téléphone de l’entreprise"
-                  onChange={(telephone) =>
-                    updateCompanyField("telephone", telephone)
-                  }
-                />
-                <Field
-                  label="E-mail"
-                  type="email"
-                  value={company.email || ""}
-                  placeholder="contact@entreprise.com"
-                  onChange={(email) => updateCompanyField("email", email)}
-                />
-                <div className="space-y-1.5">
-                  <Label>
-                    Devise
-                    <span className="ml-1 text-destructive">*</span>
-                  </Label>
-                  <SearchableSelect
-                    value={company.devise}
-                    onValueChange={(devise) =>
-                      updateCompanyField("devise", devise)
+        {canManageSettings ? (
+          <TabsContent value="company">
+            <SectionCard
+              title="Paramètres entreprise"
+              description="Informations utilisées sur les documents et rapports"
+            >
+              {company && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Raison sociale"
+                    value={company.raisonSociale}
+                    placeholder="Nom officiel de l’entreprise"
+                    required
+                    error={companyErrors.raisonSociale}
+                    onChange={(raisonSociale) =>
+                      updateCompanyField("raisonSociale", raisonSociale)
                     }
-                    options={AFRICAN_CURRENCIES.map((currency) => ({
-                      value: currency.code,
-                      label: `${currency.code} - ${currency.name} (${currency.symbol})`,
-                    }))}
-                    placeholder="Selectionnez une devise"
-                    searchPlaceholder="Rechercher une devise"
-                    emptyMessage="Aucune devise trouvee"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Symbole utilise: {getCurrencyMeta(company.devise).symbol}
-                  </p>
-                  {companyErrors.devise && (
-                    <p className="text-xs text-destructive">
-                      {companyErrors.devise}
+                  <Field
+                    label="Identifiant fiscal"
+                    value={company.numeroFiscal || ""}
+                    placeholder="Numéro fiscal ou NIU"
+                    onChange={(numeroFiscal) =>
+                      updateCompanyField("numeroFiscal", numeroFiscal)
+                    }
+                  />
+                  <Field
+                    label="Adresse"
+                    value={company.adresse || ""}
+                    placeholder="Adresse complète"
+                    onChange={(adresse) =>
+                      updateCompanyField("adresse", adresse)
+                    }
+                  />
+                  <Field
+                    label="Téléphone"
+                    value={company.telephone || ""}
+                    placeholder="Numéro de téléphone de l’entreprise"
+                    onChange={(telephone) =>
+                      updateCompanyField("telephone", telephone)
+                    }
+                  />
+                  <Field
+                    label="E-mail"
+                    type="email"
+                    value={company.email || ""}
+                    placeholder="contact@entreprise.com"
+                    onChange={(email) => updateCompanyField("email", email)}
+                  />
+                  <div className="space-y-1.5">
+                    <Label>
+                      Devise
+                      <span className="ml-1 text-destructive">*</span>
+                    </Label>
+                    <SearchableSelect
+                      value={company.devise}
+                      onValueChange={(devise) =>
+                        updateCompanyField("devise", devise)
+                      }
+                      options={AFRICAN_CURRENCIES.map((currency) => ({
+                        value: currency.code,
+                        label: `${currency.code} - ${currency.name} (${currency.symbol})`,
+                      }))}
+                      placeholder="Selectionnez une devise"
+                      searchPlaceholder="Rechercher une devise"
+                      emptyMessage="Aucune devise trouvee"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Symbole utilise: {getCurrencyMeta(company.devise).symbol}
                     </p>
-                  )}
+                    {companyErrors.devise && (
+                      <p className="text-xs text-destructive">
+                        {companyErrors.devise}
+                      </p>
+                    )}
+                  </div>
+                  <Field
+                    label="Fuseau horaire"
+                    value={company.fuseauHoraire}
+                    placeholder="Africa/Douala"
+                    required
+                    error={companyErrors.fuseauHoraire}
+                    onChange={(fuseauHoraire) =>
+                      updateCompanyField("fuseauHoraire", fuseauHoraire)
+                    }
+                  />
+                  <Field
+                    label="Logo (URL)"
+                    value={company.logo || ""}
+                    placeholder="https://exemple.com/logo.png"
+                    onChange={(logo) => updateCompanyField("logo", logo)}
+                  />
                 </div>
-                <Field
-                  label="Fuseau horaire"
-                  value={company.fuseauHoraire}
-                  placeholder="Africa/Douala"
-                  required
-                  error={companyErrors.fuseauHoraire}
-                  onChange={(fuseauHoraire) =>
-                    updateCompanyField("fuseauHoraire", fuseauHoraire)
-                  }
-                />
-                <Field
-                  label="Logo (URL)"
-                  value={company.logo || ""}
-                  placeholder="https://exemple.com/logo.png"
-                  onChange={(logo) => updateCompanyField("logo", logo)}
-                />
-              </div>
-            )}
-            <Button className="mt-4" onClick={saveCompany}>
-              Enregistrer
-            </Button>
-          </SectionCard>
-        </TabsContent>
+              )}
+              <Button className="mt-4" onClick={saveCompany}>
+                Enregistrer
+              </Button>
+            </SectionCard>
+          </TabsContent>
+        ) : null}
 
-        <TabsContent value="system">
-          <SectionCard
-            title="Paramètres système"
-            description="Préférences globales de la plateforme"
-          >
-            {system && (
-              <div className="space-y-4">
-                <Setting
-                  label="Notifications par e-mail"
-                  description="Recevoir les alertes importantes par e-mail"
-                  checked={system.notificationsEmail}
-                  onChange={(v) => toggleSystem("notificationsEmail", v)}
-                />
-                <Setting
-                  label="Alertes IA proactives"
-                  description="Prévisions et recommandations automatiques"
-                  checked={system.alertesIa}
-                  onChange={(v) => toggleSystem("alertesIa", v)}
-                />
-                <Setting
-                  label="Facturation automatique"
-                  description="Générer les factures à la validation des ventes"
-                  checked={system.facturationAutomatique}
-                  onChange={(v) => toggleSystem("facturationAutomatique", v)}
-                />
-                <Setting
-                  label="Mode maintenance"
-                  description={
-                    isSuperAdmin
-                      ? "Bloque les écritures pour tous sauf le super administrateur"
-                      : "Seul le super administrateur peut modifier ce réglage"
-                  }
-                  checked={system.modeMaintenance}
-                  disabled={!isSuperAdmin}
-                  onChange={(v) => toggleSystem("modeMaintenance", v)}
-                />
-              </div>
-            )}
-          </SectionCard>
-        </TabsContent>
+        {canManageSettings ? (
+          <TabsContent value="system">
+            <SectionCard
+              title="Paramètres système"
+              description="Préférences globales de la plateforme"
+            >
+              {system && (
+                <div className="space-y-4">
+                  <Setting
+                    label="Notifications par e-mail"
+                    description="Recevoir les alertes importantes par e-mail"
+                    checked={system.notificationsEmail}
+                    onChange={(v) => toggleSystem("notificationsEmail", v)}
+                  />
+                  <Setting
+                    label="Alertes IA proactives"
+                    description="Prévisions et recommandations automatiques"
+                    checked={system.alertesIa}
+                    onChange={(v) => toggleSystem("alertesIa", v)}
+                  />
+                  <Setting
+                    label="Facturation automatique"
+                    description="Générer les factures à la validation des ventes"
+                    checked={system.facturationAutomatique}
+                    onChange={(v) => toggleSystem("facturationAutomatique", v)}
+                  />
+                  <Setting
+                    label="Mode maintenance"
+                    description={
+                      isSuperAdmin
+                        ? "Bloque les écritures pour tous sauf le super administrateur"
+                        : "Seul le super administrateur peut modifier ce réglage"
+                    }
+                    checked={system.modeMaintenance}
+                    disabled={!isSuperAdmin}
+                    onChange={(v) => toggleSystem("modeMaintenance", v)}
+                  />
+                </div>
+              )}
+            </SectionCard>
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="security">
           <div className="grid gap-4 lg:grid-cols-2">
@@ -648,67 +709,69 @@ function SettingsPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="log">
-          <SectionCard
-            title="Journal d'activité"
-            description={logDescription}
-            action={
-              <Input
-                type="date"
-                value={logDate}
-                onChange={(e) => setLogDate(e.target.value || today())}
-                className="w-auto"
-                aria-label="Filtrer le journal par date"
-              />
-            }
-          >
-            <div className="space-y-1">
-              {audits.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-5 text-center">
-                  <img
-                    src="/src/assets/sorry.svg"
-                    alt="Aucun élément"
-                    className="mb-3 w-28 opacity-90"
-                  />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Aucun élément à afficher
-                  </p>
-                </div>
-              )}
-              {audits.map((audit) => {
-                const actor = audit.utilisateur
-                  ? `${audit.utilisateur.prenom} ${audit.utilisateur.nom}`
-                  : "Système";
-                return (
-                  <div
-                    key={audit.id}
-                    className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-white">
-                      {actor
-                        .split(" ")
-                        .map((w) => w[0])
-                        .join("")
-                        .slice(0, 2)}
-                    </span>
-                    <p className="min-w-0 flex-1 text-sm text-foreground">
-                      <span className="font-medium">{actor}</span>{" "}
-                      <span className="text-muted-foreground">
-                        {audit.action} · {audit.module}
-                      </span>
+        {canManageSettings ? (
+          <TabsContent value="log">
+            <SectionCard
+              title="Journal d'activité"
+              description={logDescription}
+              action={
+                <Input
+                  type="date"
+                  value={logDate}
+                  onChange={(e) => setLogDate(e.target.value || today())}
+                  className="w-auto"
+                  aria-label="Filtrer le journal par date"
+                />
+              }
+            >
+              <div className="space-y-1">
+                {audits.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-5 text-center">
+                    <img
+                      src="/src/assets/sorry.svg"
+                      alt="Aucun élément"
+                      className="mb-3 w-28 opacity-90"
+                    />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Aucun élément à afficher
                     </p>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {new Date(audit.createdAt).toLocaleTimeString("fr-FR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </SectionCard>
-        </TabsContent>
+                )}
+                {audits.map((audit) => {
+                  const actor = audit.utilisateur
+                    ? `${audit.utilisateur.prenom} ${audit.utilisateur.nom}`
+                    : "Système";
+                  return (
+                    <div
+                      key={audit.id}
+                      className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-white">
+                        {actor
+                          .split(" ")
+                          .map((w) => w[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </span>
+                      <p className="min-w-0 flex-1 text-sm text-foreground">
+                        <span className="font-medium">{actor}</span>{" "}
+                        <span className="text-muted-foreground">
+                          {audit.action} · {audit.module}
+                        </span>
+                      </p>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {new Date(audit.createdAt).toLocaleTimeString("fr-FR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          </TabsContent>
+        ) : null}
       </Tabs>
     </>
   );

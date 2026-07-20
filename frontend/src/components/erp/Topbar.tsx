@@ -317,11 +317,9 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {canOpenSettings && (
-                <DropdownMenuItem asChild>
-                  <Link to="/settings">Profil & paramètres</Link>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem asChild>
+                <Link to="/settings">Profil</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"

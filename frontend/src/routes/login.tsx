@@ -1,4 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import { z } from "zod";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -28,10 +33,15 @@ import {
   resendMfa,
   verifyMfa,
 } from "@/lib/api/auth.service";
+import { canAccessPermission, type AuthUserLike } from "@/lib/auth-session";
+import { navGroups } from "@/lib/erp-data";
 import logo from "@/assets/erp-logo.png";
 import illustration from "@/assets/login-illustration.jpg";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: z.object({
+    redirect: z.string().optional().catch(""),
+  }),
   head: () => ({
     meta: [
       { title: "Connexion — AC ERP" },
@@ -52,6 +62,8 @@ function LoginPage() {
   const [code, setCode] = useState("");
   const [resendCountdown, setResendCountdown] = useState(0);
   const navigate = useNavigate();
+  const router = useRouter();
+  const search = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -113,7 +125,7 @@ function LoginPage() {
         return;
       }
 
-      completeLogin();
+      completeLogin(result as { user?: AuthUserLike } | undefined);
     } catch (error: any) {
       toast.error("Connexion impossible", {
         description: error.message || "Verifier vos identifiants.",
@@ -123,11 +135,30 @@ function LoginPage() {
     }
   };
 
-  const completeLogin = () => {
+  const getDefaultRedirect = (user?: AuthUserLike | null) => {
+    const fallback = "/";
+    const visibleItem = navGroups
+      .flatMap((group) => group.items)
+      .find((item) => {
+        if (!item.permission) return true;
+        const [module, action] = item.permission.split(":");
+        return canAccessPermission(user, module, action);
+      });
+
+    return visibleItem?.url ?? fallback;
+  };
+
+  const completeLogin = (session?: { user?: AuthUserLike } | undefined) => {
+    const redirectTarget =
+      search.redirect && search.redirect !== "/login"
+        ? search.redirect
+        : getDefaultRedirect(session?.user);
+
     toast.success("Connexion réussie", {
       description: "Bienvenue sur AC ERP.",
     });
-    navigate({ to: "/" });
+    router.invalidate();
+    navigate({ to: redirectTarget, replace: true });
   };
 
   const submitMfa = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -140,8 +171,8 @@ function LoginPage() {
     }
     setIsSubmitting(true);
     try {
-      await verifyMfa(mfaToken, code);
-      completeLogin();
+      const result = await verifyMfa(mfaToken, code);
+      completeLogin(result as { user?: AuthUserLike } | undefined);
     } catch (error: any) {
       toast.error("Code refusé", {
         description: error.message || "Le code est invalide ou expiré.",

@@ -1,4 +1,5 @@
 import api from "./client";
+import { clearAuthSession, storeAuthSession } from "../auth-session";
 
 type AuthSession = {
   accessToken?: string;
@@ -15,22 +16,14 @@ export async function login(email: string, password: string) {
   const response = await api.post("/auth/login", { email, password });
   const data = unwrapAuth(response as ApiResponse<AuthSession>);
   if (data.mfaRequired) return data;
-  storeSession(data);
+  storeAuthSession(data);
   return data;
-}
-
-function storeSession(data: AuthSession) {
-  const { accessToken, refreshToken, user } = data;
-  if (!accessToken || !refreshToken || !user) return;
-  localStorage.setItem("erp_access_token", accessToken);
-  localStorage.setItem("erp_refresh_token", refreshToken);
-  localStorage.setItem("erp_user", JSON.stringify(user));
 }
 
 export async function verifyMfa(mfaToken: string, code: string) {
   const response = await api.post("/auth/verify-mfa", { mfaToken, code });
   const data = unwrapAuth(response as ApiResponse<AuthSession>);
-  storeSession(data);
+  storeAuthSession(data);
   return data;
 }
 
@@ -58,9 +51,7 @@ export async function logout(
   try {
     return await api.post("/auth/logout", { refreshToken });
   } finally {
-    localStorage.removeItem("erp_access_token");
-    localStorage.removeItem("erp_refresh_token");
-    localStorage.removeItem("erp_user");
+    clearAuthSession();
   }
 }
 

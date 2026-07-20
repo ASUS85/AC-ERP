@@ -1,33 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { navGroups } from "@/lib/erp-data";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/erp-logo.png";
+import {
+  canAccessPermission,
+  getRoleName,
+  getStoredUser,
+  type AuthUserLike,
+} from "@/lib/auth-session";
 
-type StoredUser = {
-  nom?: string;
-  prenom?: string;
-  email?: string;
-  role?: { nomRole?: string } | string | null;
-  permissions?: string[];
-};
-
-function getStoredUser(): StoredUser | null {
-  try {
-    if (typeof window === "undefined") return null;
-    return JSON.parse(localStorage.getItem("erp_user") || "null");
-  } catch {
-    return null;
-  }
-}
-
-function roleName(user: StoredUser | null) {
-  if (!user?.role) return "Utilisateur";
-  return typeof user.role === "string"
-    ? user.role
-    : user.role.nomRole || "Utilisateur";
-}
-
-function initials(user: StoredUser | null) {
+function initials(user: AuthUserLike | null) {
   const raw =
     `${user?.prenom?.[0] || ""}${user?.nom?.[0] || ""}` ||
     user?.email?.slice(0, 2) ||
@@ -37,10 +20,25 @@ function initials(user: StoredUser | null) {
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const user = getStoredUser();
-  const permissions = user?.permissions || [];
-  const canSee = (permission?: string) =>
-    !permission || permissions.includes(permission);
+  const [user, setUser] = useState<AuthUserLike | null>(() => getStoredUser());
+
+  useEffect(() => {
+    const syncUser = () => setUser(getStoredUser());
+    syncUser();
+    window.addEventListener("auth-change", syncUser);
+    window.addEventListener("erp:user-updated", syncUser);
+    return () => {
+      window.removeEventListener("auth-change", syncUser);
+      window.removeEventListener("erp:user-updated", syncUser);
+    };
+  }, []);
+
+  const canSee = (permission?: string) => {
+    if (!permission) return true;
+    const [module, action] = permission.split(":");
+    return canAccessPermission(user, module, action);
+  };
+
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
@@ -129,7 +127,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 : "Non connecte"}
             </p>
             <p className="truncate text-xs text-sidebar-foreground/60">
-              {roleName(user)}
+              {getRoleName(user)}
             </p>
           </div>
         </div>

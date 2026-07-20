@@ -1,0 +1,1 @@
+import{q as t}from"./index-DFrOYU1O.js";const s=()=>t.get("/parametres/entreprise"),r=e=>t.put("/parametres/entreprise",e),p=()=>t.get("/parametres/systeme"),n=e=>t.put("/parametres/systeme",e),m=e=>t.patch("/parametres/systeme/maintenance",{active:e}),o=e=>t.get("/parametres/journal",{params:e});export{o as a,p as b,m as c,n as d,s as g,r as u};

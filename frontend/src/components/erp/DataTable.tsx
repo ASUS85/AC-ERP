@@ -45,9 +45,9 @@ export function DataTable<T extends Record<string, any>>({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
-            {columns.map((c) => (
+            {columns.map((c, index) => (
               <th
-                key={c.key}
+                key={`${c.key}-${index}`}
                 className={cn(
                   "px-3 py-2.5 font-medium first:pl-1",
                   align(c.align),
@@ -66,9 +66,9 @@ export function DataTable<T extends Record<string, any>>({
               key={rowKey(row)}
               className="border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/40"
             >
-              {columns.map((c) => (
+              {columns.map((c, index) => (
                 <td
-                  key={c.key}
+                  key={`${c.key}-${index}`}
                   className={cn(
                     "px-3 py-3.5 first:pl-1",
                     align(c.align),

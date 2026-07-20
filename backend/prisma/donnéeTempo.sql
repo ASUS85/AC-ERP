@@ -15,7 +15,7 @@ TRUNCATE TABLE lignes_bl;
 TRUNCATE TABLE bons_commande_clients;
 TRUNCATE TABLE lignes_bcc;
 TRUNCATE TABLE devis;
-TRUNCATE TABLE lignes_devis;arq
+TRUNCATE TABLE lignes_devis;
 TRUNCATE TABLE receptions_marchandises;
 TRUNCATE TABLE lignes_reception;
 TRUNCATE TABLE bons_commande_fournisseurs;
@@ -31,6 +31,10 @@ TRUNCATE TABLE fournisseurs;
 TRUNCATE TABLE clients;
 TRUNCATE TABLE produits;
 TRUNCATE TABLE categories;
+TRUNCATE TABLE role_permissions;
+TRUNCATE TABLE permissions;
+TRUNCATE TABLE roles;
+TRUNCATE TABLE utilisateurs;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ==========================================================
@@ -152,3 +156,345 @@ INSERT INTO fournisseurs (id, code_fournisseur, raison_sociale, email, telephone
 (UUID(), 'FRS-0008', 'LightTech', 'contact@lighttech.cm', '+237 677000008', '33 Rue des Lumieres', 'Douala', 'Cameroun', 5, 'Paiement 15 jours', 'ACTIF', NOW()),
 (UUID(), 'FRS-0009', 'Cablexpert', 'info@cablexpert.cm', '+237 677000009', '66 Rue des Cables', 'Douala', 'Cameroun', 7, 'Paiement 30 jours', 'ACTIF', NOW()),
 (UUID(), 'FRS-0010', 'NetEquip', 'ventes@netequip.cm', '+237 677000010', '99 Rue du Reseau', 'Yaounde', 'Cameroun', 6, 'Paiement 30 jours', 'ACTIF', NOW());
+
+INSERT INTO permissions (id, module, action, description) VALUES
+-- Tableau de bord
+(UUID(), 'dashboard', 'lire', 'Voir le tableau de bord'),
+-- Produits & categories
+(UUID(), 'produits', 'creer', 'Créer un produit'),
+(UUID(), 'produits', 'lire', 'Lire les produits'),
+(UUID(), 'produits', 'modifier', 'Modifier un produit'),
+(UUID(), 'produits', 'supprimer', 'Supprimer un produit'),
+(UUID(), 'categories', 'creer', 'Créer une catégorie'),
+(UUID(), 'categories', 'lire', 'Lire les catégories'),
+(UUID(), 'categories', 'modifier', 'Modifier une catégorie'),
+(UUID(), 'categories', 'supprimer', 'Supprimer une catégorie'),
+-- Tiers (clients & fournisseurs)
+(UUID(), 'clients', 'creer', 'Créer un client'),
+(UUID(), 'clients', 'lire', 'Lire les clients'),
+(UUID(), 'clients', 'modifier', 'Modifier un client'),
+(UUID(), 'clients', 'supprimer', 'Supprimer un client'),
+(UUID(), 'fournisseurs', 'creer', 'Créer un fournisseur'),
+(UUID(), 'fournisseurs', 'lire', 'Lire les fournisseurs'),
+(UUID(), 'fournisseurs', 'modifier', 'Modifier un fournisseur'),
+(UUID(), 'fournisseurs', 'supprimer', 'Supprimer un fournisseur'),
+-- Ventes
+(UUID(), 'ventes', 'creer', 'Créer une vente'),
+(UUID(), 'ventes', 'lire', 'Lire les ventes'),
+(UUID(), 'ventes', 'modifier', 'Modifier une vente'),
+(UUID(), 'ventes', 'valider', 'Valider une vente'),
+(UUID(), 'ventes', 'livrer', 'Valider une livraison'),
+(UUID(), 'devis', 'creer', 'Créer un devis'),
+(UUID(), 'devis', 'lire', 'Lire les devis'),
+(UUID(), 'devis', 'modifier', 'Modifier un devis'),
+(UUID(), 'devis', 'supprimer', 'Supprimer un devis'),
+(UUID(), 'livraisons', 'creer', 'Créer un bon de livraison'),
+(UUID(), 'livraisons', 'lire', 'Lire les bons de livraison'),
+(UUID(), 'livraisons', 'modifier', 'Modifier un bon de livraison'),
+-- Achats
+(UUID(), 'achats', 'creer', 'Créer une demande d''achat'),
+(UUID(), 'achats', 'lire', 'Lire les achats'),
+(UUID(), 'achats', 'modifier', 'Modifier un achat'),
+(UUID(), 'achats', 'valider', 'Valider un achat'),
+(UUID(), 'achats', 'receptionner', 'Receptionner une commande'),
+(UUID(), 'commandes_fournisseurs', 'creer', 'Créer une commande fournisseur'),
+(UUID(), 'commandes_fournisseurs', 'lire', 'Lire les commandes fournisseur'),
+(UUID(), 'commandes_fournisseurs', 'modifier', 'Modifier une commande fournisseur'),
+(UUID(), 'receptions', 'creer', 'Créer une réception de marchandise'),
+(UUID(), 'receptions', 'lire', 'Lire les réceptions'),
+(UUID(), 'receptions', 'valider', 'Valider une réception'),
+-- Stock
+(UUID(), 'stocks', 'lire', 'Consulter les stocks'),
+(UUID(), 'stocks', 'ajuster', 'Ajuster un stock'),
+(UUID(), 'stocks', 'inventaire', 'Gérer les inventaires'),
+(UUID(), 'mouvements_stock', 'lire', 'Consulter les mouvements de stock'),
+(UUID(), 'inventaires', 'creer', 'Créer un inventaire'),
+(UUID(), 'inventaires', 'lire', 'Lire les inventaires'),
+(UUID(), 'inventaires', 'modifier', 'Modifier un inventaire'),
+(UUID(), 'inventaires', 'valider', 'Valider un inventaire'),
+-- Facturation & paiements
+(UUID(), 'factures', 'creer', 'Créer une facture'),
+(UUID(), 'factures', 'lire', 'Lire les factures'),
+(UUID(), 'factures', 'modifier', 'Modifier une facture'),
+(UUID(), 'factures', 'supprimer', 'Supprimer une facture'),
+(UUID(), 'factures', 'avoir', 'Créer un avoir'),
+(UUID(), 'factures', 'envoyer', 'Envoyer une facture'),
+(UUID(), 'paiements', 'creer', 'Enregistrer un paiement'),
+(UUID(), 'paiements', 'lire', 'Lire les paiements'),
+-- Administration
+(UUID(), 'users', 'creer', 'Créer un utilisateur'),
+(UUID(), 'users', 'lire', 'Lire les utilisateurs'),
+(UUID(), 'users', 'modifier', 'Modifier un utilisateur'),
+(UUID(), 'users', 'supprimer', 'Supprimer un utilisateur'),
+(UUID(), 'roles', 'creer', 'Créer un rôle'),
+(UUID(), 'roles', 'lire', 'Lire les rôles'),
+(UUID(), 'roles', 'modifier', 'Modifier un rôle'),
+(UUID(), 'roles', 'supprimer', 'Supprimer un rôle'),
+(UUID(), 'permissions', 'lire', 'Lire les permissions'),
+-- Rapports & IA
+(UUID(), 'rapports', 'lire', 'Lire les rapports'),
+(UUID(), 'rapports', 'exporter', 'Exporter un rapport'),
+(UUID(), 'ia', 'lire', 'Lire la configuration IA'),
+(UUID(), 'ia', 'modifier', 'Modifier la configuration IA'),
+(UUID(), 'ia', 'chat', 'Utiliser le chat IA'),
+(UUID(), 'ia', 'rapport', 'Generer un rapport IA');
+
+-- ==========================================================
+-- 6. ROLES
+-- ==========================================================
+INSERT INTO roles (id, nom_role, description, is_system_role, created_at) VALUES
+(UUID(), 'SUPER_ADMIN', 'Accès total à toutes les fonctionnalités, y compris la configuration système.', true, NOW()),
+(UUID(), 'ADMIN', 'Administrateur fonctionnel, gère les utilisateurs et les droits.', false, NOW()),
+(UUID(), 'GESTIONNAIRE', 'Gère les opérations commerciales, achats, ventes et stocks.', false, NOW()),
+(UUID(), 'COMMERCIAL', 'Gère le cycle de vente (clients, devis, commandes).', false, NOW()),
+(UUID(), 'MAGASINIER', 'Gère les stocks, les inventaires et les réceptions.', false, NOW());
+
+-- ==========================================================
+-- 7. UTILISATEURS DE TEST
+-- ==========================================================
+-- On récupère l'ID du rôle SUPER_ADMIN pour créer notre utilisateur de test.
+SELECT id INTO @role_super_admin_id FROM roles WHERE nom_role = 'SUPER_ADMIN';
+SELECT id INTO @role_admin_id FROM roles WHERE nom_role = 'ADMIN';
+SELECT id INTO @role_gestionnaire_id FROM roles WHERE nom_role = 'GESTIONNAIRE';
+SELECT id INTO @role_commercial_id FROM roles WHERE nom_role = 'COMMERCIAL';
+SELECT id INTO @role_magasinier_id FROM roles WHERE nom_role = 'MAGASINIER';
+
+-- Le mot de passe pour tous les utilisateurs de test est 'Admin@1234'.
+-- Le hash est généré avec bcrypt (cost 10).
+SET @password_hash = '$2a$12$I5n/FX/JTYp8HzetN7w.4uFaA9QMZGDoD5QVGN0etdbs3gerYjNeO';
+
+-- Utilisateur SUPER_ADMIN (principal pour les opérations du script)
+SET @user_id = UUID();
+INSERT INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
+(@user_id, 'Admin', 'Super', 'armandchristian85@gmail.com', @password_hash, @role_super_admin_id, 'ACTIF', NOW(), NOW());
+
+-- Autres utilisateurs
+INSERT INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
+(UUID(), 'Ministrator', 'Ad', 'admin@ac-erp.com', @password_hash, @role_admin_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Dupont', 'Jean', 'jean.dupont@ac-erp.com', @password_hash, @role_gestionnaire_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Martin', 'Sophie', 'sophie.martin@ac-erp.com', @password_hash, @role_gestionnaire_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Bernard', 'Luc', 'luc.bernard@ac-erp.com', @password_hash, @role_commercial_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Petit', 'Alice', 'alice.petit@ac-erp.com', @password_hash, @role_commercial_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Leroy', 'Paul', 'paul.leroy@ac-erp.com', @password_hash, @role_magasinier_id, 'ACTIF', NOW(), NOW()),
+(UUID(), 'Moreau', 'Juliette', 'juliette.moreau@ac-erp.com', @password_hash, @role_magasinier_id, 'ACTIF', NOW(), NOW());
+
+-- ==========================================================
+-- 8. RECUPERATION DES IDs (Produits, Clients, Fournisseurs)
+-- ==========================================================
+-- Recuperation de quelques produits
+SELECT id INTO @prod_pc_pro FROM produits WHERE reference = 'PRD-INF-001';
+SELECT id INTO @prod_ssd FROM produits WHERE reference = 'PRD-INF-003';
+SELECT id INTO @prod_clavier FROM produits WHERE reference = 'PRD-ACC-001';
+SELECT id INTO @prod_casque FROM produits WHERE reference = 'PRD-ACC-003';
+SELECT id INTO @prod_bureau FROM produits WHERE reference = 'PRD-MOB-001';
+SELECT id INTO @prod_switch FROM produits WHERE reference = 'PRD-RES-001';
+SELECT id INTO @prod_papier FROM produits WHERE reference = 'PRD-CON-003';
+SELECT id INTO @prod_ram FROM produits WHERE reference = 'PRD-INF-004';
+
+-- Recuperation de quelques clients
+SELECT id INTO @client_technoplus FROM clients WHERE code_client = 'CLI-0001';
+SELECT id INTO @client_digital FROM clients WHERE code_client = 'CLI-0002';
+SELECT id INTO @client_armand FROM clients WHERE code_client = 'CLI-0006';
+
+-- Recuperation de quelques fournisseurs
+SELECT id INTO @fournisseur_global FROM fournisseurs WHERE code_fournisseur = 'FRS-0001';
+SELECT id INTO @fournisseur_electro FROM fournisseurs WHERE code_fournisseur = 'FRS-0002';
+
+-- ==========================================================
+-- 9. PRODUIT_FOURNISSEURS
+-- ==========================================================
+INSERT INTO produit_fournisseurs (id_produit, id_fournisseur, prix_achat_fournisseur, est_fournisseur_principal) VALUES
+(@prod_pc_pro, @fournisseur_global, 845000, true),
+(@prod_ssd, @fournisseur_global, 74000, false),
+(@prod_clavier, @fournisseur_electro, 24500, true),
+(@prod_casque, @fournisseur_electro, 44000, false);
+
+-- ==========================================================
+-- 10. STOCKS & MOUVEMENTS INITIAUX
+-- ==========================================================
+-- Pour chaque produit, on cree une ligne de stock avec une quantite initiale.
+-- Note: TRUNCATE TABLE a deja vide les tables stocks et mouvements_stock.
+INSERT INTO stocks (id, id_produit, stock_actuel, stock_reserve, created_at, updated_at)
+SELECT UUID(), id, 25, 0, NOW(), NOW() FROM produits;
+
+-- On cree un mouvement d'entree initiale pour chaque produit.
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, id_utilisateur, created_at)
+SELECT UUID(), p.id, 'ENTREE_INITIALE', 25, 0, 25, 'Stock de départ', @user_id, NOW() FROM produits p;
+
+-- ==========================================================
+-- 11. FLUX DE VENTE COMPLET (Devis -> Commande -> Livraison -> Facture -> Paiement)
+-- ==========================================================
+
+-- DEVIS
+SET @devis1_id = UUID();
+INSERT INTO devis (id, numero_devis, id_client, id_utilisateur, date_devis, date_validite, statut, total_ht, total_tva, total_ttc, created_at) VALUES
+(@devis1_id, 'DEV-2024-001', @client_technoplus, @user_id, NOW() - INTERVAL 20 DAY, NOW() - INTERVAL 5 DAY, 'ACCEPTE', 1749800, 314964, 2064764, NOW() - INTERVAL 20 DAY);
+
+INSERT INTO lignes_devis (id, id_devis, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc) VALUES
+(UUID(), @devis1_id, @prod_pc_pro, 'PC Portable Pro 15 i7 32Go 512Go SSD', 1, 1299900, 18.00, 1299900, 233982, 1533882),
+(UUID(), @devis1_id, @prod_bureau, 'Bureau Assis-Debout Electrique', 1, 449900, 18.00, 449900, 80982, 530882);
+
+-- BON DE COMMANDE CLIENT (BCC)
+SET @bcc1_id = UUID();
+INSERT INTO bons_commande_clients (id, numero_bcc, id_client, id_utilisateur, id_devis, date_commande, statut, total_ht, total_tva, total_ttc, created_at) VALUES
+(@bcc1_id, 'BCC-2024-001', @client_technoplus, @user_id, @devis1_id, NOW() - INTERVAL 18 DAY, 'LIVRE', 1749800, 314964, 2064764, NOW() - INTERVAL 18 DAY);
+
+INSERT INTO lignes_bcc (id, id_bcc, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc)
+SELECT UUID(), @bcc1_id, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc FROM lignes_devis WHERE id_devis = @devis1_id;
+
+-- BON DE LIVRAISON (BL)
+SET @bl1_id = UUID();
+INSERT INTO bons_livraison (id, numero_bl, id_bcc, id_utilisateur, date_livraison, statut, created_at) VALUES
+(@bl1_id, 'BL-2024-001', @bcc1_id, @user_id, NOW() - INTERVAL 10 DAY, 'LIVRE', NOW() - INTERVAL 10 DAY);
+
+INSERT INTO lignes_bl (id, id_bl, id_ligne_bcc, id_produit, quantite_livree)
+SELECT UUID(), @bl1_id, lbcc.id, lbcc.id_produit, lbcc.quantite FROM lignes_bcc lbcc WHERE lbcc.id_bcc = @bcc1_id;
+
+-- MOUVEMENTS DE STOCK (SORTIE VENTE)
+UPDATE stocks SET stock_actuel = stock_actuel - 1, updated_at = NOW() WHERE id_produit = @prod_pc_pro;
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, reference_doc, id_utilisateur, created_at)
+VALUES (UUID(), @prod_pc_pro, 'SORTIE_VENTE', 1, 25, 24, 'Vente BL-2024-001', 'BL-2024-001', @user_id, NOW() - INTERVAL 10 DAY);
+
+UPDATE stocks SET stock_actuel = stock_actuel - 1, updated_at = NOW() WHERE id_produit = @prod_bureau;
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, reference_doc, id_utilisateur, created_at)
+VALUES (UUID(), @prod_bureau, 'SORTIE_VENTE', 1, 25, 24, 'Vente BL-2024-001', 'BL-2024-001', @user_id, NOW() - INTERVAL 10 DAY);
+
+-- FACTURE (partiellement payee)
+SET @facture1_id = UUID();
+INSERT INTO factures (id, numero_facture, type_facture, id_client, id_bl, id_utilisateur, date_emission, date_echeance, statut, total_ht, total_tva, total_ttc, montant_paye, created_at) VALUES
+(@facture1_id, 'FAC-2024-001', 'VENTE', @client_technoplus, @bl1_id, @user_id, NOW() - INTERVAL 10 DAY, NOW() + INTERVAL 20 DAY, 'PARTIELLEMENT_PAYEE', 1749800, 314964, 2064764, 1000000, NOW() - INTERVAL 10 DAY);
+
+INSERT INTO lignes_facture (id, id_facture, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc)
+SELECT UUID(), @facture1_id, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc FROM lignes_devis WHERE id_devis = @devis1_id;
+
+-- PAIEMENT (partiel)
+INSERT INTO paiements (id, id_facture, id_utilisateur, montant, date_paiement, mode_paiement, created_at) VALUES
+(UUID(), @facture1_id, @user_id, 1000000, NOW() - INTERVAL 5 DAY, 'VIREMENT', NOW() - INTERVAL 5 DAY);
+
+-- ==========================================================
+-- 12. FACTURE DIRECTE (payee) & AVOIR
+-- ==========================================================
+SET @facture2_id = UUID();
+INSERT INTO factures (id, numero_facture, type_facture, id_client, id_utilisateur, date_emission, date_echeance, statut, total_ht, total_tva, total_ttc, montant_paye, created_at) VALUES
+(@facture2_id, 'FAC-2024-002', 'VENTE', @client_digital, @user_id, NOW() - INTERVAL 15 DAY, NOW() - INTERVAL 5 DAY, 'SOLDEE', 1353900, 243702, 1597602, 1597602, NOW() - INTERVAL 15 DAY);
+
+INSERT INTO lignes_facture (id, id_facture, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc) VALUES
+(UUID(), @facture2_id, @prod_clavier, 'Clavier Mecanique RGB', 10, 45900, 18.00, 459000, 82620, 541620),
+(UUID(), @facture2_id, @prod_casque, 'Casque Audio Bluetooth ANC', 10, 79900, 18.00, 799000, 143820, 942820),
+(UUID(), @facture2_id, @prod_ssd, 'SSD 1To NVMe M.2', 1, 95900, 18.00, 95900, 17262, 113162);
+
+INSERT INTO paiements (id, id_facture, id_utilisateur, montant, date_paiement, mode_paiement, created_at) VALUES
+(UUID(), @facture2_id, @user_id, 1597602, NOW() - INTERVAL 14 DAY, 'MOBILE_MONEY', NOW() - INTERVAL 14 DAY);
+
+-- AVOIR sur la facture 2
+SET @avoir1_id = UUID();
+INSERT INTO avoirs (id, numero_avoir, id_facture, id_utilisateur, date_avoir, motif, total_ht, total_ttc, created_at) VALUES
+(@avoir1_id, 'AV-2024-001', @facture2_id, @user_id, NOW() - INTERVAL 2 DAY, 'Retour de 2 claviers défectueux', 91800, 108324, NOW() - INTERVAL 2 DAY);
+
+INSERT INTO lignes_avoir (id, id_avoir, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_ttc) VALUES
+(UUID(), @avoir1_id, @prod_clavier, 'Clavier Mecanique RGB', 2, 45900, 18.00, 91800, 108324);
+
+-- ==========================================================
+-- 13. FACTURE EN RETARD
+-- ==========================================================
+SET @facture3_id = UUID();
+INSERT INTO factures (id, numero_facture, type_facture, id_client, id_utilisateur, date_emission, date_echeance, statut, total_ht, total_tva, total_ttc, montant_paye, created_at) VALUES
+(@facture3_id, 'FAC-2024-003', 'VENTE', @client_armand, @user_id, NOW() - INTERVAL 45 DAY, NOW() - INTERVAL 15 DAY, 'EN_RETARD', 54900, 9882, 64782, 0, NOW() - INTERVAL 45 DAY);
+
+INSERT INTO lignes_facture (id, id_facture, id_produit, designation, quantite, prix_unitaire_ht, taux_tva, montant_ht, montant_tva, montant_ttc) VALUES
+(UUID(), @facture3_id, @prod_ram, 'Barrette RAM DDR4 16Go', 1, 54900, 18.00, 54900, 9882, 64782);
+
+-- ==========================================================
+-- 14. FLUX D'ACHAT
+-- ==========================================================
+SET @bcf1_id = UUID();
+INSERT INTO bons_commande_fournisseurs (id, numero_bcf, id_fournisseur, id_utilisateur, date_commande, statut, total_ht, total_tva, total_ttc, created_at) VALUES
+(@bcf1_id, 'BCF-2024-001', @fournisseur_global, @user_id, NOW() - INTERVAL 8 DAY, 'RECU_PARTIEL', 850000, 153000, 1003000, NOW() - INTERVAL 8 DAY);
+
+SET @ligne_bcf_1_id = UUID();
+INSERT INTO lignes_bcf (id, id_bcf, id_produit, quantite_commandee, prix_unitaire_ht, montant_ht) VALUES
+(@ligne_bcf_1_id, @bcf1_id, @prod_pc_pro, 10, 85000, 850000);
+
+SET @reception1_id = UUID();
+INSERT INTO receptions_marchandises (id, id_bcf, id_utilisateur, date_reception, statut, created_at) VALUES
+(@reception1_id, @bcf1_id, @user_id, NOW() - INTERVAL 1 DAY, 'PARTIELLE', NOW() - INTERVAL 1 DAY);
+
+INSERT INTO lignes_reception (id, id_reception, id_ligne_bcf, quantite_recue, conforme) VALUES
+(UUID(), @reception1_id, @ligne_bcf_1_id, 8, true);
+
+-- MOUVEMENT DE STOCK (ENTREE ACHAT)
+UPDATE stocks SET stock_actuel = stock_actuel + 8, updated_at = NOW() WHERE id_produit = @prod_pc_pro;
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, reference_doc, id_utilisateur, created_at)
+VALUES (UUID(), @prod_pc_pro, 'ENTREE_ACHAT', 8, 24, 32, 'Réception BCF-2024-001', 'REC-2024-001', @user_id, NOW() - INTERVAL 1 DAY);
+
+-- ==========================================================
+-- 15. INVENTAIRE & AJUSTEMENTS
+-- ==========================================================
+SET @inv1_id = UUID();
+INSERT INTO inventaires (id, id_utilisateur_createur, statut, date_debut, date_fin, created_at) VALUES
+(@inv1_id, @user_id, 'VALIDE', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 3 DAY);
+
+INSERT INTO lignes_inventaire (id, id_inventaire, id_produit, stock_theorique, stock_reel) VALUES
+(UUID(), @inv1_id, @prod_papier, 25, 24),
+(UUID(), @inv1_id, @prod_switch, 25, 26);
+
+-- MOUVEMENTS D'AJUSTEMENT
+UPDATE stocks SET stock_actuel = 24, updated_at = NOW() WHERE id_produit = @prod_papier;
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, reference_doc, id_utilisateur, created_at)
+VALUES (UUID(), @prod_papier, 'AJUSTEMENT_NEG', 1, 25, 24, 'Inventaire', 'INV-1', @user_id, NOW() - INTERVAL 2 DAY);
+
+UPDATE stocks SET stock_actuel = 26, updated_at = NOW() WHERE id_produit = @prod_switch;
+INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, reference_doc, id_utilisateur, created_at)
+VALUES (UUID(), @prod_switch, 'AJUSTEMENT_POS', 1, 25, 26, 'Inventaire', 'INV-1', @user_id, NOW() - INTERVAL 2 DAY);
+
+-- ==========================================================
+-- 16. NOTIFICATIONS
+-- ==========================================================
+INSERT INTO notifications (id, id_utilisateur, type_notif, titre, message, is_lue, created_at) VALUES
+(UUID(), @user_id, 'ALERTE_STOCK', 'Stock faible - PC Portable Pro 15', 'Le stock du produit PRD-INF-001 est de 32 unités (seuil: 5).', false, NOW() - INTERVAL 1 DAY),
+(UUID(), @user_id, 'FACTURE_ECHEANCE', 'Facture FAC-2024-003 en retard', 'La facture de Armand Christian est en retard de 15 jours.', false, NOW());
+
+-- ==========================================================
+-- 17. DONNEES IA (simulées)
+-- ==========================================================
+INSERT INTO alertes_rupture (id, id_produit, jours_avant_rupture, vitesse_ecoulement, qte_recommandee, statut, created_at)
+SELECT UUID(), id, 10, 2.5, 20, 'VIGILANCE', NOW()
+FROM produits p
+WHERE p.reference = 'PRD-ACC-002'; -- Souris Ergonomique
+
+INSERT INTO previsions_ventes (id, id_produit, periode, quantite_prevue, quantite_min, quantite_max, tendance, taux_confiance, created_at) VALUES
+(UUID(), @prod_pc_pro, LAST_DAY(NOW() + INTERVAL 1 MONTH), 15, 12, 18, 'HAUSSE', 88.5, NOW()),
+(UUID(), @prod_casque, LAST_DAY(NOW() + INTERVAL 1 MONTH), 30, 25, 35, 'STABLE', 92.1, NOW());
+
+-- ==========================================================
+-- 18. AFFECTATION DES PERMISSIONS AUX ROLES
+-- ==========================================================
+SELECT id INTO @role_super_admin FROM roles WHERE nom_role = 'SUPER_ADMIN';
+SELECT id INTO @role_admin FROM roles WHERE nom_role = 'ADMIN';
+SELECT id INTO @role_gestionnaire FROM roles WHERE nom_role = 'GESTIONNAIRE';
+SELECT id INTO @role_commercial FROM roles WHERE nom_role = 'COMMERCIAL';
+SELECT id INTO @role_magasinier FROM roles WHERE nom_role = 'MAGASINIER';
+
+-- 1. SUPER_ADMIN et ADMIN recoivent toutes les permissions
+INSERT INTO role_permissions (id_role, id_permission)
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.nom_role IN ('SUPER_ADMIN', 'ADMIN');
+
+-- 2. Le GESTIONNAIRE a presque tout, sauf la gestion des utilisateurs/rôles et de l'IA.
+INSERT INTO role_permissions (id_role, id_permission)
+SELECT @role_gestionnaire, p.id
+FROM permissions p
+WHERE p.module NOT IN ('users', 'roles', 'permissions', 'ia');
+
+-- 3. Le COMMERCIAL gère le cycle de vente et la consultation utile du catalogue.
+INSERT INTO role_permissions (id_role, id_permission)
+SELECT @role_commercial, p.id
+FROM permissions p
+WHERE (p.module IN ('clients', 'ventes', 'factures') AND p.action IN ('creer', 'lire', 'modifier', 'valider', 'livrer', 'avoir', 'envoyer'))
+   OR (p.module IN ('produits', 'stocks', 'dashboard', 'rapports') AND p.action = 'lire');
+
+-- 4. Le MAGASINIER gère les stocks, les achats et les réceptions.
+INSERT INTO role_permissions (id_role, id_permission)
+SELECT @role_magasinier, p.id
+FROM permissions p
+WHERE (p.module IN ('stocks', 'mouvements_stock', 'inventaires', 'receptions', 'achats') AND p.action IN ('creer', 'lire', 'modifier', 'ajuster', 'inventaire', 'valider', 'receptionner'))
+   OR (p.module IN ('produits', 'fournisseurs', 'categories', 'dashboard') AND p.action = 'lire');

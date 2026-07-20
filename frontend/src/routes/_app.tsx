@@ -1,6 +1,7 @@
 import {
   createFileRoute,
   Outlet,
+  redirect,
   useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -12,15 +13,43 @@ import {
 } from "@/components/erp/GlobalLoader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { getEntreprise } from "@/lib/api/parametres.service";
+import { getMe } from "@/lib/api/auth.service";
+import { AUTH_STORAGE_KEYS, clearAuthSession } from "@/lib/auth-session";
 import { setStoredCurrency } from "@/lib/currency";
 
 export const Route = createFileRoute("/_app")({
+  beforeLoad: async ({ context, location }) => {
+    // Ne pas exécuter la logique d'authentification côté serveur
+    if (typeof window === "undefined") {
+      return {};
+    }
+
+    const token = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
+    if (!token) {
+      throw redirect({
+        to: "/login",
+        search: {
+          redirect: location.href,
+        },
+      });
+    }
+
+    if (!context.auth) {
+      try {
+        const userResponse = await getMe();
+        return { auth: { user: userResponse.data } };
+      } catch (error) {
+        clearAuthSession();
+        throw redirect({ to: "/login" });
+      }
+    }
+    return {};
+  },
   component: AppLayout,
 });
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
-  const [, setCurrencyVersion] = useState(0);
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -34,16 +63,6 @@ function AppLayout() {
     getEntreprise()
       .then((response) => setStoredCurrency(response?.data?.devise))
       .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    const handleCurrencyChanged = () => {
-      setCurrencyVersion((version) => version + 1);
-    };
-    window.addEventListener("erp:currency-changed", handleCurrencyChanged);
-    return () => {
-      window.removeEventListener("erp:currency-changed", handleCurrencyChanged);
-    };
   }, []);
 
   return (

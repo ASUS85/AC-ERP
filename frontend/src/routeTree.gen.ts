@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as TopbarRouteImport } from './routes/Topbar'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
 import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
@@ -49,6 +50,11 @@ const LoginRoute = LoginRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TopbarRoute = TopbarRouteImport.update({
+  id: '/Topbar',
+  path: '/Topbar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -143,6 +149,7 @@ const AppAiRoute = AppAiRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/Topbar': typeof TopbarRoute
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AppUsersRoute
 }
 export interface FileRoutesByTo {
+  '/Topbar': typeof TopbarRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -190,6 +198,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/Topbar': typeof TopbarRoute
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -216,6 +225,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/Topbar'
     | '/'
     | '/login'
     | '/reset-password'
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/users'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/Topbar'
     | '/login'
     | '/reset-password'
     | '/sitemap.xml'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/'
   id:
     | '__root__'
+    | '/Topbar'
     | '/_app'
     | '/login'
     | '/reset-password'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  TopbarRoute: typeof TopbarRoute
   AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/Topbar': {
+      id: '/Topbar'
+      path: '/Topbar'
+      fullPath: '/Topbar'
+      preLoaderRoute: typeof TopbarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/': {
@@ -497,6 +517,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  TopbarRoute: TopbarRoute,
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,

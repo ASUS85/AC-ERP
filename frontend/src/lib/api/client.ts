@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { AUTH_STORAGE_KEYS, clearAuthSession } from "../auth-session";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1",
@@ -7,7 +8,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("erp_access_token");
+  const token = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -31,18 +32,22 @@ api.interceptors.response.use(
       original._retry = true;
       refreshing = true;
       try {
-        const refreshToken = localStorage.getItem("erp_refresh_token");
+        const refreshToken = localStorage.getItem(
+          AUTH_STORAGE_KEYS.refreshToken,
+        );
         const response = await axios.post(
           `${api.defaults.baseURL}/auth/refresh`,
           { refreshToken },
         );
         const accessToken = response.data?.data?.accessToken;
-        localStorage.setItem("erp_access_token", accessToken);
+        if (!accessToken) {
+          throw new Error("Access token missing from refresh response");
+        }
+        localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, accessToken);
         original.headers.Authorization = `Bearer ${accessToken}`;
         return api(original);
       } catch (refreshError) {
-        localStorage.removeItem("erp_access_token");
-        localStorage.removeItem("erp_refresh_token");
+        clearAuthSession();
         window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {

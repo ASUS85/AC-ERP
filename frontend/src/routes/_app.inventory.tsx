@@ -171,7 +171,7 @@ function InventoryPage() {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [skRes, mvRes, alRes, invRes, prodRes] = await Promise.all([
+      const [skRes, mvRes, alRes, invRes, prodRes] = await Promise.allSettled([
         getStocks({ page: skPage, limit: PAGE_SIZE }),
         getMouvements({
           page: mvPage,
@@ -191,33 +191,44 @@ function InventoryPage() {
           });
         })(),
       ]);
-      setStocks(((skRes as any)?.data || []) as StockItem[]);
+      const stockData =
+        skRes.status === "fulfilled" ? (skRes.value as any) : null;
+      const movementData =
+        mvRes.status === "fulfilled" ? (mvRes.value as any) : null;
+      const alertData =
+        alRes.status === "fulfilled" ? (alRes.value as any) : null;
+      const inventaireData =
+        invRes.status === "fulfilled" ? (invRes.value as any) : null;
+      const productData =
+        prodRes.status === "fulfilled" ? (prodRes.value as any) : null;
+
+      setStocks((stockData?.data || []) as StockItem[]);
       setSkMeta(
-        (skRes as any)?.meta || {
+        stockData?.meta || {
           total: 0,
           page: skPage,
           limit: PAGE_SIZE,
           totalPages: 1,
         },
       );
-      setMouvements(((mvRes as any)?.data || []) as Mouvement[]);
+      setMouvements((movementData?.data || []) as Mouvement[]);
       setMvMeta(
-        (mvRes as any)?.meta || {
+        movementData?.meta || {
           total: 0,
           page: mvPage,
           limit: PAGE_SIZE,
           totalPages: 1,
         },
       );
-      setAlertes(((alRes as any)?.data || []) as Alerte[]);
-      setInventaires(((invRes as any)?.data || []) as Inventaire[]);
+      setAlertes((alertData?.data || []) as Alerte[]);
+      setInventaires((inventaireData?.data || []) as Inventaire[]);
       setInvMeta({
-        total: ((invRes as any)?.data || []).length,
+        total: (inventaireData?.data || []).length,
         page: 1,
         limit: 10000,
         totalPages: 1,
       });
-      const produitsRaw = (prodRes as any)?.data || [];
+      const produitsRaw = productData?.data || [];
       setAdjProduits(
         produitsRaw.map((p: any) => ({
           id: p.id,
@@ -225,7 +236,11 @@ function InventoryPage() {
         })),
       );
     } catch {
-      toast.error("Impossible de charger les stocks");
+      setStocks([]);
+      setMouvements([]);
+      setAlertes([]);
+      setInventaires([]);
+      setAdjProduits([]);
     } finally {
       setLoading(false);
     }
