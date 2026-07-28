@@ -14,4 +14,3 @@ router.get("/inventaires/:id", stocksController.inventaireById);
 router.post("/inventaires/:id/valider", stocksController.validerInventaire);
 
 export default router;
-

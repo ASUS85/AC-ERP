@@ -2,7 +2,10 @@ import { notificationsRepository } from "./notifications.repository.js";
 
 export const notificationsService = {
   list(userId, query) {
-    const where = query.isLue === undefined ? {} : { isLue: query.isLue === "true" || query.isLue === true };
+    const where =
+      query.isLue === undefined
+        ? {}
+        : { isLue: query.isLue === "true" || query.isLue === true };
 
     if (query.dateFrom || query.dateTo) {
       where.createdAt = {};
@@ -12,6 +15,10 @@ export const notificationsService = {
 
     return notificationsRepository.findForUser(userId, where);
   },
-  lire(id, userId) { return notificationsRepository.markRead(id, userId); },
-  toutLire(userId) { return notificationsRepository.markAllRead(userId); },
+  lire(id, userId) {
+    return notificationsRepository.markRead(id, userId);
+  },
+  toutLire(userId) {
+    return notificationsRepository.markAllRead(userId);
+  },
 };

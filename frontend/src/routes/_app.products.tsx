@@ -129,7 +129,7 @@ function ProductsPage() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const pageSize = 10;
+  const pageSize = 40;
 
   const loadCategories = async () => {
     const response = await getCategories({ limit: 500, statut: "ACTIF" });
@@ -630,23 +630,17 @@ function ProductsPage() {
           </Field>
           <Field label="Unité" htmlFor="uniteMesure" error={errors.uniteMesure}>
             <span class="ml-1 text-destructive">*</span>
-            <Select
+            <SearchableSelect
               value={form.uniteMesure}
-              onValueChange={(value: ProduitPayload["uniteMesure"]) =>
-                setField("uniteMesure", value)
-              }
-            >
-              <SelectTrigger id="uniteMesure">
-                <SelectValue placeholder="Sélectionner une unité" />
-              </SelectTrigger>
-              <SelectContent>
-                {units.map((unit) => (
-                  <SelectItem key={unit.value} value={unit.value}>
-                    {unit.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(value) => setField("uniteMesure", value)}
+              placeholder="Sélectionner une unité"
+              searchPlaceholder="Rechercher une unité..."
+              emptyMessage="Aucune unité trouvée"
+              options={units.map((unit) => ({
+                value: unit.value,
+                label: unit.label,
+              }))}
+            />
           </Field>
           <Field
             label="Prix d’achat HT"

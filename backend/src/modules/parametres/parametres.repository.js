@@ -114,7 +114,13 @@ export const parametresRepository = {
       where,
       include: {
         utilisateur: {
-          select: { id: true, nom: true, prenom: true, email: true },
+          select: {
+            id: true,
+            nom: true,
+            prenom: true,
+            email: true,
+            avatar: true,
+          },
         },
       },
       orderBy: { createdAt: "desc" },

@@ -287,7 +287,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2 pl-1.5 pr-2">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-9 w-8">
                   <AvatarImage
                     src={resolveAvatarUrl(user?.avatar)}
                     alt={getDisplayName(user)}

@@ -9,10 +9,28 @@ import {
   MonitorSmartphone,
   LoaderCircle,
   Camera,
+  Lock,
+  Users,
+  KeyRound,
+  Package,
+  FolderOpen,
+  Factory,
+  Warehouse,
+  ShoppingCart,
+  ShoppingBag,
+  FileText,
+  CreditCard,
+  Bell,
+  BarChart3,
+  LineChart,
+  Bot,
+  ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard } from "@/components/erp/widgets";
 import { useGlobalLoader } from "@/components/erp/GlobalLoader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +38,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useAuth } from "@/hooks/useAuth";
+import type { ComponentType } from "react";
 import {
   changePassword,
   getMe,
@@ -28,7 +47,6 @@ import {
   updateProfile,
   uploadAvatar,
 } from "@/lib/api/auth.service";
-import { resolveAvatarUrl } from "@/lib/avatar";
 import {
   getEntreprise,
   getJournal,
@@ -43,11 +61,14 @@ import {
   setStoredCurrency,
 } from "@/lib/currency";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Paramètres — AC ERP" }] }),
   component: SettingsPage,
 });
+
+// ── Types ──────────────────────────────────────────────────────────────────
 
 type Profile = {
   nom: string;
@@ -74,18 +95,33 @@ type SystemSettings = {
   facturationAutomatique: boolean;
   modeMaintenance: boolean;
 };
+
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 type Audit = {
   id: string;
   action: string;
   module: string;
-  newValues?: { status?: number };
+  newValues?: {
+    status?: number;
+    donnees?: Record<string, JsonValue>;
+  };
+  ipAddress?: string;
   createdAt: string;
-  utilisateur?: { nom: string; prenom: string; email: string };
+  utilisateur?: { nom: string; prenom: string; email: string; avatar?: string };
 };
 type Session = { id: string; createdAt: string; expiresAt: string };
 type ApiResponse<T> = { data: T };
 type ApiError = { response?: { data?: { error?: { message?: unknown } } } };
 type AvatarUploadResponse = { avatar: string };
+
+// ── Helpers généraux ───────────────────────────────────────────────────────
 
 const today = () => {
   const now = new Date();
@@ -102,6 +138,589 @@ const errorMessage = (error: unknown, fallback: string) => {
   const message = (error as ApiError).response?.data?.error?.message;
   return typeof message === "string" ? message : fallback;
 };
+
+// ── Helpers journal d'activité ─────────────────────────────────────────────
+
+const ACTION_META: Record<
+  string,
+  {
+    label: string;
+    color: string;
+  }
+> = {
+  LOGIN: {
+    label: "Connexion",
+    color:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  },
+  LOGOUT: {
+    label: "Déconnexion",
+    color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  },
+  CREATE: {
+    label: "Création",
+    color:
+      "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
+  },
+  UPDATE: {
+    label: "Modification",
+    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  DELETE: {
+    label: "Suppression",
+    color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  },
+  ARCHIVE: {
+    label: "Archivage",
+    color:
+      "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  },
+  VALIDATE: {
+    label: "Validation",
+    color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+  },
+  REJECT: {
+    label: "Rejet",
+    color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  },
+  EXPORT: {
+    label: "Export",
+    color:
+      "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+  },
+  PAYMENT: {
+    label: "Paiement",
+    color:
+      "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
+  },
+};
+
+// ── Mapping icônes par module  ───────────────────────
+
+const MODULE_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  auth: Lock,
+  users: Users,
+  roles: KeyRound,
+  produits: Package,
+  categories: FolderOpen,
+  clients: Users,
+  fournisseurs: Factory,
+  stocks: Warehouse,
+  achats: ShoppingCart,
+  ventes: ShoppingBag,
+  factures: FileText,
+  paiements: CreditCard,
+  notifications: Bell,
+  dashboard: BarChart3,
+  rapports: LineChart,
+  ia: Bot,
+};
+
+// ── Couleurs des points timeline par action ───────────────────────────────
+
+const ACTION_DOT_CLASS: Record<string, string> = {
+  CREATE: "bg-green-500",
+  UPDATE: "bg-blue-500",
+  DELETE: "bg-red-500",
+  LOGIN: "bg-emerald-500",
+  LOGOUT: "bg-gray-400",
+  ARCHIVE: "bg-amber-500",
+  VALIDATE: "bg-teal-500",
+  REJECT: "bg-rose-500",
+  EXPORT: "bg-violet-500",
+  PAYMENT: "bg-indigo-500",
+};
+
+const ACTION_BADGE_CLASS: Record<string, string> = {
+  CREATE:
+    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  UPDATE: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  DELETE: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  LOGIN:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  LOGOUT: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  ARCHIVE:
+    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  VALIDATE: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",
+  REJECT: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+  EXPORT:
+    "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300",
+  PAYMENT:
+    "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+};
+
+const STATUS_LABELS: Record<number, { label: string; className: string }> = {
+  200: {
+    label: "Succès",
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  },
+  201: {
+    label: "Créé",
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  },
+  204: {
+    label: "Succès",
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  },
+  400: {
+    label: "Requête invalide",
+    className:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+  },
+  401: {
+    label: "Non autorisé",
+    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  },
+  403: {
+    label: "Accès refusé",
+    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  },
+  404: {
+    label: "Introuvable",
+    className:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  },
+  500: {
+    label: "Erreur serveur",
+    className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  },
+};
+
+// ── Override explicite (libellés custom) ─────────────────────────────────
+const DISPLAY_FIELDS: Record<string, string> = {
+  nom: "Nom",
+  prenom: "Prénom",
+  email: "E-mail",
+  telephone: "Téléphone",
+  statut: "Statut",
+  role: "Rôle",
+  nomRole: "Rôle",
+  raisonSociale: "Raison sociale",
+  numeroFiscal: "NIU",
+  devise: "Devise",
+  fuseauHoraire: "Fuseau horaire",
+  adresse: "Adresse",
+};
+
+// ── Champs techniques/sensibles à masquer ────────────────────────────────
+const HIDDEN_FIELDS = new Set([
+  "id",
+  "createdAt",
+  "updatedAt",
+  "deletedAt",
+  "password",
+  "motDePasse",
+  "idUtilisateur",
+  "avatar",
+  "mfaToken",
+  "idCategorie",
+  "idRole",
+  "lockedUntil",
+  "permissions",
+  "failedAttempts",
+  "refreshToken",
+  "idProduit",
+  "code",
+  "donnees",
+]);
+
+// ── Génère un label lisible depuis une clé technique ─────────────────────
+function toReadableLabel(key: string): string {
+  // 1. Override explicite
+  if (DISPLAY_FIELDS[key]) return DISPLAY_FIELDS[key];
+
+  // 2. Génération automatique : camelCase / snake_case → mots
+  return key
+    .replace(/([A-Z])/g, " $1") // prixAchatHt → prix Achat Ht
+    .replace(/_/g, " ") // snake_case → espaces
+    .replace(/^./, (s) => s.toUpperCase()) // Majuscule initiale
+    .trim();
+}
+
+// ── Regroupement par période ──────────────────────────────────────────────
+function getAuditAction(action: string): string {
+  const lower = action.toLowerCase();
+
+  // ── CAS SPÉCIAUX (avant les verbes HTTP) ──
+  if (lower.includes("login")) return "LOGIN";
+  if (lower.includes("auth")) return "LOGIN";
+  if (lower.includes("logout")) return "LOGOUT";
+  if (lower.includes("verify-mfa") || lower.includes("verify_mfa"))
+    return "VERIFY_MFA";
+
+  // ── VERBES HTTP standards ──
+  if (lower.startsWith("post")) return "CREATE";
+  if (lower.startsWith("put") || lower.startsWith("patch")) return "UPDATE";
+  if (lower.startsWith("delete")) return "DELETE";
+
+  return action.toUpperCase();
+}
+
+function buildSentence(audit: Audit): string {
+  const action = getAuditAction(audit.action);
+  const module = audit.module.toLowerCase();
+
+  switch (action) {
+    case "LOGIN":
+      return "s'est connecté.";
+
+    case "LOGOUT":
+      return "s'est déconnecté.";
+
+    case "VERIFY_MFA":
+    case "VERIFY-MFA":
+      return "a validé la vérification en deux étapes.";
+
+    case "CREATE":
+      switch (module) {
+        case "users":
+          return "a créé un nouvel utilisateur.";
+        case "roles":
+          return "a créé un nouveau rôle.";
+        case "produits":
+          return "a ajouté un nouveau produit.";
+        case "categories":
+          return "a créé une nouvelle catégorie.";
+        case "clients":
+          return "a ajouté un nouveau client.";
+        case "fournisseurs":
+          return "a ajouté un nouveau fournisseur.";
+        case "stocks":
+          return "a créé un mouvement de stock.";
+        case "achats":
+          return "a enregistré un nouvel achat.";
+        case "ventes":
+          return "a enregistré une nouvelle vente.";
+        case "factures":
+          return "a créé une facture.";
+        case "paiements":
+          return "a enregistré un paiement.";
+        case "ajustement":
+          return "a effectué un ajustement.";
+        case "inventaires":
+          return "a crée un inventaire.";
+        default:
+          return "a créé un nouvel élément.";
+      }
+
+    case "UPDATE":
+      switch (module) {
+        case "me":
+        case "auth":
+          return "a mis à jour son profil.";
+        case "users":
+          return "a modifié un utilisateur.";
+        case "roles":
+          return "a modifié un rôle.";
+        case "produits":
+          return "a modifié un produit.";
+        case "categories":
+          return "a modifié une catégorie.";
+        case "clients":
+          return "a modifié un client.";
+        case "fournisseurs":
+          return "a modifié un fournisseur.";
+        case "stocks":
+          return "a mis à jour le stock.";
+        case "entreprise":
+          return "a modifié les informations de l'entreprise.";
+        case "systeme":
+          return "a modifié les paramètres système.";
+        default:
+          return "a effectué une modification.";
+      }
+
+    case "DELETE":
+      switch (module) {
+        case "users":
+          return "a supprimé un utilisateur.";
+        case "roles":
+          return "a supprimé un rôle.";
+        case "produits":
+          return "a supprimé un produit.";
+        case "categories":
+          return "a supprimé une catégorie.";
+        case "clients":
+          return "a supprimé un client.";
+        case "fournisseurs":
+          return "a supprimé un fournisseur.";
+        default:
+          return "a supprimé un élément.";
+      }
+
+    case "ARCHIVE":
+      return "a archivé un élément.";
+
+    case "VALIDATE":
+      return "a validé une opération.";
+
+    case "REJECT":
+      return "a rejeté une opération.";
+
+    case "EXPORT":
+      return "a exporté des données.";
+
+    case "PAYMENT":
+      return "a enregistré un paiement.";
+
+    default:
+      return "a effectué une action.";
+  }
+}
+
+function fmtTime(date: string | Date): string {
+  return new Date(date).toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function getDisplayName(user?: Audit["utilisateur"]) {
+  const fullName = `${user?.prenom || ""} ${user?.nom || ""}`.trim();
+
+  return fullName || user?.email || "Utilisateur";
+}
+
+function getInitials(user?: Audit["utilisateur"]) {
+  const initials = `${user?.prenom?.[0] || ""}${user?.nom?.[0] || ""}`;
+  return (initials || user?.email?.slice(0, 2) || "AC").toUpperCase();
+}
+
+function formatAuditValue(value: JsonValue): string {
+  if (value === null || value === undefined) {
+    return "—";
+  }
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  // Objet
+  const obj = value as Record<string, JsonValue>;
+
+  // Cas rôle
+  if ("nomRole" in obj) {
+    return String(obj.nomRole);
+  }
+
+  // Cas utilisateur
+  if ("prenom" in obj || "nom" in obj) {
+    return `${obj.prenom ?? ""} ${obj.nom ?? ""}`.trim();
+  }
+
+  // Cas catégorie
+  if ("nomCategorie" in obj) {
+    return String(obj.nomCategorie);
+  }
+
+  // Cas produit
+  if ("nomProduit" in obj) {
+    return String(obj.nomProduit);
+  }
+
+  // Cas entreprise
+  if ("raisonSociale" in obj) {
+    return String(obj.raisonSociale);
+  }
+
+  return "Objet";
+}
+
+function getDisplayData(audit: Audit) {
+  const donnees = audit.newValues?.donnees;
+
+  if (!donnees || typeof donnees !== "object") {
+    return [];
+  }
+
+  return Object.entries(donnees)
+    .filter(([key]) => !HIDDEN_FIELDS.has(key))
+    .map(([key, value]) => ({
+      label: toReadableLabel(key),
+      value: formatAuditValue(value),
+    }));
+}
+
+// ── Composant AuditRow ─────────────────────────────────────────────────────
+
+function AuditRow({ audit }: { audit: Audit }) {
+  const [expanded, setExpanded] = useState(false);
+  const actor = audit.utilisateur
+    ? `${audit.utilisateur.prenom} ${audit.utilisateur.nom}`
+    : "Système";
+  const isSystem = !audit.utilisateur;
+
+  const action = audit.action?.toUpperCase();
+  const module = audit.module?.toLowerCase();
+
+  const ModuleIcon = MODULE_ICONS[module];
+  const dotClass = ACTION_DOT_CLASS[action] ?? "bg-gray-400";
+  const badgeClass = ACTION_BADGE_CLASS[action] ?? ACTION_BADGE_CLASS.LOGOUT;
+  const hasDetails = audit.newValues && Object.keys(audit.newValues).length > 0;
+  console.log("Audit newvalue", audit);
+  const donnees = audit.newValues?.donnees as
+    | Record<string, JsonValue>
+    | undefined;
+
+  const displayData = getDisplayData(audit);
+
+  const status =
+    typeof audit.newValues?.status === "number"
+      ? audit.newValues.status
+      : undefined;
+
+  return (
+    <div
+      className={cn(
+        "group relative rounded-2xl border border-border/70 bg-card/80 px-5 py-4 backdrop-blur-sm transition-all hover:border-primary/30 hover:shadow-md",
+        "hover:border-primary/30 hover:shadow-sm",
+        expanded && "border-primary/50 shadow-sm",
+        hasDetails && "cursor-pointer",
+      )}
+      onClick={() => hasDetails && setExpanded((v) => !v)}
+    >
+      {/* Point timeline */}
+      <div className="absolute -left-8 top-0 bottom-0 flex flex-col items-center">
+        <div className="flex-1 w-px bg-border" />
+
+        <div
+          className={cn(
+            "h-3 w-3 rounded-full border-2 border-background",
+            dotClass,
+          )}
+        />
+
+        <div className="flex-1 w-px bg-border" />
+      </div>
+
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <Avatar className="h-9 w-8">
+          <AvatarImage
+            src={resolveAvatarUrl(audit?.utilisateur?.avatar)}
+            alt={getDisplayName(audit.utilisateur)}
+          />
+          <AvatarFallback className="bg-gradient-primary text-xs font-semibold text-white">
+            {getInitials(audit.utilisateur)}
+          </AvatarFallback>
+        </Avatar>
+
+        {/* Contenu */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm leading-snug text-foreground">
+            <span className="font-semibold">{actor}</span>{" "}
+            <span className="text-muted-foreground">
+              {buildSentence(audit)}
+            </span>
+          </p>
+
+          {/* Badges */}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+              {ModuleIcon && <ModuleIcon className="h-3 w-3" />}
+              {audit.module}
+            </span>
+
+            <span
+              className={cn(
+                "rounded-md px-2 py-1 text-[11px] font-medium",
+                badgeClass,
+              )}
+            >
+              {ACTION_META[action]?.label}
+            </span>
+
+            {audit.ipAddress && (
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {audit.ipAddress}
+              </span>
+            )}
+          </div>
+
+          {/* Détails dépliables */}
+          {hasDetails && expanded && (
+            <div className="mt-3 rounded-lg border border-border/60 bg-muted/40 p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Détails
+              </p>
+              <div className="space-y-4">
+                {status && (
+                  <div>
+                    <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
+                      Statut
+                    </p>
+
+                    <span
+                      className={cn(
+                        "inline-flex rounded-md px-2 py-1 text-xs font-medium",
+                        STATUS_LABELS[status]?.className ??
+                          "bg-gray-100 text-gray-700",
+                      )}
+                    >
+                      {STATUS_LABELS[status]?.label ?? status}
+                    </span>
+                  </div>
+                )}
+
+                {displayData.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+                      Nouvelles données
+                    </p>
+
+                    <div className="space-y-2">
+                      {displayData.map((item) => (
+                        <div
+                          key={item.label}
+                          className="flex items-center justify-between rounded-lg border bg-background p-3"
+                        >
+                          <span className="text-sm text-muted-foreground">
+                            {item.label}
+                          </span>
+
+                          <span className="font-medium">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Heure + chevron */}
+        <div className="flex shrink-0 flex-col items-end gap-0.5">
+          <span className="tabular-nums text-xs text-muted-foreground">
+            {fmtTime(audit.createdAt)}
+          </span>
+          {hasDetails && (
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 text-muted-foreground/50 transition-transform duration-200",
+                expanded && "rotate-180",
+              )}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page principale ────────────────────────────────────────────────────────
 
 function SettingsPage() {
   const { hasPermission } = useAuth();
@@ -133,6 +752,7 @@ function SettingsPage() {
   const canManageSettings = hasPermission("users", "modifier");
   const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
 
+  // Chargement initial
   useEffect(() => {
     let alive = true;
 
@@ -150,13 +770,11 @@ function SettingsPage() {
       if (meResult.status === "fulfilled") {
         setProfile(unwrap(meResult.value as ApiResponse<Profile>));
       }
-
       if (sessionsResult.status === "fulfilled") {
         setSessions(
           unwrap(sessionsResult.value as ApiResponse<Session[]>) || [],
         );
       }
-
       if (canManageSettings && entrepriseResult.status === "fulfilled") {
         const loadedCompany = unwrap(
           entrepriseResult.value as ApiResponse<Company>,
@@ -164,11 +782,9 @@ function SettingsPage() {
         setCompany(loadedCompany);
         setStoredCurrency(loadedCompany?.devise);
       }
-
       if (canManageSettings && systemeResult.status === "fulfilled") {
         setSystem(unwrap(systemeResult.value as ApiResponse<SystemSettings>));
       }
-
       if (
         meResult.status === "rejected" ||
         sessionsResult.status === "rejected" ||
@@ -182,53 +798,52 @@ function SettingsPage() {
     }
 
     void loadInitialData();
-
     return () => {
       alive = false;
     };
   }, [canManageSettings]);
 
+  // Chargement journal
   useEffect(() => {
     if (!canManageSettings) {
       setAudits([]);
       return;
     }
-
     getJournal(bounds(logDate))
-      .then((response) =>
-        setAudits(unwrap(response as ApiResponse<Audit[]>) || []),
-      )
+      .then((r) => setAudits(unwrap(r as ApiResponse<Audit[]>) || []))
       .catch(() => toast.error("Impossible de charger le journal"));
   }, [logDate, canManageSettings]);
 
+  // Nettoyage preview avatar
   useEffect(() => {
     return () => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
 
+  // ── Actions ──────────────────────────────────────────────────────────────
+
   const saveProfile = async () => {
     if (!profile) return;
     const newErrors: Record<string, string> = {};
     if (!profile.nom.trim()) newErrors.nom = "Le nom est obligatoire";
     if (!profile.prenom.trim()) newErrors.prenom = "Le prénom est obligatoire";
-    if (!profile.email.trim()) newErrors.email = "L’e-mail est obligatoire";
+    if (!profile.email.trim()) newErrors.email = "L'e-mail est obligatoire";
     setProfileErrors(newErrors);
     if (Object.keys(newErrors).length) return;
 
     try {
-      const profilePayload = { ...profile };
+      const payload = { ...profile };
       if (avatarFile) {
         const uploadResponse = await runWithLoader(uploadAvatar(avatarFile), {
           target: "main",
           label: "Import de la photo...",
         });
-        profilePayload.avatar = unwrap(
+        payload.avatar = unwrap(
           uploadResponse as ApiResponse<AvatarUploadResponse>,
         ).avatar;
       }
-
-      const response = await runWithLoader(updateProfile(profilePayload), {
+      const response = await runWithLoader(updateProfile(payload), {
         target: "main",
         label: "Enregistrement du profil...",
       });
@@ -276,17 +891,13 @@ function SettingsPage() {
   const updateProfileField = (field: keyof Profile, value: string) => {
     if (!profile) return;
     setProfile({ ...profile, [field]: value });
-    if (profileErrors[field]) {
-      setProfileErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (profileErrors[field]) setProfileErrors((p) => ({ ...p, [field]: "" }));
   };
 
   const updateCompanyField = (field: keyof Company, value: string) => {
     if (!company) return;
     setCompany({ ...company, [field]: value });
-    if (companyErrors[field]) {
-      setCompanyErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (companyErrors[field]) setCompanyErrors((p) => ({ ...p, [field]: "" }));
   };
 
   const handleAvatarChange = (file?: File) => {
@@ -295,7 +906,6 @@ function SettingsPage() {
       toast.error("Veuillez choisir une image JPG, PNG ou équivalent");
       return;
     }
-
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
@@ -359,12 +969,16 @@ function SettingsPage() {
       `${audits.length} activité${audits.length > 1 ? "s" : ""} pour cette date`,
     [audits.length],
   );
-  if (loading)
+
+  // ── Rendu ─────────────────────────────────────────────────────────────────
+
+  if (loading) {
     return (
       <div className="flex min-h-64 items-center justify-center">
         <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
+  }
 
   return (
     <>
@@ -373,6 +987,7 @@ function SettingsPage() {
         description="Profil, entreprise, système et sécurité"
         breadcrumb={["Administration", "Paramètres"]}
       />
+
       <Tabs defaultValue="profile">
         <TabsList className="mb-4 flex-wrap">
           <TabsTrigger value="profile" className="gap-1.5">
@@ -398,6 +1013,7 @@ function SettingsPage() {
           ) : null}
         </TabsList>
 
+        {/* ── Profil ── */}
         <TabsContent value="profile">
           <SectionCard
             title="Profil utilisateur"
@@ -424,9 +1040,9 @@ function SettingsPage() {
                       type="file"
                       accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                       className="sr-only"
-                      onChange={(event) => {
-                        handleAvatarChange(event.target.files?.[0]);
-                        event.target.value = "";
+                      onChange={(e) => {
+                        handleAvatarChange(e.target.files?.[0]);
+                        e.target.value = "";
                       }}
                     />
                   </label>
@@ -437,7 +1053,7 @@ function SettingsPage() {
                   placeholder="Entrez votre nom"
                   required
                   error={profileErrors.nom}
-                  onChange={(nom) => updateProfileField("nom", nom)}
+                  onChange={(v) => updateProfileField("nom", v)}
                 />
                 <Field
                   label="Prénom"
@@ -445,24 +1061,22 @@ function SettingsPage() {
                   placeholder="Entrez votre prénom"
                   required
                   error={profileErrors.prenom}
-                  onChange={(prenom) => updateProfileField("prenom", prenom)}
+                  onChange={(v) => updateProfileField("prenom", v)}
                 />
                 <Field
                   label="Adresse e-mail"
-                  type="email"
                   value={profile.email}
                   placeholder="exemple@ac-erp.com"
                   required
                   error={profileErrors.email}
-                  onChange={(email) => updateProfileField("email", email)}
+                  onChange={(v) => updateProfileField("email", v)}
+                  type="email"
                 />
                 <Field
                   label="Téléphone"
                   value={profile.telephone || ""}
-                  placeholder="Entrez votre numéro de téléphone"
-                  onChange={(telephone) =>
-                    updateProfileField("telephone", telephone)
-                  }
+                  placeholder="Entrez votre numéro"
+                  onChange={(v) => updateProfileField("telephone", v)}
                 />
                 <Field
                   label="Rôle"
@@ -484,6 +1098,7 @@ function SettingsPage() {
           </SectionCard>
         </TabsContent>
 
+        {/* ── Entreprise ── */}
         {canManageSettings ? (
           <TabsContent value="company">
             <SectionCard
@@ -495,57 +1110,46 @@ function SettingsPage() {
                   <Field
                     label="Raison sociale"
                     value={company.raisonSociale}
-                    placeholder="Nom officiel de l’entreprise"
+                    placeholder="Nom officiel de l'entreprise"
                     required
                     error={companyErrors.raisonSociale}
-                    onChange={(raisonSociale) =>
-                      updateCompanyField("raisonSociale", raisonSociale)
-                    }
+                    onChange={(v) => updateCompanyField("raisonSociale", v)}
                   />
                   <Field
                     label="Identifiant fiscal"
                     value={company.numeroFiscal || ""}
                     placeholder="Numéro fiscal ou NIU"
-                    onChange={(numeroFiscal) =>
-                      updateCompanyField("numeroFiscal", numeroFiscal)
-                    }
+                    onChange={(v) => updateCompanyField("numeroFiscal", v)}
                   />
                   <Field
                     label="Adresse"
                     value={company.adresse || ""}
                     placeholder="Adresse complète"
-                    onChange={(adresse) =>
-                      updateCompanyField("adresse", adresse)
-                    }
+                    onChange={(v) => updateCompanyField("adresse", v)}
                   />
                   <Field
                     label="Téléphone"
                     value={company.telephone || ""}
-                    placeholder="Numéro de téléphone de l’entreprise"
-                    onChange={(telephone) =>
-                      updateCompanyField("telephone", telephone)
-                    }
+                    placeholder="Numéro de téléphone"
+                    onChange={(v) => updateCompanyField("telephone", v)}
                   />
                   <Field
                     label="E-mail"
-                    type="email"
                     value={company.email || ""}
                     placeholder="contact@entreprise.com"
-                    onChange={(email) => updateCompanyField("email", email)}
+                    onChange={(v) => updateCompanyField("email", v)}
+                    type="email"
                   />
                   <div className="space-y-1.5">
                     <Label>
-                      Devise
-                      <span className="ml-1 text-destructive">*</span>
+                      Devise <span className="ml-1 text-destructive">*</span>
                     </Label>
                     <SearchableSelect
                       value={company.devise}
-                      onValueChange={(devise) =>
-                        updateCompanyField("devise", devise)
-                      }
-                      options={AFRICAN_CURRENCIES.map((currency) => ({
-                        value: currency.code,
-                        label: `${currency.code} - ${currency.name} (${currency.symbol})`,
+                      onValueChange={(v) => updateCompanyField("devise", v)}
+                      options={AFRICAN_CURRENCIES.map((c) => ({
+                        value: c.code,
+                        label: `${c.code} - ${c.name} (${c.symbol})`,
                       }))}
                       placeholder="Selectionnez une devise"
                       searchPlaceholder="Rechercher une devise"
@@ -566,15 +1170,13 @@ function SettingsPage() {
                     placeholder="Africa/Douala"
                     required
                     error={companyErrors.fuseauHoraire}
-                    onChange={(fuseauHoraire) =>
-                      updateCompanyField("fuseauHoraire", fuseauHoraire)
-                    }
+                    onChange={(v) => updateCompanyField("fuseauHoraire", v)}
                   />
                   <Field
                     label="Logo (URL)"
                     value={company.logo || ""}
                     placeholder="https://exemple.com/logo.png"
-                    onChange={(logo) => updateCompanyField("logo", logo)}
+                    onChange={(v) => updateCompanyField("logo", v)}
                   />
                 </div>
               )}
@@ -585,6 +1187,7 @@ function SettingsPage() {
           </TabsContent>
         ) : null}
 
+        {/* ── Système ── */}
         {canManageSettings ? (
           <TabsContent value="system">
             <SectionCard
@@ -628,6 +1231,7 @@ function SettingsPage() {
           </TabsContent>
         ) : null}
 
+        {/* ── Sécurité ── */}
         <TabsContent value="security">
           <div className="grid gap-4 lg:grid-cols-2">
             <SectionCard
@@ -643,10 +1247,10 @@ function SettingsPage() {
                   placeholder="Saisissez le mot de passe actuel"
                   required
                   autoComplete="off"
-                  onChange={(current) => {
-                    setPasswords({ ...passwords, current });
+                  onChange={(v) => {
+                    setPasswords({ ...passwords, current: v });
                     if (passwordErrors.current)
-                      setPasswordErrors((prev) => ({ ...prev, current: "" }));
+                      setPasswordErrors((p) => ({ ...p, current: "" }));
                   }}
                 />
                 <Field
@@ -657,10 +1261,10 @@ function SettingsPage() {
                   placeholder="Saisissez le nouveau mot de passe"
                   required
                   autoComplete="new-password"
-                  onChange={(next) => {
-                    setPasswords({ ...passwords, next });
+                  onChange={(v) => {
+                    setPasswords({ ...passwords, next: v });
                     if (passwordErrors.next)
-                      setPasswordErrors((prev) => ({ ...prev, next: "" }));
+                      setPasswordErrors((p) => ({ ...p, next: "" }));
                   }}
                 />
                 <Field
@@ -671,10 +1275,10 @@ function SettingsPage() {
                   placeholder="Confirmez le nouveau mot de passe"
                   required
                   autoComplete="new-password"
-                  onChange={(confirm) => {
-                    setPasswords({ ...passwords, confirm });
+                  onChange={(v) => {
+                    setPasswords({ ...passwords, confirm: v });
                     if (passwordErrors.confirm)
-                      setPasswordErrors((prev) => ({ ...prev, confirm: "" }));
+                      setPasswordErrors((p) => ({ ...p, confirm: "" }));
                   }}
                 />
               </div>
@@ -682,6 +1286,7 @@ function SettingsPage() {
                 Mettre à jour
               </Button>
             </SectionCard>
+
             <SectionCard
               title="Sessions actives"
               description="Contrôlez les connexions à votre compte"
@@ -709,10 +1314,11 @@ function SettingsPage() {
           </div>
         </TabsContent>
 
+        {/* ── Journal d'activité ── */}
         {canManageSettings ? (
           <TabsContent value="log">
             <SectionCard
-              title="Journal d'activité"
+              title="Activités récentes"
               description={logDescription}
               action={
                 <Input
@@ -724,50 +1330,36 @@ function SettingsPage() {
                 />
               }
             >
-              <div className="space-y-1">
-                {audits.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-5 text-center">
+              <div className="space-y-0">
+                {audits.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
                     <img
                       src="/src/assets/sorry.svg"
-                      alt="Aucun élément"
+                      alt="Aucune activité"
                       className="mb-3 w-28 opacity-90"
                     />
                     <p className="text-sm font-medium text-muted-foreground">
-                      Aucun élément à afficher
+                      Aucune activité pour cette date
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground/60">
+                      Sélectionnez une autre date pour consulter le journal.
                     </p>
                   </div>
-                )}
-                {audits.map((audit) => {
-                  const actor = audit.utilisateur
-                    ? `${audit.utilisateur.prenom} ${audit.utilisateur.nom}`
-                    : "Système";
-                  return (
-                    <div
-                      key={audit.id}
-                      className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-primary text-[10px] font-semibold text-white">
-                        {actor
-                          .split(" ")
-                          .map((w) => w[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </span>
-                      <p className="min-w-0 flex-1 text-sm text-foreground">
-                        <span className="font-medium">{actor}</span>{" "}
-                        <span className="text-muted-foreground">
-                          {audit.action} · {audit.module}
-                        </span>
-                      </p>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {new Date(audit.createdAt).toLocaleTimeString("fr-FR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                ) : (
+                  groupAuditsByPeriod(audits).map(([period, items]) => (
+                    <div key={period} className="mb-8">
+                      <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {period}
+                      </h3>
+
+                      <div className="relative ml-4 border-l border-border pl-6 space-y-4">
+                        {items.map((audit) => (
+                          <AuditRow key={audit.id} audit={audit} />
+                        ))}
+                      </div>
                     </div>
-                  );
-                })}
+                  ))
+                )}
               </div>
             </SectionCard>
           </TabsContent>
@@ -775,6 +1367,42 @@ function SettingsPage() {
       </Tabs>
     </>
   );
+}
+
+// ── Composants utilitaires ─────────────────────────────────────────────────
+
+function groupAuditsByPeriod(audits: Audit[]) {
+  const sections: Record<string, Audit[]> = {
+    "Aujourd'hui": [],
+    Hier: [],
+    "Cette semaine": [],
+    "Ce mois": [],
+    "Plus ancien": [],
+  };
+
+  const now = new Date();
+
+  audits.forEach((audit) => {
+    const date = new Date(audit.createdAt);
+
+    const diffDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diffDays === 0) {
+      sections["Aujourd'hui"].push(audit);
+    } else if (diffDays === 1) {
+      sections["Hier"].push(audit);
+    } else if (diffDays < 7) {
+      sections["Cette semaine"].push(audit);
+    } else if (diffDays < 30) {
+      sections["Ce mois"].push(audit);
+    } else {
+      sections["Plus ancien"].push(audit);
+    }
+  });
+
+  return Object.entries(sections).filter(([, items]) => items.length > 0);
 }
 
 function Field({
@@ -804,7 +1432,6 @@ function Field({
         {label}
         {required && <span className="ml-1 text-destructive">*</span>}
       </Label>
-
       <Input
         type={type}
         value={value}
@@ -814,11 +1441,11 @@ function Field({
         aria-invalid={Boolean(error)}
         onChange={(e) => onChange?.(e.target.value)}
       />
-
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
+
 function Setting({
   label,
   description,
