@@ -7,9 +7,27 @@ export const validerDemandeAchat = (id: string) =>
   api.patch(`/achats/demandes/${id}/valider`);
 export const getBonsCommandeFournisseur = () =>
   api.get("/achats/bons-commande");
+export const getBonCommandeFournisseurById = (id: string) =>
+  api.get(`/achats/bons-commande/${id}`);
 export const createBonCommandeFournisseur = (data: unknown) =>
   api.post("/achats/bons-commande", data);
 export const envoyerBonCommandeFournisseur = (id: string) =>
   api.patch(`/achats/bons-commande/${id}/envoyer`);
+export const transitionBonCommandeFournisseur = (
+  id: string,
+  action: "SUBMIT" | "VALIDATE" | "BACK_TO_DRAFT" | "CANCEL",
+) => api.patch(`/achats/bons-commande/${id}/statut`, { action });
+export const dupliquerBonCommandeFournisseur = (id: string) =>
+  api.post(`/achats/bons-commande/${id}/dupliquer`);
+export const telechargerBonCommandeFournisseurPdf = (
+  id: string,
+): Promise<Blob> =>
+  api.get(`/achats/bons-commande/${id}/pdf`, {
+    responseType: "blob",
+  }) as unknown as Promise<Blob>;
+export const creerFactureAchatDepuisBcf = (
+  id: string,
+  data?: { dateEcheance?: string; mentionsLegales?: string },
+) => api.post(`/achats/bons-commande/${id}/facture`, data || {});
 export const receptionBonCommandeFournisseur = (id: string, data: unknown) =>
   api.post(`/achats/bons-commande/${id}/reception`, data);

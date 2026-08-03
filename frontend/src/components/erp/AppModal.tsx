@@ -46,6 +46,10 @@ export function AppModal({
     right: "top-6 sm:top-8 right-6 sm:right-8 translate-y-0",
   };
 
+  const isSearchableDropdownTarget = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    Boolean(target.closest('[data-searchable-dropdown="true"]'));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -53,11 +57,7 @@ export function AppModal({
         onPointerDownOutside={(e) => {
           if (!closeOnOutsideClick) {
             // Autorise les clics sur le dropdown du SearchableSelect qui est dans un portail
-            if (
-              (e.target as HTMLElement)?.closest(
-                '[data-searchable-dropdown="true"]',
-              )
-            ) {
+            if (isSearchableDropdownTarget(e.target)) {
               return;
             }
             e.preventDefault();
@@ -65,11 +65,17 @@ export function AppModal({
         }}
         onInteractOutside={(e) => {
           if (!closeOnOutsideClick) {
-            if (
-              (e.target as HTMLElement)?.closest(
-                '[data-searchable-dropdown="true"]',
-              )
-            ) {
+            if (isSearchableDropdownTarget(e.target)) {
+              return;
+            }
+            e.preventDefault();
+          }
+        }}
+        onFocusOutside={(e) => {
+          if (!closeOnOutsideClick) {
+            // En mode portal body, le champ de recherche du select sort du contenu Dialog.
+            // On autorise le focus vers ce dropdown pour pouvoir cliquer/saisir/scroller.
+            if (isSearchableDropdownTarget(e.target)) {
               return;
             }
             e.preventDefault();
@@ -81,7 +87,7 @@ export function AppModal({
           }
         }}
         className={cn(
-          "max-h-[90vh] overflow-hidden p-0",
+          "max-h-[90vh] overflow-visible p-0",
           sizeClasses[size],
           positionClasses[position],
         )}

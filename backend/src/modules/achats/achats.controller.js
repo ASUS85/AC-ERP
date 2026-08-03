@@ -112,6 +112,66 @@ export const achatsController = {
       next(e);
     }
   },
+  async transitionBonCommande(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await achatsService.transitionBonCommande(
+          req.params.id,
+          req.body?.action,
+          { user: req.user },
+        ),
+        "Statut du BCF mis a jour",
+      );
+    } catch (e) {
+      next(e);
+    }
+  },
+  async dupliquerBonCommande(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await achatsService.dupliquerBonCommande(req.params.id, {
+          user: req.user,
+        }),
+        "BCF duplique",
+        null,
+        201,
+      );
+    } catch (e) {
+      next(e);
+    }
+  },
+  async telechargerBonCommandeInterne(req, res, next) {
+    try {
+      const pdf = await achatsService.telechargerBonCommandeInterne(
+        req.params.id,
+      );
+      res.type("application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${pdf.filename}"`,
+      );
+      return res.send(pdf.buffer);
+    } catch (e) {
+      next(e);
+    }
+  },
+  async creerFactureAchat(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await achatsService.creerFactureAchat(req.params.id, req.body, {
+          user: req.user,
+        }),
+        "Facture achat creee",
+        null,
+        201,
+      );
+    } catch (e) {
+      next(e);
+    }
+  },
   async fournisseurValider(req, res, next) {
     try {
       const result = await achatsService.reponseFournisseur(

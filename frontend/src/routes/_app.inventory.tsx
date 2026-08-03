@@ -24,7 +24,12 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { getStocks, getAlertes, getMouvements } from "@/lib/api/stocks.service";
+import {
+  getStocks,
+  getAlertes,
+  getMouvements,
+  ajusterStock,
+} from "@/lib/api/stocks.service";
 import { fmtNumber, fmtCurrency } from "@/lib/erp-data";
 import { getCurrencyMeta } from "@/lib/currency";
 
@@ -148,6 +153,10 @@ function InventoryPage() {
   // Recherche
   const [search, setSearch] = useState("");
   const [searchStock, setSearchStock] = useState("");
+  const [stockCategorie, setStockCategorie] = useState("");
+  const [mouvementDate, setMouvementDate] = useState("");
+  const [inventaireDateCreation, setInventaireDateCreation] = useState("");
+  const [inventaireDateValidation, setInventaireDateValidation] = useState("");
 
   // Modale ajustement
   const [adjModalOpen, setAdjModalOpen] = useState(false);
@@ -177,6 +186,7 @@ function InventoryPage() {
           page: mvPage,
           limit: PAGE_SIZE,
           search: search || undefined,
+          date: mouvementDate || undefined,
         }),
         getAlertes(),
         (async () => {
@@ -244,7 +254,7 @@ function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [skPage, mvPage, search]);
+  }, [skPage, mvPage, search, mouvementDate]);
 
   useEffect(() => {
     void loadAll();
@@ -252,6 +262,15 @@ function InventoryPage() {
   useEffect(() => {
     setMvPage(1);
   }, [search]);
+  useEffect(() => {
+    setMvPage(1);
+  }, [mouvementDate]);
+  useEffect(() => {
+    setSkPage(1);
+  }, [searchStock, stockCategorie]);
+  useEffect(() => {
+    setInvPage(1);
+  }, [inventaireDateCreation, inventaireDateValidation]);
 
   // ── Stats ──
   const stats = useMemo(() => {
@@ -270,7 +289,6 @@ function InventoryPage() {
     }
     setAdjSubmitting(true);
     try {
-      const { ajusterStock } = await import("@/lib/api/stocks.service");
       await ajusterStock(adjForm);
       toast.success("Stock ajuste");
       setAdjModalOpen(false);
@@ -291,7 +309,12 @@ function InventoryPage() {
     try {
       const { default: api } = await import("@/lib/api/client");
       const res = await api.get(`/stocks/inventaires/${id}`);
-      setInvDetail(((res as any)?.data || {}) as Inventaire);
+      const detail = ((res as any)?.data || null) as Inventaire | null;
+      if (!detail) {
+        toast.error("Inventaire introuvable");
+        return;
+      }
+      setInvDetail(detail);
       setInvDetailOpen(true);
     } catch {
       toast.error("Impossible de charger l'inventaire");
@@ -300,14 +323,68 @@ function InventoryPage() {
 
   // ── Filtrage local des stocks pour la recherche ──
   const filteredStocks = useMemo(() => {
-    if (!searchStock) return stocks;
-    const q = searchStock.toLowerCase();
-    return stocks.filter(
-      (s) =>
+    const q = searchStock.trim().toLowerCase();
+    return stocks.filter((s) => {
+      const categorie = s.produit.categorie?.nom || "";
+      const categoryMatch = !stockCategorie || categorie === stockCategorie;
+      const searchMatch =
+        !q ||
         s.produit.designation.toLowerCase().includes(q) ||
-        s.produit.reference.toLowerCase().includes(q),
+        s.produit.reference.toLowerCase().includes(q);
+      return categoryMatch && searchMatch;
+    });
+  }, [stocks, searchStock, stockCategorie]);
+
+  const categoriesOptions = useMemo(
+    () => [
+      { value: "", label: "Toutes les categories" },
+      ...Array.from(
+        new Set(
+          stocks
+            .map((s) => s.produit.categorie?.nom || "")
+            .filter((c) => c.length > 0),
+        ),
+      )
+        .sort((a, b) => a.localeCompare(b, "fr"))
+        .map((c) => ({ value: c, label: c })),
+    ],
+    [stocks],
+  );
+
+  const toDateOnly = (value?: string | null) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const filteredInventaires = useMemo(
+    () =>
+      inventaires.filter((inv) => {
+        const dateCreation = toDateOnly(inv.dateDebut);
+        const dateValidation = toDateOnly(inv.dateFin);
+        const creationMatch =
+          !inventaireDateCreation || dateCreation === inventaireDateCreation;
+        const validationMatch =
+          !inventaireDateValidation ||
+          (dateValidation && dateValidation === inventaireDateValidation);
+        return creationMatch && validationMatch;
+      }),
+    [inventaires, inventaireDateCreation, inventaireDateValidation],
+  );
+
+  const filteredMouvements = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return mouvements;
+    return mouvements.filter(
+      (m) =>
+        m.produit.designation.toLowerCase().includes(q) ||
+        m.produit.reference.toLowerCase().includes(q),
     );
-  }, [stocks, searchStock]);
+  }, [mouvements, search]);
 
   // ── Colonnes ──
   const stockCols: Column<StockItem>[] = [
@@ -464,28 +541,37 @@ function InventoryPage() {
   ];
 
   // ── Rendu ──
-  const renderAlerteIcon = (stockActuel: number, stockMinimum: number) => {
-    if (stockActuel <= 0)
+  const renderAlerteIcon = (stockDisponible: number, stockMinimum: number) => {
+    if (stockDisponible <= 0)
       return <XCircle className="h-5 w-5 text-destructive" />;
-    if (stockActuel <= stockMinimum / 2)
+    if (stockDisponible <= stockMinimum / 2)
       return <AlertCircle className="h-5 w-5 text-warning" />;
     return <AlertTriangle className="h-5 w-5 text-info" />;
   };
-  const renderAlerteSeverity = (stockActuel: number, stockMinimum: number) => {
-    if (stockActuel <= 0) return "CRITIQUE";
-    if (stockActuel <= stockMinimum / 2) return "VIGILANCE";
+  const renderAlerteSeverity = (
+    stockDisponible: number,
+    stockMinimum: number,
+  ) => {
+    if (stockDisponible <= 0) return "CRITIQUE";
+    if (stockDisponible <= stockMinimum / 2) return "VIGILANCE";
     return "OK";
   };
 
   // Pagination locale pour inventaires
-  const totalInvPages = Math.ceil(inventaires.length / PAGE_SIZE);
-  const paginatedInventaires = inventaires.slice(
+  const totalInvPages = Math.max(
+    1,
+    Math.ceil(filteredInventaires.length / PAGE_SIZE),
+  );
+  const paginatedInventaires = filteredInventaires.slice(
     (invPage - 1) * PAGE_SIZE,
     invPage * PAGE_SIZE,
   );
 
   // Pagination locale pour l'onglet Stocks (après filtrage)
-  const totalSkPages = Math.ceil(filteredStocks.length / PAGE_SIZE);
+  const totalSkPages = Math.max(
+    1,
+    Math.ceil(filteredStocks.length / PAGE_SIZE),
+  );
   const paginatedStocks = useMemo(
     () => filteredStocks.slice((skPage - 1) * PAGE_SIZE, skPage * PAGE_SIZE),
     [filteredStocks, skPage],
@@ -573,25 +659,89 @@ function InventoryPage() {
           }
           className="lg:col-span-2"
         >
-          <div className="mb-4 flex items-center justify-between">
-            <div className="relative w-full max-w-xs">
-              <input
-                placeholder={
-                  tab === "stocks"
-                    ? "Rechercher un produit..."
-                    : tab === "mouvements"
-                      ? "Rechercher un mouvement..."
-                      : "Rechercher un inventaire..."
-                }
-                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring"
-                value={tab === "stocks" ? searchStock : search}
-                onChange={(e) => {
-                  if (tab === "stocks") {
-                    setSearchStock(e.target.value);
-                    setSkPage(1);
-                  } else setSearch(e.target.value);
-                }}
-              />
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex w-full max-w-xl  items-center gap-2">
+              {tab !== "inventaires" ? (
+                <div className="relative w-full max-w-xs">
+                  <input
+                    placeholder={
+                      tab === "stocks"
+                        ? "Rechercher un produit..."
+                        : "Rechercher un mouvement..."
+                    }
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 pl-8 text-sm shadow-sm outline-none focus:ring-2 focus:ring-ring"
+                    value={tab === "stocks" ? searchStock : search}
+                    onChange={(e) => {
+                      if (tab === "stocks") {
+                        setSearchStock(e.target.value);
+                      } else {
+                        setSearch(e.target.value);
+                      }
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              {tab === "stocks" ? (
+                <div className="w-full max-w-xs">
+                  <SearchableSelect
+                    value={stockCategorie}
+                    onValueChange={setStockCategorie}
+                    options={categoriesOptions}
+                    placeholder="Trier par categorie"
+                    searchPlaceholder="Rechercher une categorie"
+                    emptyMessage="Aucune categorie"
+                  />
+                </div>
+              ) : null}
+
+              {tab === "mouvements" ? (
+                <div className="w-full max-w-xs space-y-1">
+                  <Input
+                    id="mv-date-filter"
+                    type="date"
+                    value={mouvementDate}
+                    onChange={(e) => setMouvementDate(e.target.value)}
+                  />
+                </div>
+              ) : null}
+
+              {tab === "inventaires" ? (
+                <>
+                  <div className="w-full max-w-xs space-y-1">
+                    <Label
+                      htmlFor="inv-date-creation-filter"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Date creation
+                    </Label>
+                    <Input
+                      id="inv-date-creation-filter"
+                      type="date"
+                      value={inventaireDateCreation}
+                      onChange={(e) =>
+                        setInventaireDateCreation(e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="w-full max-w-xs space-y-1">
+                    <Label
+                      htmlFor="inv-date-validation-filter"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Date validation
+                    </Label>
+                    <Input
+                      id="inv-date-validation-filter"
+                      type="date"
+                      value={inventaireDateValidation}
+                      onChange={(e) =>
+                        setInventaireDateValidation(e.target.value)
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
             </div>
             <div className="flex gap-1 rounded-lg border border-border p-0.5">
               {(["stocks", "mouvements", "inventaires"] as const).map((t) => (
@@ -600,6 +750,7 @@ function InventoryPage() {
                   onClick={() => {
                     setTab(t);
                     if (t === "stocks") setSkPage(1);
+                    if (t === "mouvements") setMvPage(1);
                     if (t === "inventaires") setInvPage(1);
                   }}
                   className={cn(
@@ -643,14 +794,21 @@ function InventoryPage() {
             <>
               <DataTable
                 columns={mvCols}
-                rows={mouvements}
+                rows={filteredMouvements}
                 rowKey={(m) => m.id}
                 withActions={false}
               />
               <Pagination
-                count={mvMeta.total}
+                count={search ? filteredMouvements.length : mvMeta.total}
                 currentPage={mvPage}
-                totalPages={mvMeta.totalPages}
+                totalPages={
+                  search
+                    ? Math.max(
+                        1,
+                        Math.ceil(filteredMouvements.length / PAGE_SIZE),
+                      )
+                    : mvMeta.totalPages
+                }
                 pageSize={PAGE_SIZE}
                 onPageChange={setMvPage}
               />
@@ -670,7 +828,7 @@ function InventoryPage() {
                 ]}
               />
               <Pagination
-                count={inventaires.length}
+                count={filteredInventaires.length}
                 currentPage={invPage}
                 totalPages={totalInvPages}
                 pageSize={PAGE_SIZE}
@@ -697,38 +855,47 @@ function InventoryPage() {
                 </p>
               </div>
             ) : (
-              alertes.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-start gap-3 rounded-lg border border-border p-3"
-                >
-                  <span className="mt-0.5 shrink-0">
-                    {renderAlerteIcon(a.stockActuel, a.produit.stockMinimum)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {a.produit.designation}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Ref. {a.produit.reference} · Min. {a.produit.stockMinimum}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <span className="text-sm font-bold text-foreground">
-                        {fmtNumber(a.stockActuel)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        en stock
-                      </span>
-                      <StatusBadge
-                        status={renderAlerteSeverity(
-                          a.stockActuel,
+              alertes.map((a) =>
+                (() => {
+                  const stockDisponible = a.stockActuel - a.stockReserve;
+                  return (
+                    <div
+                      key={a.id}
+                      className="flex items-start gap-3 rounded-lg border border-border p-3"
+                    >
+                      <span className="mt-0.5 shrink-0">
+                        {renderAlerteIcon(
+                          stockDisponible,
                           a.produit.stockMinimum,
                         )}
-                      />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {a.produit.designation}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Ref. {a.produit.reference} · Min.{" "}
+                          {a.produit.stockMinimum}
+                        </p>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">
+                            {fmtNumber(stockDisponible)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            disponible
+                          </span>
+                          <StatusBadge
+                            status={renderAlerteSeverity(
+                              stockDisponible,
+                              a.produit.stockMinimum,
+                            )}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))
+                  );
+                })(),
+              )
             )}
           </div>
         </SectionCard>

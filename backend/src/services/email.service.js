@@ -112,8 +112,8 @@ export const sendWelcomeEmail = (to, nom, motDePasseTemp) =>
       <p>
         Nous vous recommandons de modifier ce mot de passe dès votre première connexion.
       </p>
-      `
-    )
+      `,
+    ),
   );
 
 export const sendPasswordResetEmail = (to, nom, lien) =>
@@ -146,14 +146,22 @@ export const sendPasswordResetEmail = (to, nom, lien) =>
         Si vous n'êtes pas à l'origine de cette demande,
         ignorez simplement cet email.
       </p>
-      `
-    )
+      `,
+    ),
   );
 
 export const sendFactureEmail = (to, nom, factureNum, pdfBuffer) =>
-  sendMail(to, `Facture ${factureNum}`, layout("Facture", `<p>Bonjour ${nom}, veuillez trouver votre facture en piece jointe.</p>`), {
-    attachments: [{ filename: `${factureNum}.pdf`, content: pdfBuffer }],
-  });
+  sendMail(
+    to,
+    `Facture ${factureNum}`,
+    layout(
+      "Facture",
+      `<p>Bonjour ${nom}, veuillez trouver votre facture en piece jointe.</p>`,
+    ),
+    {
+      attachments: [{ filename: `${factureNum}.pdf`, content: pdfBuffer }],
+    },
+  );
 
 export const sendDevisEmail = (to, nom, devis, downloadUrl) =>
   sendMail(
@@ -166,17 +174,36 @@ export const sendDevisEmail = (to, nom, devis, downloadUrl) =>
       <p>Total TTC : <strong>${Number(devis.totalTtc || 0).toLocaleString("fr-FR")} XAF</strong></p>
       <div style="margin:24px 0 8px;">
         <a href="${downloadUrl}" style="display:inline-flex;align-items:center;gap:8px;color:#2563eb;text-decoration:none;font-size:13px;font-weight:600;"><span style="display:inline-block;background:#fee2e2;border:1px solid #fecaca;border-radius:4px;color:#b91c1c;font-size:10px;font-weight:700;line-height:1;padding:4px 5px;">PDF</span><span>Telecharger le devis</span></a>
-      </div>`
-    )
+      </div>`,
+    ),
   );
 
 export const sendRelanceEmail = (to, nom, factureNum, montant, joursRetard) =>
-  sendMail(to, `Relance facture ${factureNum}`, layout("Relance paiement", `<p>Bonjour ${nom}, la facture ${factureNum} presente un solde de ${montant} avec ${joursRetard} jours de retard.</p>`));
+  sendMail(
+    to,
+    `Relance facture ${factureNum}`,
+    layout(
+      "Relance paiement",
+      `<p>Bonjour ${nom}, la facture ${factureNum} presente un solde de ${montant} avec ${joursRetard} jours de retard.</p>`,
+    ),
+  );
 
 export const sendAlertStockEmail = (to, produit, stockActuel, stockMinimum) =>
-  sendMail(to, "Alerte stock", layout("Alerte stock", `<p>${produit} est a ${stockActuel}, minimum attendu ${stockMinimum}.</p>`));
+  sendMail(
+    to,
+    "Alerte stock",
+    layout(
+      "Alerte stock",
+      `<p>${produit} est a ${stockActuel}, minimum attendu ${stockMinimum}.</p>`,
+    ),
+  );
 
-export const sendBonCommandeFournisseurEmail = (to, fournisseurNom, bonCommande, links = {}) => {
+export const sendBonCommandeFournisseurEmail = (
+  to,
+  fournisseurNom,
+  bonCommande,
+  links = {},
+) => {
   const lignes = (bonCommande.lignes || [])
     .map((ligne) => {
       const designation = ligne.produit?.designation || ligne.idProduit;
@@ -238,8 +265,40 @@ export const sendBonCommandeFournisseurEmail = (to, fournisseurNom, bonCommande,
       <p>Total TVA : <strong>${Number(bonCommande.totalTva || 0).toLocaleString("fr-FR")}</strong></p>
       <p>Total TTC : <strong>${Number(bonCommande.totalTtc || 0).toLocaleString("fr-FR")}</strong></p>
       <p>Merci de confirmer la bonne reception de cette commande.</p>
+      `,
+    ),
+  );
+};
+
+export const sendBonCommandeAnnuleeEmail = (
+  to,
+  fournisseurNom,
+  bonCommande,
+) => {
+  const dateCommande = bonCommande?.dateCommande
+    ? new Date(bonCommande.dateCommande).toLocaleDateString("fr-FR")
+    : "-";
+
+  return sendMail(
+    to,
+    `Annulation du bon de commande ${bonCommande.numeroBcf}`,
+    layout(
+      "Annulation de bon de commande",
       `
-    )
+      <p>Bonjour <strong>${fournisseurNom}</strong>,</p>
+      <p>
+        Nous vous informons que le bon de commande
+        <strong> ${bonCommande.numeroBcf}</strong> (date: <strong>${dateCommande}</strong>)
+        a ete annule.
+      </p>
+      <p>
+        Merci de ne plus traiter cette commande.
+      </p>
+      <p>
+        Pour toute question, veuillez contacter notre service achats.
+      </p>
+      `,
+    ),
   );
 };
 
@@ -292,6 +351,6 @@ export const sendMfaCodeEmail = (to, nom, code) =>
       <p>
         Pour votre sécurité, ne communiquez jamais ce code à un tiers.
       </p>
-      `
-    )
+      `,
+    ),
   );

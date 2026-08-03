@@ -19,6 +19,7 @@ interface SearchableSelectProps {
   emptyMessage?: string;
   disabled?: boolean;
   className?: string;
+  portalMode?: "nearest" | "body";
 }
 
 export function SearchableSelect({
@@ -30,21 +31,36 @@ export function SearchableSelect({
   emptyMessage = "Aucun résultat",
   disabled,
   className,
+  portalMode = "nearest",
 }: SearchableSelectProps) {
   const dropdownMaxHeight = 240;
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const viewportRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const getPortalContainer = React.useCallback(() => {
     if (typeof document === "undefined") return null;
-    return (
-      (containerRef.current?.closest(
-        '[data-searchable-portal-root="true"]',
-      ) as HTMLElement | null) ?? document.body
-    );
-  }, []);
+    const nearestPortalRoot = containerRef.current?.closest(
+      '[data-searchable-portal-root="true"]',
+    ) as HTMLElement | null;
+
+    if (portalMode === "body") {
+      // Avec un Dialog modal, Radix peut mettre le body en pointer-events:none.
+      // Dans ce cas, un portail sur body devient non interactif (clic/scroll/focus bloqués).
+      // Fallback vers le root modal pour garder l'interaction.
+      const bodyPointerEvents = window.getComputedStyle(
+        document.body,
+      ).pointerEvents;
+      if (bodyPointerEvents === "none" && nearestPortalRoot) {
+        return nearestPortalRoot;
+      }
+      return document.body;
+    }
+
+    return nearestPortalRoot ?? document.body;
+  }, [portalMode]);
   const [pos, setPos] = React.useState({
     top: 0,
     left: 0,
@@ -103,6 +119,24 @@ export function SearchableSelect({
   }, [getPortalContainer]);
 
   const portalContainer = getPortalContainer();
+
+  const handleDropdownWheelCapture = React.useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      if (portalMode !== "body") return;
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+
+      const canScroll = viewport.scrollHeight > viewport.clientHeight;
+      if (!canScroll) return;
+
+      // En modal + portal body, le lock de scroll peut bloquer le wheel natif.
+      // On applique un scroll manuel sur la liste pour garder une UX fluide.
+      viewport.scrollTop += e.deltaY;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    [portalMode],
+  );
 
   // Fermer si clic en dehors
   React.useEffect(() => {
@@ -202,6 +236,8 @@ export function SearchableSelect({
               zIndex: 99999,
             }}
             data-searchable-dropdown="true"
+            data-radix-scroll-lock-scrollable=""
+            onWheelCapture={handleDropdownWheelCapture}
             role="listbox"
           >
             <div className="shrink-0 p-2">
@@ -229,8 +265,10 @@ export function SearchableSelect({
             </div>
 
             <div
+              ref={viewportRef}
               className="flex-1 overflow-y-auto overscroll-contain py-1"
               style={{ maxHeight: pos.maxHeight - 55 }}
+              data-radix-scroll-lock-scrollable=""
             >
               {filtered.length === 0 ? (
                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
