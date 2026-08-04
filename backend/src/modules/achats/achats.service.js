@@ -13,6 +13,7 @@ import {
   signBcfSupplierToken,
   verifyBcfSupplierToken,
 } from "../../services/public-link.service.js";
+import emitter from "../../events/emitter.js";
 import { ApiError } from "../../utils/response.util.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
 import { achatsRepository } from "./achats.repository.js";
@@ -99,7 +100,7 @@ export const achatsService = {
     }
 
     const t = totals(data.lignes);
-    return achatsRepository.createBcf({
+    const created = await achatsRepository.createBcf({
       numeroBcf: await generateNumeroBCF(),
       idFournisseur: data.idFournisseur,
       idUtilisateur: ctx.user.userId,
@@ -121,6 +122,14 @@ export const achatsService = {
         })),
       },
     });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "CREATE",
+      idBcf: created.id,
+      numeroBcf: created.numeroBcf,
+    });
+
+    return created;
   },
   async envoyerBonCommande(id) {
     const bonCommande = await achatsRepository.bcfById(id);
@@ -161,7 +170,15 @@ export const achatsService = {
       links,
     );
 
-    return achatsRepository.updateBcf(id, { statut: "ENVOYE" });
+    const updated = await achatsRepository.updateBcf(id, { statut: "ENVOYE" });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "SEND",
+      idBcf: updated.id,
+      numeroBcf: bonCommande.numeroBcf,
+    });
+
+    return updated;
   },
   async transitionBonCommande(id, action) {
     const transition = ALLOWED_TRANSITIONS[action];
@@ -204,6 +221,13 @@ export const achatsService = {
       );
     }
 
+    emitter.emit("achat.bcf.crud", {
+      action,
+      idBcf: updated.id,
+      numeroBcf: bonCommande.numeroBcf,
+      statut: updated.statut,
+    });
+
     return updated;
   },
   async dupliquerBonCommande(id, ctx) {
@@ -219,7 +243,7 @@ export const achatsService = {
     }));
 
     const t = totals(lignes);
-    return achatsRepository.createBcf({
+    const duplicated = await achatsRepository.createBcf({
       numeroBcf: await generateNumeroBCF(),
       idFournisseur: source.idFournisseur,
       idUtilisateur: ctx.user.userId,
@@ -240,6 +264,15 @@ export const achatsService = {
         })),
       },
     });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "DUPLICATE",
+      idBcf: duplicated.id,
+      numeroBcf: duplicated.numeroBcf,
+      sourceNumeroBcf: source.numeroBcf,
+    });
+
+    return duplicated;
   },
   async reponseFournisseur(token, action) {
     let payload;
@@ -269,14 +302,28 @@ export const achatsService = {
 
     if (action === "accept") {
       const updated = await achatsRepository.updateBcf(payload.idBcf, {
-        statut: "VALIDE",
+        statut: "CONFIRME",
       });
+
+      emitter.emit("achat.bcf.crud", {
+        action: "SUPPLIER_ACCEPT",
+        idBcf: updated.id,
+        numeroBcf: bonCommande.numeroBcf,
+      });
+
       return { action: "accepted", bonCommande: updated };
     }
 
     const updated = await achatsRepository.updateBcf(payload.idBcf, {
-      statut: "ANNULE",
+      statut: "REJETE",
     });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "SUPPLIER_REJECT",
+      idBcf: updated.id,
+      numeroBcf: bonCommande.numeroBcf,
+    });
+
     return { action: "rejected", bonCommande: updated };
   },
   async telechargerBonCommandePublic(token) {
@@ -373,7 +420,7 @@ export const achatsService = {
     const defaultEcheance = new Date(now);
     defaultEcheance.setDate(defaultEcheance.getDate() + 30);
 
-    return achatsRepository.createFactureAchat({
+    const createdInvoice = await achatsRepository.createFactureAchat({
       numeroFacture: await generateNumeroFacture(),
       typeFacture: "ACHAT",
       idFournisseur: bonCommande.idFournisseur,
@@ -389,12 +436,31 @@ export const achatsService = {
         `Facture generee depuis ${bonCommande.numeroBcf}`,
       lignes: { create: lignesFacture },
     });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "CREATE_INVOICE_ACHAT",
+      idBcf: bonCommande.id,
+      numeroBcf: bonCommande.numeroBcf,
+      idFacture: createdInvoice.id,
+      numeroFacture: createdInvoice.numeroFacture,
+    });
+
+    return createdInvoice;
   },
-  reception(id, data, ctx) {
-    return achatsRepository.createReception(
+  async reception(id, data, ctx) {
+    const reception = await achatsRepository.createReception(
       id,
       ctx.user.userId,
       data.lignes || [],
     );
+
+    emitter.emit("achat.bcf.crud", {
+      action: "RECEPTION",
+      idBcf: id,
+      statut: reception.statut,
+      produitsRecus: reception.produitsRecus,
+    });
+
+    return reception;
   },
 };

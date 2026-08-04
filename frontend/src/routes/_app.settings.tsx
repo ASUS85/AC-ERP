@@ -327,6 +327,52 @@ const HIDDEN_FIELDS = new Set([
   "donnees",
 ]);
 
+const MODULE_AUDIT_LABELS: Record<
+  string,
+  { create: string; update: string; delete: string }
+> = {
+  users: {
+    create: "a créé un utilisateur.",
+    update: "a modifié un utilisateur.",
+    delete: "a supprimé un utilisateur.",
+  },
+  roles: {
+    create: "a créé un rôle.",
+    update: "a modifié un rôle.",
+    delete: "a supprimé un rôle.",
+  },
+  produits: {
+    create: "a créé un produit.",
+    update: "a modifié un produit.",
+    delete: "a supprimé un produit.",
+  },
+  categories: {
+    create: "a créé une catégorie.",
+    update: "a modifié une catégorie.",
+    delete: "a supprimé une catégorie.",
+  },
+  clients: {
+    create: "a créé un client.",
+    update: "a modifié un client.",
+    delete: "a supprimé un client.",
+  },
+  fournisseurs: {
+    create: "a créé un fournisseur.",
+    update: "a modifié un fournisseur.",
+    delete: "a supprimé un fournisseur.",
+  },
+  factures: {
+    create: "a créé une facture.",
+    update: "a modifié une facture.",
+    delete: "a supprimé une facture.",
+  },
+  paiements: {
+    create: "a enregistré un paiement.",
+    update: "a modifié un paiement.",
+    delete: "a supprimé un paiement.",
+  },
+};
+
 // ── Génère un label lisible depuis une clé technique ─────────────────────
 function toReadableLabel(key: string): string {
   // 1. Override explicite
@@ -359,9 +405,231 @@ function getAuditAction(action: string): string {
   return action.toUpperCase();
 }
 
+function normalizeAuditModule(module: string): string {
+  const lower = module.toLowerCase();
+
+  if (lower === "utilisateurs") return "users";
+  if (lower === "parametres") return "systeme";
+
+  return lower;
+}
+
+function getAuditRouteInfo(action: string) {
+  const [rawMethod = "", ...rest] = action.split(" ");
+  const path = rest.join(" ").toLowerCase();
+  const segments = path.split("/").filter(Boolean);
+
+  return {
+    method: rawMethod.toUpperCase(),
+    path,
+    root: segments[2] || segments[0] || "",
+    resource: segments[3] || "",
+    target: segments[4] || "",
+    extra: segments[5] || "",
+  };
+}
+
+function getAuditPayload(audit: Audit): Record<string, JsonValue> {
+  const donnees = audit.newValues?.donnees;
+  return donnees && typeof donnees === "object" && !Array.isArray(donnees)
+    ? (donnees as Record<string, JsonValue>)
+    : {};
+}
+
+function buildCrudSentence(action: string, module: string): string | null {
+  const labels = MODULE_AUDIT_LABELS[module];
+  if (!labels) return null;
+  if (action === "CREATE") return labels.create;
+  if (action === "UPDATE") return labels.update;
+  if (action === "DELETE") return labels.delete;
+  return null;
+}
+
 function buildSentence(audit: Audit): string {
   const action = getAuditAction(audit.action);
-  const module = audit.module.toLowerCase();
+  const module = normalizeAuditModule(audit.module);
+  const route = getAuditRouteInfo(audit.action);
+  const payload = getAuditPayload(audit);
+
+  if (route.root === "auth") {
+    if (route.path.includes("/login")) return "s'est connecté.";
+    if (route.path.includes("/logout")) return "s'est déconnecté.";
+    if (route.path.includes("/verify-mfa")) {
+      return "a validé la vérification en deux étapes.";
+    }
+    if (route.path.includes("/resend-mfa")) {
+      return "a demandé le renvoi du code MFA.";
+    }
+    if (route.path.includes("/forgot-password")) {
+      return "a demandé une réinitialisation de mot de passe.";
+    }
+    if (route.path.includes("/reset-password")) {
+      return "a réinitialisé son mot de passe.";
+    }
+    if (route.path.includes("/refresh")) {
+      return "a renouvelé sa session.";
+    }
+    if (route.path.includes("/me/avatar")) {
+      return "a mis à jour sa photo de profil.";
+    }
+    if (route.path.includes("/change-password")) {
+      return "a modifié son mot de passe.";
+    }
+    if (route.path.includes("/sessions/others")) {
+      return "a révoqué les autres sessions actives.";
+    }
+    if (route.path.includes("/me")) {
+      return "a mis à jour son profil.";
+    }
+  }
+
+  if (route.root === "parametres") {
+    if (route.path.includes("/entreprise")) {
+      return "a modifié les informations de l'entreprise.";
+    }
+    if (route.path.includes("/systeme/maintenance")) {
+      return "a modifié le mode maintenance.";
+    }
+    if (route.path.includes("/systeme")) {
+      return "a modifié les paramètres système.";
+    }
+  }
+
+  if (route.root === "notifications") {
+    if (route.path.includes("/tout-lire")) {
+      return "a marqué toutes les notifications comme lues.";
+    }
+    if (route.path.includes("/lire")) {
+      return "a marqué une notification comme lue.";
+    }
+  }
+
+  if (route.root === "stocks") {
+    if (route.path.includes("/ajustement")) {
+      if (payload.typeMouvement === "AJUSTEMENT_POS") {
+        return "a effectué un ajustement positif de stock.";
+      }
+      if (payload.typeMouvement === "AJUSTEMENT_NEG") {
+        return "a effectué un ajustement négatif de stock.";
+      }
+      return "a effectué un ajustement de stock.";
+    }
+    if (
+      route.path.includes("/inventaires/") &&
+      route.path.includes("/valider")
+    ) {
+      return "a validé un inventaire.";
+    }
+    if (route.path.includes("/inventaires")) {
+      return "a créé un inventaire.";
+    }
+  }
+
+  if (route.root === "achats") {
+    if (route.path.includes("/demandes/") && route.path.includes("/valider")) {
+      return "a validé une demande d'achat.";
+    }
+    if (route.path.includes("/demandes")) {
+      return "a créé une demande d'achat.";
+    }
+    if (
+      route.path.includes("/bons-commande/") &&
+      route.path.includes("/envoyer")
+    ) {
+      return "a envoyé un bon de commande fournisseur.";
+    }
+    if (
+      route.path.includes("/bons-commande/") &&
+      route.path.includes("/statut")
+    ) {
+      if (payload.action === "SUBMIT") {
+        return "a soumis un bon de commande fournisseur.";
+      }
+      if (payload.action === "VALIDATE") {
+        return "a validé un bon de commande fournisseur.";
+      }
+      if (payload.action === "BACK_TO_DRAFT") {
+        return "a remis un bon de commande fournisseur en brouillon.";
+      }
+      if (payload.action === "CANCEL") {
+        return "a annulé un bon de commande fournisseur.";
+      }
+      return "a modifié le statut d'un bon de commande fournisseur.";
+    }
+    if (
+      route.path.includes("/bons-commande/") &&
+      route.path.includes("/dupliquer")
+    ) {
+      return "a dupliqué un bon de commande fournisseur.";
+    }
+    if (
+      route.path.includes("/bons-commande/") &&
+      route.path.includes("/facture")
+    ) {
+      return "a créé une facture d'achat depuis un bon de commande.";
+    }
+    if (
+      route.path.includes("/bons-commande/") &&
+      route.path.includes("/reception")
+    ) {
+      return "a enregistré une réception de marchandises.";
+    }
+    if (route.path.includes("/bons-commande")) {
+      return "a créé un bon de commande fournisseur.";
+    }
+  }
+
+  if (route.root === "ventes") {
+    if (route.path.includes("/devis/") && route.path.includes("/envoyer")) {
+      return "a envoyé un devis.";
+    }
+    if (route.path.includes("/devis/") && route.path.includes("/convertir")) {
+      return "a converti un devis en commande.";
+    }
+    if (route.path.includes("/devis")) {
+      return "a créé un devis.";
+    }
+    if (
+      route.path.includes("/commandes/") &&
+      route.path.includes("/confirmer")
+    ) {
+      return "a confirmé une commande client.";
+    }
+    if (
+      route.path.includes("/commandes/") &&
+      route.path.includes("/livraison")
+    ) {
+      return "a créé un bon de livraison client.";
+    }
+    if (route.path.includes("/commandes")) {
+      return "a créé une commande client.";
+    }
+  }
+
+  if (route.root === "factures") {
+    if (route.path.includes("/avoir")) {
+      return "a créé un avoir.";
+    }
+    if (route.path.includes("/envoyer")) {
+      return "a envoyé une facture.";
+    }
+    if (route.method === "POST") {
+      return "a créé une facture.";
+    }
+  }
+
+  if (route.root === "paiements" && route.method === "POST") {
+    return "a enregistré un paiement.";
+  }
+
+  if (route.root === "ia") {
+    if (route.path.includes("/rapport-auto")) {
+      return "a généré un rapport automatique avec l'IA.";
+    }
+    if (route.path.includes("/chat")) {
+      return "a lancé une interaction avec l'assistant IA.";
+    }
+  }
 
   switch (action) {
     case "LOGIN":
@@ -375,36 +643,18 @@ function buildSentence(audit: Audit): string {
       return "a validé la vérification en deux étapes.";
 
     case "CREATE":
-      switch (module) {
-        case "users":
-          return "a créé un nouvel utilisateur.";
-        case "roles":
-          return "a créé un nouveau rôle.";
-        case "produits":
-          return "a ajouté un nouveau produit.";
-        case "categories":
-          return "a créé une nouvelle catégorie.";
-        case "clients":
-          return "a ajouté un nouveau client.";
-        case "fournisseurs":
-          return "a ajouté un nouveau fournisseur.";
-        case "stocks":
-          return "a créé un mouvement de stock.";
-        case "achats":
-          return "a enregistré un nouvel achat.";
-        case "ventes":
-          return "a enregistré une nouvelle vente.";
-        case "factures":
-          return "a créé une facture.";
-        case "paiements":
-          return "a enregistré un paiement.";
-        case "ajustement":
-          return "a effectué un ajustement.";
-        case "inventaires":
-          return "a crée un inventaire.";
-        default:
-          return "a créé un nouvel élément.";
-      }
+      return (
+        buildCrudSentence(action, module) ??
+        (module === "stocks"
+          ? "a créé un mouvement de stock."
+          : module === "achats"
+            ? "a créé un élément du module achats."
+            : module === "ventes"
+              ? "a créé un élément du module ventes."
+              : module === "inventaires"
+                ? "a créé un inventaire."
+                : "a créé un élément.")
+      );
 
     case "UPDATE":
       switch (module) {
@@ -412,17 +662,16 @@ function buildSentence(audit: Audit): string {
         case "auth":
           return "a mis à jour son profil.";
         case "users":
-          return "a modifié un utilisateur.";
         case "roles":
-          return "a modifié un rôle.";
         case "produits":
-          return "a modifié un produit.";
         case "categories":
-          return "a modifié une catégorie.";
         case "clients":
-          return "a modifié un client.";
         case "fournisseurs":
-          return "a modifié un fournisseur.";
+        case "factures":
+        case "paiements":
+          return (
+            buildCrudSentence(action, module) || "a effectué une modification."
+          );
         case "stocks":
           return "a mis à jour le stock.";
         case "entreprise":
@@ -434,22 +683,7 @@ function buildSentence(audit: Audit): string {
       }
 
     case "DELETE":
-      switch (module) {
-        case "users":
-          return "a supprimé un utilisateur.";
-        case "roles":
-          return "a supprimé un rôle.";
-        case "produits":
-          return "a supprimé un produit.";
-        case "categories":
-          return "a supprimé une catégorie.";
-        case "clients":
-          return "a supprimé un client.";
-        case "fournisseurs":
-          return "a supprimé un fournisseur.";
-        default:
-          return "a supprimé un élément.";
-      }
+      return buildCrudSentence(action, module) || "a supprimé un élément.";
 
     case "ARCHIVE":
       return "a archivé un élément.";
@@ -562,17 +796,13 @@ function AuditRow({ audit }: { audit: Audit }) {
     : "Système";
   const isSystem = !audit.utilisateur;
 
-  const action = audit.action?.toUpperCase();
-  const module = audit.module?.toLowerCase();
+  const action = getAuditAction(audit.action);
+  const module = normalizeAuditModule(audit.module);
 
   const ModuleIcon = MODULE_ICONS[module];
   const dotClass = ACTION_DOT_CLASS[action] ?? "bg-gray-400";
   const badgeClass = ACTION_BADGE_CLASS[action] ?? ACTION_BADGE_CLASS.LOGOUT;
   const hasDetails = audit.newValues && Object.keys(audit.newValues).length > 0;
-  console.log("Audit newvalue", audit);
-  const donnees = audit.newValues?.donnees as
-    | Record<string, JsonValue>
-    | undefined;
 
   const displayData = getDisplayData(audit);
 

@@ -79,6 +79,8 @@ enum StatutBonCommandeFournisseur {
   RECU_PARTIEL
   RECU_TOTAL
   ANNULE
+  CONFIRME
+  REJETE
 }
 
 enum StatutReception {

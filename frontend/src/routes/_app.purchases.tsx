@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Plus,
   FileEdit,
@@ -188,6 +188,8 @@ const STATUS_LABELS: Record<string, string> = {
   SOUMIS: "Soumis",
   VALIDE: "Valide",
   ENVOYE: "Envoye",
+  CONFIRME: "Confirme",
+  REJETE: "Rejete",
   RECU_PARTIEL: "Recu partiel",
   RECU_TOTAL: "Recu total",
   ANNULE: "Annule",
@@ -243,6 +245,15 @@ function PurchasesPage() {
 
   const [receptionOpen, setReceptionOpen] = useState(false);
   const [receptionSubmitting, setReceptionSubmitting] = useState(false);
+  const [rowActionPendingById, setRowActionPendingById] = useState<
+    Record<string, string>
+  >({});
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfModalLoading, setPdfModalLoading] = useState(false);
+  const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfFilename, setPdfFilename] = useState("bon-commande.pdf");
+  const pdfFrameRef = useRef<HTMLIFrameElement | null>(null);
   const [receptionOrder, setReceptionOrder] = useState<{
     id: string;
     ref: string;
@@ -362,7 +373,7 @@ function PurchasesPage() {
 
     const countBrouillon = byStatus(["BROUILLON"]);
     const countValidation = byStatus(["SOUMIS", "VALIDE"]);
-    const countEnvoye = byStatus(["ENVOYE"]);
+    const countEnvoye = byStatus(["ENVOYE", "CONFIRME"]);
     const countReception = byStatus(["RECU_PARTIEL", "RECU_TOTAL"]);
 
     return [
@@ -774,35 +785,54 @@ function PurchasesPage() {
     }
   };
 
-  const openPdfOrder = async (orderId: string, print = false) => {
+  const blobToDataUrl = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("PDF_READ_FAILED"));
+      reader.readAsDataURL(blob);
+    });
+
+  const openPdfOrder = async (orderId: string) => {
+    setPdfModalLoading(true);
+    setPdfModalOpen(true);
     try {
       const blob = (await telechargerBonCommandeFournisseurPdf(
         orderId,
       )) as Blob;
-      const fileUrl = URL.createObjectURL(blob);
-      const win = window.open(fileUrl, "_blank", "noopener,noreferrer");
-      if (!win) {
-        URL.revokeObjectURL(fileUrl);
-        toast.warning("Autorisez les popups pour ouvrir le PDF");
-        return;
-      }
-      if (print) {
-        setTimeout(() => {
-          try {
-            win.focus();
-            win.print();
-          } catch {
-            // no-op
-          }
-        }, 400);
-      }
-      setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000);
+      const dataUrl = await blobToDataUrl(blob);
+      const numero = rows.find((row) => row.id === orderId)?.ref || "bcf";
+      setPdfFilename(`${numero}.pdf`);
+      setPdfBlob(blob);
+      setPdfDataUrl(dataUrl);
     } catch (error: unknown) {
       const maybeMessage =
         error && typeof error === "object" && "message" in error
           ? String((error as { message?: unknown }).message || "")
           : "";
       toast.error(maybeMessage.trim() || "Impossible de generer le PDF");
+      setPdfModalOpen(false);
+    } finally {
+      setPdfModalLoading(false);
+    }
+  };
+
+  const downloadCurrentPdf = () => {
+    if (!pdfBlob) return;
+    const objectUrl = URL.createObjectURL(pdfBlob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = pdfFilename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
+  const printCurrentPdf = () => {
+    try {
+      pdfFrameRef.current?.contentWindow?.focus();
+      pdfFrameRef.current?.contentWindow?.print();
+    } catch {
+      toast.error("Impossible de lancer l'impression");
     }
   };
 
@@ -824,193 +854,308 @@ function PurchasesPage() {
     }
   };
 
+  const executeRowActionWithLoader = async (
+    rowId: string,
+    actionKey: string,
+    action: () => Promise<void>,
+  ) => {
+    let shouldRun = true;
+    setRowActionPendingById((prev) => {
+      if (prev[rowId]) {
+        shouldRun = false;
+        return prev;
+      }
+      return { ...prev, [rowId]: actionKey };
+    });
+
+    if (!shouldRun) return;
+
+    try {
+      await action();
+    } finally {
+      setRowActionPendingById((prev) => {
+        const { [rowId]: _removed, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
   const actionsByStatus = (row: PurchaseRow) => {
+    const makeAction = (
+      key: string,
+      label: string,
+      icon: ReactNode,
+      action: () => Promise<void>,
+      destructive = false,
+    ) => {
+      const isRunning = rowActionPendingById[row.id] === key;
+      return {
+        label,
+        icon: isRunning ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          icon
+        ),
+        destructive,
+        onClick: () => void executeRowActionWithLoader(row.id, key, action),
+      };
+    };
+
     if (row.statutRaw === "BROUILLON") {
       return [
-        {
-          label: "Soumettre",
-          icon: <ArrowRight className="mr-2 h-4 w-4" />,
-          onClick: () =>
-            void transitionOrder(
-              row.id,
-              "SUBMIT",
-              "Bon soumis pour validation",
-            ),
-        },
-        {
-          label: "Annuler",
-          icon: <Trash2 className="mr-2 h-4 w-4" />,
-          destructive: true,
-          onClick: () => void transitionOrder(row.id, "CANCEL", "Bon annule"),
-        },
-        {
-          label: "Dupliquer",
-          icon: <Copy className="mr-2 h-4 w-4" />,
-          onClick: () => void duplicateOrder(row.id),
-        },
-        {
-          label: "Exporter PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
+        makeAction(
+          "submit",
+          "Soumettre",
+          <ArrowRight className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "SUBMIT", "Bon soumis pour validation"),
+        ),
+        makeAction(
+          "cancel",
+          "Annuler",
+          <Trash2 className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "CANCEL", "Bon annule"),
+          true,
+        ),
+        makeAction(
+          "duplicate",
+          "Dupliquer",
+          <Copy className="mr-2 h-4 w-4" />,
+          () => duplicateOrder(row.id),
+        ),
+        makeAction(
+          "export-pdf",
+          "Exporter PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
       ];
     }
 
     if (row.statutRaw === "SOUMIS") {
       return [
-        {
-          label: "Valider",
-          icon: <CheckCircle2 className="mr-2 h-4 w-4" />,
-          onClick: () => void transitionOrder(row.id, "VALIDATE", "Bon valide"),
-        },
-        {
-          label: "Annuler",
-          icon: <Trash2 className="mr-2 h-4 w-4" />,
-          destructive: true,
-          onClick: () => void transitionOrder(row.id, "CANCEL", "Bon annule"),
-        },
-        {
-          label: "Retour au brouillon",
-          icon: <ArrowLeft className="mr-2 h-4 w-4" />,
-          onClick: () =>
-            void transitionOrder(
+        makeAction(
+          "validate",
+          "Valider",
+          <CheckCircle2 className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "VALIDATE", "Bon valide"),
+        ),
+        makeAction(
+          "cancel",
+          "Annuler",
+          <Trash2 className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "CANCEL", "Bon annule"),
+          true,
+        ),
+        makeAction(
+          "back-to-draft",
+          "Retour au brouillon",
+          <ArrowLeft className="mr-2 h-4 w-4" />,
+          () =>
+            transitionOrder(
               row.id,
               "BACK_TO_DRAFT",
               "Bon retourne au brouillon",
             ),
-        },
-        {
-          label: "Dupliquer",
-          icon: <Copy className="mr-2 h-4 w-4" />,
-          onClick: () => void duplicateOrder(row.id),
-        },
+        ),
+        makeAction(
+          "duplicate",
+          "Dupliquer",
+          <Copy className="mr-2 h-4 w-4" />,
+          () => duplicateOrder(row.id),
+        ),
       ];
     }
 
     if (row.statutRaw === "VALIDE") {
       return [
-        {
-          label: "Envoyer au fournisseur",
-          icon: <Send className="mr-2 h-4 w-4" />,
-          onClick: () => void sendToSupplier(row.id),
-        },
-        {
-          label: "Telecharger PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
-        {
-          label: "Imprimer",
-          icon: <Printer className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id, true),
-        },
-        {
-          label: "Annuler",
-          icon: <Trash2 className="mr-2 h-4 w-4" />,
-          destructive: true,
-          onClick: () => void transitionOrder(row.id, "CANCEL", "Bon annule"),
-        },
+        makeAction(
+          "send",
+          "Envoyer au fournisseur",
+          <Send className="mr-2 h-4 w-4" />,
+          () => sendToSupplier(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+        /* makeAction(
+          "print",
+          "Imprimer",
+          <Printer className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id, true),
+        ), */
+        makeAction(
+          "cancel",
+          "Annuler",
+          <Trash2 className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "CANCEL", "Bon annule"),
+          true,
+        ),
       ];
     }
 
     if (row.statutRaw === "ENVOYE") {
       return [
-        {
-          label: "Relancer le fournisseur",
-          icon: <Send className="mr-2 h-4 w-4" />,
-          onClick: () => void sendToSupplier(row.id),
-        },
-        {
-          label: "Voir le detail",
-          icon: <FileEdit className="mr-2 h-4 w-4" />,
-          onClick: () => void openReceptionModal(row.id),
-        },
-        {
-          label: "Annuler",
-          icon: <Trash2 className="mr-2 h-4 w-4" />,
-          destructive: true,
-          onClick: () => void transitionOrder(row.id, "CANCEL", "Bon annule"),
-        },
-        {
-          label: "Creer une reception",
-          icon: <PackageCheck className="mr-2 h-4 w-4" />,
-          onClick: () => void openReceptionModal(row.id),
-        },
-        {
-          label: "Telecharger PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
+        makeAction(
+          "resend",
+          "Relancer le fournisseur",
+          <Send className="mr-2 h-4 w-4" />,
+          () => sendToSupplier(row.id),
+        ),
+        makeAction(
+          "details",
+          "Voir le detail",
+          <FileEdit className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ),
+        makeAction(
+          "cancel",
+          "Annuler",
+          <Trash2 className="mr-2 h-4 w-4" />,
+          () => transitionOrder(row.id, "CANCEL", "Bon annule"),
+          true,
+        ),
+        makeAction(
+          "create-reception",
+          "Creer une reception",
+          <PackageCheck className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+      ];
+    }
+
+    if (row.statutRaw === "CONFIRME") {
+      return [
+        /* makeAction(
+          "details",
+          "Voir le detail",
+          <FileEdit className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ), */
+        makeAction(
+          "create-reception",
+          "Creer une reception",
+          <PackageCheck className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+        /* makeAction(
+          "print",
+          "Imprimer",
+          <Printer className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id, true),
+        ), */
       ];
     }
 
     if (row.statutRaw === "RECU_PARTIEL") {
       return [
-        {
-          label: "Creer facture achat",
-          icon: <FileEdit className="mr-2 h-4 w-4" />,
-          onClick: () => void createSupplierInvoice(row.id),
-        },
-        {
-          label: "Nouvelle reception",
-          icon: <PackageCheck className="mr-2 h-4 w-4" />,
-          onClick: () => void openReceptionModal(row.id),
-        },
-        {
-          label: "Voir les quantites restantes",
-          icon: <FileEdit className="mr-2 h-4 w-4" />,
-          onClick: () => void openReceptionModal(row.id),
-        },
-        {
-          label: "Telecharger PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
-        {
-          label: "Imprimer",
-          icon: <Printer className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id, true),
-        },
+        makeAction(
+          "create-invoice",
+          "Creer facture achat",
+          <FileEdit className="mr-2 h-4 w-4" />,
+          () => createSupplierInvoice(row.id),
+        ),
+        makeAction(
+          "new-reception",
+          "Nouvelle reception",
+          <PackageCheck className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ),
+        /*  makeAction(
+          "remaining-quantities",
+          "Voir les quantites restantes",
+          <FileEdit className="mr-2 h-4 w-4" />,
+          () => openReceptionModal(row.id),
+        ), */
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+        /*  makeAction(
+          "print",
+          "Imprimer",
+          <Printer className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id, true),
+        ), */
       ];
     }
 
     if (row.statutRaw === "RECU_TOTAL") {
       return [
-        {
-          label: "Creer facture achat",
-          icon: <FileEdit className="mr-2 h-4 w-4" />,
-          onClick: () => void createSupplierInvoice(row.id),
-        },
-        {
-          label: "Telecharger PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
-        {
-          label: "Imprimer",
-          icon: <Printer className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id, true),
-        },
-        {
-          label: "Dupliquer",
-          icon: <Copy className="mr-2 h-4 w-4" />,
-          onClick: () => void duplicateOrder(row.id),
-        },
+        makeAction(
+          "create-invoice",
+          "Creer facture achat",
+          <FileEdit className="mr-2 h-4 w-4" />,
+          () => createSupplierInvoice(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+        /*  makeAction(
+          "print",
+          "Imprimer",
+          <Printer className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id, true),
+        ), */
+        makeAction(
+          "duplicate",
+          "Dupliquer",
+          <Copy className="mr-2 h-4 w-4" />,
+          () => duplicateOrder(row.id),
+        ),
       ];
     }
 
     if (row.statutRaw === "ANNULE") {
       return [
-        {
-          label: "Dupliquer",
-          icon: <Copy className="mr-2 h-4 w-4" />,
-          onClick: () => void duplicateOrder(row.id),
-        },
-        {
-          label: "Telecharger PDF",
-          icon: <Download className="mr-2 h-4 w-4" />,
-          onClick: () => void openPdfOrder(row.id),
-        },
+        makeAction(
+          "duplicate",
+          "Dupliquer",
+          <Copy className="mr-2 h-4 w-4" />,
+          () => duplicateOrder(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
+      ];
+    }
+
+    if (row.statutRaw === "REJETE") {
+      return [
+        makeAction(
+          "duplicate",
+          "Dupliquer",
+          <Copy className="mr-2 h-4 w-4" />,
+          () => duplicateOrder(row.id),
+        ),
+        makeAction(
+          "download-pdf",
+          "Telecharger PDF",
+          <Download className="mr-2 h-4 w-4" />,
+          () => openPdfOrder(row.id),
+        ),
       ];
     }
 
@@ -1092,6 +1237,7 @@ function PurchasesPage() {
               rows={paginatedRows}
               rowKey={(o) => o.id}
               rowActions={actionsByStatus}
+              isRowActionLoading={(o) => Boolean(rowActionPendingById[o.id])}
             />
             <Pagination
               count={filteredRows.length}
@@ -1813,6 +1959,60 @@ function PurchasesPage() {
             ))}
           </div>
         ) : null}
+      </AppModal>
+
+      <AppModal
+        open={pdfModalOpen}
+        onOpenChange={(open) => {
+          setPdfModalOpen(open);
+          if (!open) {
+            setPdfDataUrl(null);
+            setPdfBlob(null);
+            setPdfModalLoading(false);
+          }
+        }}
+        title="Apercu PDF bon de commande"
+        description={pdfFilename}
+        size="xxl"
+        footer={
+          <div className="flex items-center justify-between gap-2">
+            <Button variant="outline" onClick={() => setPdfModalOpen(false)}>
+              Fermer
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={printCurrentPdf}
+                disabled={!pdfDataUrl || pdfModalLoading}
+              >
+                <Printer className="mr-2 h-4 w-4" /> Imprimer
+              </Button>
+              <Button
+                onClick={downloadCurrentPdf}
+                disabled={!pdfBlob || pdfModalLoading}
+              >
+                <Download className="mr-2 h-4 w-4" /> Telecharger
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        {pdfModalLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : pdfDataUrl ? (
+          <iframe
+            ref={pdfFrameRef}
+            src={pdfDataUrl}
+            title="Apercu BCF PDF"
+            className="h-[70vh] w-full rounded-md border border-border"
+          />
+        ) : (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Aucun PDF charge.
+          </p>
+        )}
       </AppModal>
     </>
   );

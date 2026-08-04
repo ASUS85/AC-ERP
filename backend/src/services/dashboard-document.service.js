@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { renderPdfDocument } from "./pdf-render.service.js";
 
 const money = (value, currency = "XAF") =>
   `${Number(value || 0).toLocaleString("fr-FR", {
@@ -246,26 +246,17 @@ export function buildDashboardHtml(data, entreprise = {}) {
 }
 
 export async function buildDashboardPdf(data, entreprise) {
-  let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      protocolTimeout: 60000,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
-    });
-    const page = await browser.newPage();
-    await page.emulateMediaType("print");
-    await page.setContent(buildDashboardHtml(data, entreprise), {
-      waitUntil: "domcontentloaded",
-    });
-    return await page.pdf({
+    const { buffer } = await renderPdfDocument({
+      html: buildDashboardHtml(data, entreprise),
+      pdfOptions: {
       format: "A4",
       printBackground: true,
       margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
+      },
     });
+    return buffer;
   } catch {
     return buildSimplePdf(buildSimpleLines(data, entreprise));
-  } finally {
-    if (browser) await browser.close().catch(() => {});
   }
 }

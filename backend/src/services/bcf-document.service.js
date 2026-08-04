@@ -1,7 +1,9 @@
-import puppeteer from "puppeteer";
+import { renderPdfDocument } from "./pdf-render.service.js";
 
-const money = (value, currency = "XAF") => `${Number(value || 0).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`;
-const date = (value) => (value ? new Date(value).toLocaleDateString("fr-FR") : "-");
+const money = (value, currency = "XAF") =>
+  `${Number(value || 0).toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`;
+const date = (value) =>
+  value ? new Date(value).toLocaleDateString("fr-FR") : "-";
 
 function escapeHtml(value = "") {
   return String(value)
@@ -66,7 +68,9 @@ function buildBcfTextLines(bonCommande, entreprise = {}) {
     const prix = Number(ligne.prixUnitaireHt || 0);
     const remise = Number(ligne.remise || 0);
     const tauxTva = Number(produit.tauxTva || 18);
-    const montantHt = Number(ligne.montantHt || quantite * prix * (1 - remise / 100));
+    const montantHt = Number(
+      ligne.montantHt || quantite * prix * (1 - remise / 100),
+    );
     const label = `${index + 1}. ${produit.reference || ligne.idProduit} - ${produit.designation || "Produit"} | Qte: ${quantite} | PU HT: ${money(prix, currency)} | Remise: ${remise}% | TVA: ${tauxTva}% | Montant HT: ${money(montantHt, currency)}`;
     lines.push(...wrapText(label));
   });
@@ -84,7 +88,7 @@ function buildBcfTextLines(bonCommande, entreprise = {}) {
     "Signature et cachet de l'entreprise: ______________________________",
     "Accuse de reception fournisseur: _________________________________",
     "",
-    "Document a conserver comme piece justificative et a rapprocher avec la facture fournisseur et la reception marchandise."
+    "Document a conserver comme piece justificative et a rapprocher avec la facture fournisseur et la reception marchandise.",
   );
 
   return lines;
@@ -113,15 +117,22 @@ function buildSimplePdf(lines) {
       "/F1 10 Tf",
       "50 790 Td",
       "14 TL",
-      ...pageLines.map((line, index) => `${index === 0 ? "" : "T* " }(${pdfText(line)}) Tj`),
+      ...pageLines.map(
+        (line, index) => `${index === 0 ? "" : "T* "}(${pdfText(line)}) Tj`,
+      ),
       "ET",
     ].join("\n");
-    const contentRef = add(`<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`);
-    const pageRef = add(`<< /Type /Page /Parent ${pagesRef} 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontRef} 0 R >> >> /Contents ${contentRef} 0 R >>`);
+    const contentRef = add(
+      `<< /Length ${Buffer.byteLength(content, "utf8")} >>\nstream\n${content}\nendstream`,
+    );
+    const pageRef = add(
+      `<< /Type /Page /Parent ${pagesRef} 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${fontRef} 0 R >> >> /Contents ${contentRef} 0 R >>`,
+    );
     pageRefs.push(pageRef);
   }
 
-  objects[pagesRef - 1] = `<< /Type /Pages /Kids [${pageRefs.map((ref) => `${ref} 0 R`).join(" ")}] /Count ${pageRefs.length} >>`;
+  objects[pagesRef - 1] =
+    `<< /Type /Pages /Kids [${pageRefs.map((ref) => `${ref} 0 R`).join(" ")}] /Count ${pageRefs.length} >>`;
 
   const chunks = ["%PDF-1.4\n"];
   const offsets = [0];
@@ -131,24 +142,33 @@ function buildSimplePdf(lines) {
   });
   const xrefOffset = Buffer.byteLength(chunks.join(""), "utf8");
   chunks.push(`xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`);
-  offsets.slice(1).forEach((offset) => chunks.push(`${String(offset).padStart(10, "0")} 00000 n \n`));
-  chunks.push(`trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+  offsets
+    .slice(1)
+    .forEach((offset) =>
+      chunks.push(`${String(offset).padStart(10, "0")} 00000 n \n`),
+    );
+  chunks.push(
+    `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`,
+  );
   return Buffer.from(chunks.join(""), "utf8");
 }
 
 export function buildBcfHtml(bonCommande, entreprise = {}) {
   const currency = entreprise.devise || "XAF";
   const fournisseur = bonCommande.fournisseur || {};
-  const lignes = (bonCommande.lignes || []).map((ligne, index) => {
-    const produit = ligne.produit || {};
-    const quantite = Number(ligne.quantiteCommandee || 0);
-    const prix = Number(ligne.prixUnitaireHt || 0);
-    const remise = Number(ligne.remise || 0);
-    const tauxTva = Number(produit.tauxTva || 18);
-    const montantHt = Number(ligne.montantHt || quantite * prix * (1 - remise / 100));
-    const montantTva = montantHt * (tauxTva / 100);
+  const lignes = (bonCommande.lignes || [])
+    .map((ligne, index) => {
+      const produit = ligne.produit || {};
+      const quantite = Number(ligne.quantiteCommandee || 0);
+      const prix = Number(ligne.prixUnitaireHt || 0);
+      const remise = Number(ligne.remise || 0);
+      const tauxTva = Number(produit.tauxTva || 18);
+      const montantHt = Number(
+        ligne.montantHt || quantite * prix * (1 - remise / 100),
+      );
+      const montantTva = montantHt * (tauxTva / 100);
 
-    return `
+      return `
       <tr>
         <td>${index + 1}</td>
         <td>${escapeHtml(produit.reference || ligne.idProduit)}</td>
@@ -162,7 +182,8 @@ export function buildBcfHtml(bonCommande, entreprise = {}) {
         <td class="num">${money(montantTva, currency)}</td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 
   return `<!DOCTYPE html>
   <html lang="fr">
@@ -171,7 +192,9 @@ export function buildBcfHtml(bonCommande, entreprise = {}) {
     <title>Bon de commande ${escapeHtml(bonCommande.numeroBcf)}</title>
     <style>
       * { box-sizing: border-box; }
-      body { color: #111827; font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 28px; }
+      html, body { height: 100%; }
+      body { color: #111827; font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 0; }
+      .a4-sheet { display: flex; flex-direction: column; min-height: calc(297mm - 24mm); padding: 18px; }
       h1 { font-size: 24px; letter-spacing: .04em; margin: 0 0 8px; text-transform: uppercase; }
       h2 { border-bottom: 1px solid #d1d5db; font-size: 12px; margin: 18px 0 8px; padding-bottom: 5px; text-transform: uppercase; }
       table { border-collapse: collapse; width: 100%; }
@@ -187,10 +210,11 @@ export function buildBcfHtml(bonCommande, entreprise = {}) {
       .total { background: #111827; color: #fff; font-weight: 700; }
       .signatures { display: grid; gap: 24px; grid-template-columns: 1fr 1fr; margin-top: 36px; }
       .signature { border-top: 1px solid #111827; padding-top: 8px; text-align: center; }
-      .footer { border-top: 1px solid #d1d5db; color: #6b7280; font-size: 10px; margin-top: 28px; padding-top: 8px; text-align: center; }
+      .footer { border-top: 1px solid #d1d5db; color: #6b7280; font-size: 10px; margin-top: auto; padding-top: 8px; text-align: center; }
     </style>
   </head>
   <body>
+    <div class="a4-sheet">
     <div class="header">
       <div>
         <h1>Bon de commande fournisseur</h1>
@@ -267,29 +291,23 @@ export function buildBcfHtml(bonCommande, entreprise = {}) {
     <div class="footer">
       Ce document doit etre conserve comme piece justificative de la commande et rapproche avec la facture fournisseur et la reception marchandise.
     </div>
+    </div>
   </body>
   </html>`;
 }
 
 export async function buildBcfPdf(bonCommande, entreprise) {
-  let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      protocolTimeout: 60000,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    const { buffer } = await renderPdfDocument({
+      html: buildBcfHtml(bonCommande, entreprise),
+      pdfOptions: {
+        format: "A4",
+        printBackground: true,
+        margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
+      },
     });
-    const page = await browser.newPage();
-    await page.emulateMediaType("print");
-    await page.setContent(buildBcfHtml(bonCommande, entreprise), { waitUntil: "domcontentloaded" });
-    return await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
-    });
+    return buffer;
   } catch {
     return buildSimplePdf(buildBcfTextLines(bonCommande, entreprise));
-  } finally {
-    if (browser) await browser.close().catch(() => {});
   }
 }

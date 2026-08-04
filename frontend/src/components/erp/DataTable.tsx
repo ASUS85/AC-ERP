@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { Loader2, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ export function DataTable<T extends Record<string, any>>({
   rowKey,
   withActions = true,
   rowActions,
+  isRowActionLoading,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -34,6 +35,7 @@ export function DataTable<T extends Record<string, any>>({
     destructive?: boolean;
     onClick: () => void;
   }>;
+  isRowActionLoading?: (row: T) => boolean;
 }) {
   const align = (a?: string) =>
     a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
@@ -88,27 +90,44 @@ export function DataTable<T extends Record<string, any>>({
                   {rowActions ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                          aria-label="Actions"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
+                        {(() => {
+                          const isBusy = isRowActionLoading?.(row) ?? false;
+                          return (
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                              aria-label={
+                                isBusy ? "Action en cours" : "Actions"
+                              }
+                            >
+                              {isBusy ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <MoreHorizontal className="h-4 w-4" />
+                              )}
+                            </button>
+                          );
+                        })()}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-40">
-                        {rowActions(row).map((action) => (
-                          <DropdownMenuItem
-                            key={action.label}
-                            className={cn(
-                              action.destructive &&
-                                "text-destructive focus:text-destructive",
-                            )}
-                            onClick={action.onClick}
-                          >
-                            {action.icon}
-                            {action.label}
-                          </DropdownMenuItem>
-                        ))}
+                        {rowActions(row).map((action) => {
+                          const isBusy = isRowActionLoading?.(row) ?? false;
+                          return (
+                            <DropdownMenuItem
+                              key={action.label}
+                              disabled={isBusy}
+                              className={cn(
+                                action.destructive &&
+                                  "text-destructive focus:text-destructive",
+                              )}
+                              onClick={action.onClick}
+                            >
+                              {action.icon}
+                              {action.label}
+                            </DropdownMenuItem>
+                          );
+                        })}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (

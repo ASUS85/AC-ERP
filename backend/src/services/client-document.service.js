@@ -1,4 +1,4 @@
-import puppeteer from "puppeteer";
+import { renderPdfDocument } from "./pdf-render.service.js";
 
 const _E = String.fromCharCode(38); // &
 const _q = String.fromCharCode(34); // "
@@ -121,35 +121,22 @@ export function buildClientsHtml(clients, entreprise = {}) {
  * @returns {Buffer}
  */
 export async function buildClientsPdf(clients, entreprise) {
-  let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      protocolTimeout: 60000,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-      ],
-    });
-    const page = await browser.newPage();
-    await page.emulateMediaType("print");
-    await page.setContent(buildClientsHtml(clients, entreprise), {
-      waitUntil: "domcontentloaded",
-    });
-    return await page.pdf({
+    const { buffer } = await renderPdfDocument({
+      html: buildClientsHtml(clients, entreprise),
+      pdfOptions: {
       format: "A4",
       printBackground: true,
       margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
+      },
     });
+    return buffer;
   } catch (error) {
     console.error(
       "Erreur generation PDF clients avec Puppeteer, fallback texte simple:",
       error.message,
     );
     return buildSimplePdf(clients, entreprise);
-  } finally {
-    if (browser) await browser.close().catch(() => {});
   }
 }
 

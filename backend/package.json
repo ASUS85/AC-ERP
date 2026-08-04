@@ -27,6 +27,7 @@
     "exceljs": "^4.3.0",
     "express": "^5.2.1",
     "express-rate-limit": "^7.0.0",
+    "handlebars": "^4.7.9",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",

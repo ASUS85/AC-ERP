@@ -2982,3 +2982,122 @@ Unknown argument `tauxTva`. Available options are marked with ?. {"stack":"Prism
 2026-08-03T17:13:07.575Z info: Base de donnees connectee
 2026-08-03T17:13:07.619Z info: Serveur demarre port 3000
 2026-08-03T17:13:10.364Z info: Socket connecte 9dqOJDnKVlNQHGYNAAAB
+2026-08-03T17:31:32.872Z info: Socket deconnecte 9dqOJDnKVlNQHGYNAAAB
+2026-08-04T07:09:53.957Z info: Socket connecte XUtqo39Egddh4wYoAAAD
+2026-08-04T07:17:35.999Z info: Socket deconnecte XUtqo39Egddh4wYoAAAD
+2026-08-04T07:17:39.804Z info: Socket connecte oXWetOqienkaVFvxAAAF
+2026-08-04T07:22:59.893Z info: Socket deconnecte oXWetOqienkaVFvxAAAF
+2026-08-04T09:53:31.343Z info: Socket connecte -_S38lp6G54_um2AAAAH
+2026-08-04T09:53:33.685Z info: Socket deconnecte -_S38lp6G54_um2AAAAH
+2026-08-04T09:53:38.803Z info: Socket connecte DVGtjoNuUtW-OV78AAAJ
+2026-08-04T10:22:50.917Z error: getaddrinfo ENOTFOUND smtp.gmail.com {"stack":"Error: getaddrinfo ENOTFOUND smtp.gmail.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)","code":"EDNS"}
+2026-08-04T10:24:03.409Z error: Greeting never received {"stack":"Error: Greeting never received\n    at SMTPConnection._formatError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._onError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:795:20)\n    at Timeout.<anonymous> (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:729:22)\n    at listOnTimeout (node:internal/timers:585:17)\n    at process.processTimers (node:internal/timers:521:7)","code":"ETIMEDOUT"}
+2026-08-04T10:24:40.664Z error: Greeting never received {"stack":"Error: Greeting never received\n    at SMTPConnection._formatError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._onError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:795:20)\n    at Timeout.<anonymous> (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:729:22)\n    at listOnTimeout (node:internal/timers:585:17)\n    at process.processTimers (node:internal/timers:521:7)","code":"ETIMEDOUT"}
+2026-08-04T10:24:49.889Z error: Greeting never received {"stack":"Error: Greeting never received\n    at SMTPConnection._formatError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:809:19)\n    at SMTPConnection._onError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:795:20)\n    at Timeout.<anonymous> (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\nodemailer\\lib\\smtp-connection\\index.js:729:22)\n    at listOnTimeout (node:internal/timers:585:17)\n    at process.processTimers (node:internal/timers:521:7)","code":"ETIMEDOUT"}
+2026-08-04T13:12:13.047Z info: Base de donnees connectee
+2026-08-04T13:12:13.074Z info: Serveur demarre port 3000
+2026-08-04T13:12:14.136Z info: Socket connecte v2A8Q2KrYk3T-2iLAAAB
+2026-08-04T13:12:46.893Z info: Socket deconnecte v2A8Q2KrYk3T-2iLAAAB
+2026-08-04T13:12:57.069Z info: Socket connecte 11H15zXsQq8-3-a-AAAD
+2026-08-04T13:14:05.979Z error: Route introuvable: GET /favicon.ico {"stack":"ApiError: Route introuvable: GET /favicon.ico\n    at notFoundHandler (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/error.middleware.js:11:8)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at auditActivity (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/audit.middleware.js:12:46)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at maintenanceGuard (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/maintenance.middleware.js:10:137)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9","code":"NOT_FOUND"}
+2026-08-04T13:26:01.469Z info: Socket deconnecte 11H15zXsQq8-3-a-AAAD
+2026-08-04T13:26:15.359Z info: Socket connecte jKfq5gqUERKty-PjAAAF
+2026-08-04T13:37:09.708Z info: Base de donnees connectee
+2026-08-04T13:37:09.839Z info: Serveur demarre port 3000
+2026-08-04T13:37:12.719Z info: Socket connecte lNl-TW25IGGz5M8DAAAB
+2026-08-04T13:38:14.233Z info: Base de donnees connectee
+2026-08-04T13:38:14.305Z info: Serveur demarre port 3000
+2026-08-04T13:38:38.170Z info: Socket connecte rRkF1NJS0Ar-VIiDAAAB
+2026-08-04T13:44:06.810Z error: 
+Invalid `prisma.bonCommandeFournisseur.update()` invocation:
+
+{
+  where: {
+    id: "c2d4f100-b9d2-41c0-b464-df2b9f884919"
+  },
+  data: {
+    statut: "CONFIRME"
+            ~~~~~~~~~~
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Invalid value for argument `statut`. Expected StatutBonCommandeFournisseur. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonCommandeFournisseur.update()` invocation:\n\n{\n  where: {\n    id: \"c2d4f100-b9d2-41c0-b464-df2b9f884919\"\n  },\n  data: {\n    statut: \"CONFIRME\"\n            ~~~~~~~~~~\n  },\n  include: {\n    lignes: true\n  }\n}\n\nInvalid value for argument `statut`. Expected StatutBonCommandeFournisseur.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Object.reponseFournisseur (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.service.js:271:23)\n    at async fournisseurValider (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.controller.js:177:22)"}
+2026-08-04T13:46:10.804Z error: 
+Invalid `prisma.bonCommandeFournisseur.update()` invocation:
+
+{
+  where: {
+    id: "c2d4f100-b9d2-41c0-b464-df2b9f884919"
+  },
+  data: {
+    statut: "CONFIRME"
+            ~~~~~~~~~~
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Invalid value for argument `statut`. Expected StatutBonCommandeFournisseur. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonCommandeFournisseur.update()` invocation:\n\n{\n  where: {\n    id: \"c2d4f100-b9d2-41c0-b464-df2b9f884919\"\n  },\n  data: {\n    statut: \"CONFIRME\"\n            ~~~~~~~~~~\n  },\n  include: {\n    lignes: true\n  }\n}\n\nInvalid value for argument `statut`. Expected StatutBonCommandeFournisseur.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Object.reponseFournisseur (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.service.js:271:23)\n    at async fournisseurValider (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.controller.js:177:22)"}
+2026-08-04T14:01:06.133Z error: 
+Invalid `prisma.bonCommandeFournisseur.update()` invocation:
+
+{
+  where: {
+    id: "c2d4f100-b9d2-41c0-b464-df2b9f884919"
+  },
+  data: {
+    statut: "CONFIRME"
+            ~~~~~~~~~~
+  },
+  include: {
+    lignes: true
+  }
+}
+
+Invalid value for argument `statut`. Expected StatutBonCommandeFournisseur. {"stack":"PrismaClientValidationError: \nInvalid `prisma.bonCommandeFournisseur.update()` invocation:\n\n{\n  where: {\n    id: \"c2d4f100-b9d2-41c0-b464-df2b9f884919\"\n  },\n  data: {\n    statut: \"CONFIRME\"\n            ~~~~~~~~~~\n  },\n  include: {\n    lignes: true\n  }\n}\n\nInvalid value for argument `statut`. Expected StatutBonCommandeFournisseur.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Object.reponseFournisseur (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.service.js:271:23)\n    at async fournisseurValider (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/achats/achats.controller.js:177:22)"}
+2026-08-04T14:02:58.952Z info: Arret du serveur
+2026-08-04T14:06:32.611Z info: Base de donnees connectee
+2026-08-04T14:06:32.648Z info: Serveur demarre port 3000
+2026-08-04T14:06:36.510Z info: Socket connecte E31hJy_kSdbb3oXpAAAB
+2026-08-04T14:06:49.627Z info: Socket deconnecte E31hJy_kSdbb3oXpAAAB
+2026-08-04T14:06:55.135Z info: Socket connecte DappDcGHJsuFYIb4AAAD
+2026-08-04T14:30:00.659Z error: Token expire {"stack":"ApiError: Token expire\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:22:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\route.js:157:13)\n    at Route.dispatch (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\route.js:117:3)\n    at handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:435:11)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:295:15\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)","code":"TOKEN_EXPIRED"}
+2026-08-04T14:30:04.305Z error: Refresh token invalide {"stack":"ApiError: Refresh token invalide\n    at Object.refresh (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.service.js:233:13)\n    at async refresh (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/auth/auth.controller.js:31:9)","code":"UNAUTHORIZED"}
+2026-08-04T14:30:07.009Z info: Socket deconnecte DappDcGHJsuFYIb4AAAD
+2026-08-04T14:36:05.384Z info: Socket connecte frhcP0HyB5Z2XtsJAAAG
+2026-08-04T17:38:32.214Z info: Base de donnees connectee
+2026-08-04T17:38:32.287Z info: Serveur demarre port 3000
+2026-08-04T17:38:49.343Z info: Socket connecte LsgtR-IaB5ESdI0QAAAB
+2026-08-04T17:39:39.218Z info: Base de donnees connectee
+2026-08-04T17:39:39.278Z info: Serveur demarre port 3000
+2026-08-04T17:39:43.056Z info: Socket connecte TQ6j91OsijZQUSYsAAAB
+2026-08-04T17:47:06.074Z info: Socket deconnecte TQ6j91OsijZQUSYsAAAB
+2026-08-04T17:47:11.111Z info: Socket connecte GssIxZvt-CvHqj5CAAAD
+2026-08-04T17:50:36.904Z info: Base de donnees connectee
+2026-08-04T17:50:36.984Z info: Serveur demarre port 3000
+2026-08-04T17:50:37.123Z info: Socket connecte qxakbYeJVHyz2XYxAAAB
+2026-08-04T17:51:13.628Z info: Base de donnees connectee
+2026-08-04T17:51:13.701Z info: Serveur demarre port 3000
+2026-08-04T17:51:13.892Z info: Socket connecte 8IyJa-mwnv_YWw5xAAAB
+2026-08-04T17:51:14.934Z info: Socket deconnecte 8IyJa-mwnv_YWw5xAAAB
+2026-08-04T17:51:19.421Z info: Socket connecte VhjTaUhBt-LhkjT2AAAD
+2026-08-04T18:23:42.528Z info: Base de donnees connectee
+2026-08-04T18:23:42.594Z info: Serveur demarre port 3000
+2026-08-04T18:23:43.802Z info: Socket connecte h3OOiXpFO_bAYkHlAAAB
+2026-08-04T18:34:24.393Z info: Base de donnees connectee
+2026-08-04T18:34:24.438Z info: Serveur demarre port 3000
+2026-08-04T18:34:38.710Z info: Socket connecte QwvSpUqB2N-ppyCNAAAB
+2026-08-04T18:35:36.136Z info: Base de donnees connectee
+2026-08-04T18:35:36.192Z info: Serveur demarre port 3000
+2026-08-04T18:35:36.428Z info: Socket connecte 4Jho7rXMOeeUXUY8AAAB
+2026-08-04T18:39:29.867Z info: Socket deconnecte 4Jho7rXMOeeUXUY8AAAB
+2026-08-04T18:39:39.496Z info: Socket connecte KTqh7NEB-3d58ecqAAAD
+2026-08-04T18:52:19.674Z info: Socket deconnecte KTqh7NEB-3d58ecqAAAD
+2026-08-04T18:52:26.174Z info: Socket connecte HMnIsZnn9TO3n8R-AAAF
+2026-08-04T18:56:11.792Z info: Socket deconnecte HMnIsZnn9TO3n8R-AAAF
+2026-08-04T19:27:07.276Z info: Socket connecte yR6FPtI7gWfPbpcYAAAH
+2026-08-04T19:27:29.435Z info: Socket deconnecte yR6FPtI7gWfPbpcYAAAH
