@@ -59,6 +59,22 @@ export const achatsRepository = {
       },
     });
   },
+  facturesImporteesBcf(idBcf) {
+    return prisma.facture.findMany({
+      where: {
+        typeFacture: "ACHAT",
+        mentionsLegales: {
+          contains: `[BCF_IMPORT] idBcf=${idBcf};`,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        fournisseur: true,
+        lignes: true,
+        paiements: true,
+      },
+    });
+  },
   createReception(idBcf, userId, lignes) {
     return prisma.$transaction(async (tx) => {
       await tx.$executeRawUnsafe(

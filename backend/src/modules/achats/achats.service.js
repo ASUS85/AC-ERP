@@ -42,6 +42,74 @@ const ALLOWED_TRANSITIONS = {
   CANCEL: { from: ["BROUILLON", "SOUMIS", "VALIDE", "ENVOYE"], to: "ANNULE" },
 };
 
+const ALLOWED_IMPORT_DECISIONS = new Set(["VALIDER", "REJETER"]);
+
+function parseImportMetadata(mentionsLegales = "") {
+  const lines = String(mentionsLegales)
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const metadata = {};
+  for (const line of lines) {
+    const [key, ...rest] = line.split(":");
+    if (!key || rest.length === 0) continue;
+    metadata[key.trim()] = rest.join(":").trim();
+  }
+  return metadata;
+}
+
+function buildImportedInvoiceLines(bonCommande) {
+  const fromReceived = (bonCommande.lignes || [])
+    .map((ligne) => {
+      const quantite = Number(ligne.quantiteRecue || 0);
+      if (quantite <= 0) return null;
+      const prixUnitaire = Number(ligne.prixUnitaireHt || 0);
+      const remise = Number(ligne.remise || 0);
+      const montantHt = quantite * prixUnitaire * (1 - remise / 100);
+      const tauxTva = Number(ligne.produit?.tauxTva || 18);
+      const montantTva = montantHt * (tauxTva / 100);
+      const montantTtc = montantHt + montantTva;
+      return {
+        idProduit: ligne.idProduit,
+        designation: ligne.produit?.designation || "Produit",
+        quantite,
+        prixUnitaireHt: prixUnitaire,
+        remise,
+        tauxTva,
+        montantHt,
+        montantTva,
+        montantTtc,
+      };
+    })
+    .filter(Boolean);
+
+  if (fromReceived.length > 0) return fromReceived;
+
+  return (bonCommande.lignes || [])
+    .map((ligne) => {
+      const quantite = Number(ligne.quantiteCommandee || 0);
+      if (quantite <= 0) return null;
+      const prixUnitaire = Number(ligne.prixUnitaireHt || 0);
+      const remise = Number(ligne.remise || 0);
+      const montantHt = quantite * prixUnitaire * (1 - remise / 100);
+      const tauxTva = Number(ligne.produit?.tauxTva || 18);
+      const montantTva = montantHt * (tauxTva / 100);
+      const montantTtc = montantHt + montantTva;
+      return {
+        idProduit: ligne.idProduit,
+        designation: ligne.produit?.designation || "Produit",
+        quantite,
+        prixUnitaireHt: prixUnitaire,
+        remise,
+        tauxTva,
+        montantHt,
+        montantTva,
+        montantTtc,
+      };
+    })
+    .filter(Boolean);
+}
+
 export const achatsService = {
   getDemandes() {
     return achatsRepository.demandes({ orderBy: { createdAt: "desc" } });
@@ -446,6 +514,123 @@ export const achatsService = {
     });
 
     return createdInvoice;
+  },
+  async importerFactureFournisseur(idBcf, file, body, ctx) {
+    const bonCommande = await achatsRepository.bcfById(idBcf);
+    if (!bonCommande) throw new ApiError(404, "NOT_FOUND", "BCF introuvable");
+
+    if (!["RECU_PARTIEL", "RECU_TOTAL"].includes(bonCommande.statut)) {
+      throw new ApiError(
+        409,
+        "INVALID_STATUS_FOR_IMPORT",
+        "L'import de facture fournisseur est disponible uniquement pour un BCF recu partiellement ou totalement",
+      );
+    }
+
+    if (!file) {
+      throw new ApiError(
+        400,
+        "SUPPLIER_INVOICE_FILE_REQUIRED",
+        "Le fichier de facture fournisseur est obligatoire",
+      );
+    }
+
+    const decision = String(body?.decision || "").toUpperCase();
+    if (!ALLOWED_IMPORT_DECISIONS.has(decision)) {
+      throw new ApiError(
+        400,
+        "SUPPLIER_INVOICE_DECISION_INVALID",
+        "La decision doit etre VALIDER ou REJETER",
+      );
+    }
+
+    const lignesImportees =
+      decision === "VALIDER" ? buildImportedInvoiceLines(bonCommande) : [];
+
+    const totalHt =
+      decision === "VALIDER"
+        ? lignesImportees.reduce((acc, line) => acc + Number(line.montantHt), 0)
+        : 0;
+    const totalTva =
+      decision === "VALIDER"
+        ? lignesImportees.reduce(
+            (acc, line) => acc + Number(line.montantTva),
+            0,
+          )
+        : 0;
+    const totalTtc =
+      decision === "VALIDER"
+        ? lignesImportees.reduce(
+            (acc, line) => acc + Number(line.montantTtc),
+            0,
+          )
+        : 0;
+
+    const now = new Date();
+    const defaultEcheance = new Date(now);
+    defaultEcheance.setDate(defaultEcheance.getDate() + 30);
+
+    const fileUrl = `/uploads/${file.filename}`;
+    const mentionsLegales = [
+      `[BCF_IMPORT] idBcf=${bonCommande.id};`,
+      `Source BCF: ${bonCommande.numeroBcf}`,
+      `Decision: ${decision}`,
+      `Fichier URL: ${fileUrl}`,
+      `Fichier nom: ${file.originalname || file.filename}`,
+      `Fichier mime: ${file.mimetype || "-"}`,
+      `Fichier taille: ${Number(file.size || 0)}`,
+    ].join("\n");
+
+    const createdInvoice = await achatsRepository.createFactureAchat({
+      numeroFacture: await generateNumeroFacture(),
+      typeFacture: "ACHAT",
+      idFournisseur: bonCommande.idFournisseur,
+      idUtilisateur: ctx.user.userId,
+      dateEcheance: defaultEcheance,
+      statut: decision === "VALIDER" ? "EMISE" : "ANNULEE",
+      totalHt,
+      totalTva,
+      totalTtc,
+      mentionsLegales,
+      ...(lignesImportees.length > 0
+        ? { lignes: { create: lignesImportees } }
+        : {}),
+    });
+
+    emitter.emit("achat.bcf.crud", {
+      action: "IMPORT_SUPPLIER_INVOICE",
+      idBcf: bonCommande.id,
+      numeroBcf: bonCommande.numeroBcf,
+      decision,
+      idFacture: createdInvoice.id,
+      numeroFacture: createdInvoice.numeroFacture,
+    });
+
+    return {
+      ...createdInvoice,
+      decision,
+      fileUrl,
+      originalFilename: file.originalname || file.filename,
+    };
+  },
+  async getFacturesImportees(idBcf) {
+    const bonCommande = await achatsRepository.bcfById(idBcf);
+    if (!bonCommande) throw new ApiError(404, "NOT_FOUND", "BCF introuvable");
+
+    const rows = await achatsRepository.facturesImporteesBcf(idBcf);
+    return rows.map((row) => {
+      const metadata = parseImportMetadata(row.mentionsLegales || "");
+      return {
+        id: row.id,
+        numeroFacture: row.numeroFacture,
+        statut: row.statut,
+        totalTtc: row.totalTtc,
+        createdAt: row.createdAt,
+        decision: metadata.Decision || "-",
+        fileUrl: metadata["Fichier URL"] || null,
+        originalFilename: metadata["Fichier nom"] || null,
+      };
+    });
   },
   async reception(id, data, ctx) {
     const reception = await achatsRepository.createReception(

@@ -1,0 +1,1 @@
+import{p as o}from"./index-D9LT4Ay_.js";const e=t=>o.get("/produits",{params:t}),p=t=>o.post("/produits",t),d=(t,s)=>o.put(`/produits/${t}`,s),i=t=>o.delete(`/produits/${t}`),u=t=>o.get("/produits/export.pdf",{params:t,responseType:"blob"});export{u as a,i as b,p as c,e as g,d as u};

@@ -172,6 +172,37 @@ export const achatsController = {
       next(e);
     }
   },
+  async importerFactureFournisseur(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await achatsService.importerFactureFournisseur(
+          req.params.id,
+          req.file,
+          req.body,
+          {
+            user: req.user,
+          },
+        ),
+        "Facture fournisseur importee",
+        null,
+        201,
+      );
+    } catch (e) {
+      next(e);
+    }
+  },
+  async getFacturesImportees(req, res, next) {
+    try {
+      return sendSuccess(
+        res,
+        await achatsService.getFacturesImportees(req.params.id),
+        "Factures importees recuperees",
+      );
+    } catch (e) {
+      next(e);
+    }
+  },
   async fournisseurValider(req, res, next) {
     try {
       const result = await achatsService.reponseFournisseur(

@@ -3101,3 +3101,123 @@ Invalid value for argument `statut`. Expected StatutBonCommandeFournisseur. {"st
 2026-08-04T18:56:11.792Z info: Socket deconnecte HMnIsZnn9TO3n8R-AAAF
 2026-08-04T19:27:07.276Z info: Socket connecte yR6FPtI7gWfPbpcYAAAH
 2026-08-04T19:27:29.435Z info: Socket deconnecte yR6FPtI7gWfPbpcYAAAH
+2026-08-04T19:29:11.357Z info: Socket connecte 6EsCoJQJXr2o9bVhAAAJ
+2026-08-04T19:45:13.927Z info: Base de donnees connectee
+2026-08-04T19:45:13.972Z info: Serveur demarre port 3000
+2026-08-04T19:45:40.067Z info: Base de donnees connectee
+2026-08-04T19:45:40.106Z info: Serveur demarre port 3000
+2026-08-04T19:45:52.818Z info: Base de donnees connectee
+2026-08-04T19:45:53.152Z info: Serveur demarre port 3000
+2026-08-04T19:45:53.599Z info: Socket connecte N-HbRoTUDPc3nhE_AAAB
+2026-08-04T19:46:11.762Z info: Socket deconnecte N-HbRoTUDPc3nhE_AAAB
+2026-08-04T19:46:16.789Z info: Socket connecte p2qAe3GVzNXctcIpAAAD
+2026-08-04T19:47:36.676Z info: Base de donnees connectee
+2026-08-04T19:47:36.718Z info: Serveur demarre port 3000
+2026-08-04T19:47:36.914Z info: Socket connecte 2R9DIlwBheBgUVmoAAAB
+2026-08-04T19:48:20.487Z info: Base de donnees connectee
+2026-08-04T19:48:20.530Z info: Serveur demarre port 3000
+2026-08-04T19:48:25.160Z info: Socket connecte CBiB_XaA7QkU2YbXAAAB
+2026-08-04T19:48:28.387Z info: Socket deconnecte CBiB_XaA7QkU2YbXAAAB
+2026-08-04T19:48:35.498Z info: Socket connecte k7yE4Ynnlj_Kmm0KAAAD
+2026-08-04T19:50:11.829Z info: Base de donnees connectee
+2026-08-04T19:50:11.874Z info: Serveur demarre port 3000
+2026-08-04T19:50:11.977Z info: Socket connecte Sny3aToKnsjvAibWAAAB
+2026-08-04T19:56:21.788Z info: Base de donnees connectee
+2026-08-04T19:56:21.833Z info: Serveur demarre port 3000
+2026-08-04T19:56:22.083Z info: Socket connecte uABs5Ol_iZQQGPQvAAAB
+2026-08-04T19:58:38.183Z info: Base de donnees connectee
+2026-08-04T19:58:38.232Z info: Serveur demarre port 3000
+2026-08-04T19:58:42.685Z info: Socket connecte cCma3fNl4QJe2NYpAAAB
+2026-08-04T19:59:17.869Z info: Socket deconnecte cCma3fNl4QJe2NYpAAAB
+2026-08-04T19:59:31.574Z info: Socket connecte _UKWJZA3ObyST_d3AAAD
+2026-08-04T20:02:31.011Z info: Socket deconnecte _UKWJZA3ObyST_d3AAAD
+2026-08-04T20:02:43.503Z info: Socket connecte MntzCER1lHcli8fEAAAF
+2026-08-04T20:05:19.097Z info: Arret du serveur
+2026-08-04T20:05:40.321Z info: Base de donnees connectee
+2026-08-04T20:05:40.348Z info: Serveur demarre port 3000
+2026-08-04T20:05:41.526Z info: Socket connecte W7een6ZuGt6jak-1AAAB
+2026-08-04T20:05:53.512Z info: Socket deconnecte W7een6ZuGt6jak-1AAAB
+2026-08-04T20:06:10.966Z info: Socket connecte 3hVQgEBwYN41vh3KAAAD
+2026-08-04T20:11:50.670Z info: Base de donnees connectee
+2026-08-04T20:11:50.699Z info: Serveur demarre port 3000
+2026-08-04T20:21:38.613Z info: Base de donnees connectee
+2026-08-04T20:21:38.612Z info: Base de donnees connectee
+2026-08-04T20:21:38.659Z info: Serveur demarre port 3000
+2026-08-04T20:21:38.659Z info: Serveur demarre port 3000
+2026-08-04T20:21:38.762Z info: Socket connecte NebxuncDnQOF7SXVAAAB
+2026-08-04T20:36:39.650Z info: Base de donnees connectee
+2026-08-04T20:36:39.649Z info: Base de donnees connectee
+2026-08-04T20:36:39.688Z info: Serveur demarre port 3000
+2026-08-04T20:36:39.688Z info: Serveur demarre port 3000
+2026-08-04T20:36:44.088Z info: Socket connecte wykkIE6CVS_ki6A0AAAB
+2026-08-04T20:45:20.340Z error: getaddrinfo ENOTFOUND smtp.gmail.com {"stack":"Error: getaddrinfo ENOTFOUND smtp.gmail.com\n    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)","code":"EDNS"}
+2026-08-04T20:52:20.032Z info: Base de donnees connectee
+2026-08-04T20:52:20.081Z info: Serveur demarre port 3000
+2026-08-04T20:52:22.656Z info: Socket connecte XcHqCFT9d--twG7AAAAB
+2026-08-04T20:52:25.168Z info: Base de donnees connectee
+2026-08-04T20:52:25.241Z info: Serveur demarre port 3000
+2026-08-04T20:52:55.305Z info: Base de donnees connectee
+2026-08-04T20:52:55.402Z info: Serveur demarre port 3000
+2026-08-04T20:52:56.297Z info: Base de donnees connectee
+2026-08-04T20:52:56.381Z info: Serveur demarre port 3000
+2026-08-04T20:52:57.095Z info: Socket connecte dpiSntQE1bOjOUpLAAAB
+2026-08-04T20:53:27.598Z info: Base de donnees connectee
+2026-08-04T20:53:27.597Z info: Base de donnees connectee
+2026-08-04T20:53:27.635Z info: Serveur demarre port 3000
+2026-08-04T20:53:27.635Z info: Serveur demarre port 3000
+2026-08-04T20:53:28.575Z info: Socket connecte 9svNpNJ7_JSFI_gTAAAB
+2026-08-04T20:54:13.418Z info: Base de donnees connectee
+2026-08-04T20:54:13.441Z info: Serveur demarre port 3000
+2026-08-04T20:54:13.551Z info: Base de donnees connectee
+2026-08-04T20:54:13.579Z info: Serveur demarre port 3000
+2026-08-04T20:54:17.507Z info: Socket connecte Sr8GMv8LvviUW6vpAAAB
+2026-08-04T23:16:35.213Z info: Socket deconnecte Sr8GMv8LvviUW6vpAAAB
+2026-08-05T06:26:25.239Z info: Socket connecte and0Cb2fP0UjsXFyAAAD
+2026-08-05T06:29:33.217Z info: Base de donnees connectee
+2026-08-05T06:29:33.228Z info: Serveur demarre port 3000
+2026-08-05T06:31:16.078Z info: Socket deconnecte and0Cb2fP0UjsXFyAAAD
+2026-08-05T06:31:26.310Z info: Socket connecte 4cMC7YQKhqjaMN8aAAAF
+2026-08-05T06:32:41.038Z info: Socket deconnecte 4cMC7YQKhqjaMN8aAAAF
+2026-08-05T06:32:45.435Z info: Socket connecte o64tOc5gdG0K9exTAAAH
+2026-08-05T07:09:20.996Z info: Base de donnees connectee
+2026-08-05T07:09:21.219Z info: Serveur demarre port 3000
+2026-08-05T07:09:21.634Z info: Socket connecte Jra8ChXom0LhtBV2AAAC
+2026-08-05T07:09:22.645Z info: Base de donnees connectee
+2026-08-05T07:09:22.769Z info: Serveur demarre port 3000
+2026-08-05T07:09:38.936Z info: Base de donnees connectee
+2026-08-05T07:09:38.966Z info: Serveur demarre port 3000
+2026-08-05T07:09:39.121Z info: Socket connecte xveVhbf7S_i_wVgLAAAB
+2026-08-05T07:09:39.223Z info: Base de donnees connectee
+2026-08-05T07:09:39.241Z info: Serveur demarre port 3000
+2026-08-05T07:38:11.617Z info: Socket deconnecte xveVhbf7S_i_wVgLAAAB
+2026-08-05T07:43:14.348Z info: Base de donnees connectee
+2026-08-05T07:43:14.408Z info: Serveur demarre port 3000
+2026-08-05T07:43:15.747Z info: Base de donnees connectee
+2026-08-05T07:43:15.824Z info: Serveur demarre port 3000
+2026-08-05T07:44:02.722Z info: Base de donnees connectee
+2026-08-05T07:44:02.857Z info: Serveur demarre port 3000
+2026-08-05T07:44:05.472Z info: Base de donnees connectee
+2026-08-05T07:44:05.575Z info: Serveur demarre port 3000
+2026-08-05T07:44:52.008Z info: Base de donnees connectee
+2026-08-05T07:44:52.363Z info: Serveur demarre port 3000
+2026-08-05T07:44:54.309Z info: Base de donnees connectee
+2026-08-05T07:44:54.429Z info: Serveur demarre port 3000
+2026-08-05T07:47:38.044Z info: Base de donnees connectee
+2026-08-05T07:47:38.466Z info: Serveur demarre port 3000
+2026-08-05T07:47:47.097Z info: Base de donnees connectee
+2026-08-05T07:47:47.205Z info: Serveur demarre port 3000
+2026-08-05T07:48:23.954Z info: Base de donnees connectee
+2026-08-05T07:48:24.015Z info: Serveur demarre port 3000
+2026-08-05T07:48:25.084Z info: Base de donnees connectee
+2026-08-05T07:48:25.119Z info: Serveur demarre port 3000
+2026-08-05T07:52:55.360Z info: Socket connecte Fx6Gf0tG-9aU1u3-AAAB
+2026-08-05T07:56:21.431Z info: Socket deconnecte Fx6Gf0tG-9aU1u3-AAAB
+2026-08-05T07:56:24.881Z info: Socket connecte sh_fXg52aWNqPeEoAAAD
+2026-08-05T07:59:12.397Z info: Socket deconnecte sh_fXg52aWNqPeEoAAAD
+2026-08-05T07:59:14.414Z info: Socket connecte G1rNiCQVTIHVnC41AAAF
+2026-08-05T08:01:52.416Z info: Socket deconnecte G1rNiCQVTIHVnC41AAAF
+2026-08-05T08:01:53.955Z info: Socket connecte btFWwS9JNVLMctVAAAAH
+2026-08-05T10:30:52.206Z info: Socket deconnecte btFWwS9JNVLMctVAAAAH
+2026-08-05T10:31:23.540Z info: Base de donnees connectee
+2026-08-05T10:31:23.561Z info: Serveur demarre port 3000
+2026-08-05T10:31:38.199Z info: Socket connecte 845x8ygfQJDrzKQsAAAJ

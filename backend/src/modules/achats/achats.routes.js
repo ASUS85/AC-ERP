@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.middleware.js";
+import { uploadSupplierInvoiceSingle } from "../../middlewares/upload.middleware.js";
 import { achatsController } from "./achats.controller.js";
 
 const router = Router();
@@ -38,6 +39,15 @@ router.get(
   achatsController.telechargerBonCommandeInterne,
 );
 router.post("/bons-commande/:id/facture", achatsController.creerFactureAchat);
+router.get(
+  "/bons-commande/:id/factures-importees",
+  achatsController.getFacturesImportees,
+);
+router.post(
+  "/bons-commande/:id/factures-importees",
+  uploadSupplierInvoiceSingle("file"),
+  achatsController.importerFactureFournisseur,
+);
 router.post("/bons-commande/:id/reception", achatsController.reception);
 
 export default router;

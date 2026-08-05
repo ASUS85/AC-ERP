@@ -29,5 +29,18 @@ export const creerFactureAchatDepuisBcf = (
   id: string,
   data?: { dateEcheance?: string; mentionsLegales?: string },
 ) => api.post(`/achats/bons-commande/${id}/facture`, data || {});
+export const importerFactureFournisseurBcf = (
+  id: string,
+  payload: { file: File; decision: "VALIDER" | "REJETER" },
+) => {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  formData.append("decision", payload.decision);
+  return api.post(`/achats/bons-commande/${id}/factures-importees`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+export const getFacturesImporteesBcf = (id: string) =>
+  api.get(`/achats/bons-commande/${id}/factures-importees`);
 export const receptionBonCommandeFournisseur = (id: string, data: unknown) =>
   api.post(`/achats/bons-commande/${id}/reception`, data);

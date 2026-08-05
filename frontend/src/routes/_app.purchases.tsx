@@ -28,12 +28,13 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { fmtCurrency } from "@/lib/erp-data";
 import { cn } from "@/lib/utils";
 import {
-  creerFactureAchatDepuisBcf,
   createBonCommandeFournisseur,
   dupliquerBonCommandeFournisseur,
   envoyerBonCommandeFournisseur,
   getBonCommandeFournisseurById,
   getBonsCommandeFournisseur,
+  getFacturesImporteesBcf,
+  importerFactureFournisseurBcf,
   receptionBonCommandeFournisseur,
   telechargerBonCommandeFournisseurPdf,
   transitionBonCommandeFournisseur,
@@ -126,6 +127,17 @@ type ReceptionLine = {
   quantiteDejaRecue: number;
   restant: number;
   quantiteARecevoir: number;
+};
+
+type ImportedInvoiceItem = {
+  id: string;
+  numeroFacture: string;
+  statut: string;
+  totalTtc?: number | string;
+  createdAt?: string;
+  decision?: string;
+  fileUrl?: string | null;
+  originalFilename?: string | null;
 };
 
 type WizardGeneralErrors = Partial<Record<keyof WizardGeneralForm, string>>;
@@ -259,6 +271,18 @@ function PurchasesPage() {
     ref: string;
     lines: ReceptionLine[];
   } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importOrder, setImportOrder] = useState<{
+    id: string;
+    ref: string;
+  } | null>(null);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreviewUrl, setImportPreviewUrl] = useState<string | null>(null);
+  const [importSubmitting, setImportSubmitting] = useState(false);
+  const [importedInvoices, setImportedInvoices] = useState<
+    ImportedInvoiceItem[]
+  >([]);
+  const [importedInvoicesLoading, setImportedInvoicesLoading] = useState(false);
 
   const resetCreateWizard = () => {
     setCreateStep(1);
@@ -836,21 +860,86 @@ function PurchasesPage() {
     }
   };
 
-  const createSupplierInvoice = async (orderId: string) => {
+  const openImportInvoiceModal = async (orderId: string) => {
+    const row = rows.find((item) => item.id === orderId);
+    setImportOrder({ id: orderId, ref: row?.ref || "BCF" });
+    setImportOpen(true);
+    setImportFile(null);
+    if (importPreviewUrl) {
+      URL.revokeObjectURL(importPreviewUrl);
+      setImportPreviewUrl(null);
+    }
+    setImportedInvoicesLoading(true);
     try {
-      const response = (await creerFactureAchatDepuisBcf(orderId)) as {
-        data?: { numeroFacture?: string };
+      const response = (await getFacturesImporteesBcf(orderId)) as {
+        data?: ImportedInvoiceItem[];
       };
-      const numero = response?.data?.numeroFacture;
-      toast.success(
-        numero ? `Facture achat creee: ${numero}` : "Facture achat creee",
-      );
+      setImportedInvoices(Array.isArray(response?.data) ? response.data : []);
     } catch (error: unknown) {
       const maybeMessage =
         error && typeof error === "object" && "message" in error
           ? String((error as { message?: unknown }).message || "")
           : "";
-      toast.error(maybeMessage.trim() || "Creation de facture impossible");
+      toast.error(
+        maybeMessage.trim() || "Impossible de charger les factures importees",
+      );
+      setImportedInvoices([]);
+    } finally {
+      setImportedInvoicesLoading(false);
+    }
+  };
+
+  const onImportFileChange = (file: File | null) => {
+    setImportFile(file);
+    if (importPreviewUrl) {
+      URL.revokeObjectURL(importPreviewUrl);
+      setImportPreviewUrl(null);
+    }
+    if (file && file.type === "application/pdf") {
+      setImportPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const submitImportInvoiceDecision = async (
+    decision: "VALIDER" | "REJETER",
+  ) => {
+    if (!importOrder?.id) return;
+    if (!importFile) {
+      toast.error("Selectionnez d'abord un fichier PDF, DOC ou DOCX");
+      return;
+    }
+
+    setImportSubmitting(true);
+    try {
+      const response = (await importerFactureFournisseurBcf(importOrder.id, {
+        file: importFile,
+        decision,
+      })) as { data?: { numeroFacture?: string } };
+
+      const numero = response?.data?.numeroFacture;
+      toast.success(
+        numero
+          ? `Facture importee ${decision.toLowerCase()}: ${numero}`
+          : `Facture importee ${decision.toLowerCase()}`,
+      );
+
+      onImportFileChange(null);
+
+      const listResponse = (await getFacturesImporteesBcf(importOrder.id)) as {
+        data?: ImportedInvoiceItem[];
+      };
+      setImportedInvoices(
+        Array.isArray(listResponse?.data) ? listResponse.data : [],
+      );
+      await loadRows();
+    } catch (error: unknown) {
+      const maybeMessage =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: unknown }).message || "")
+          : "";
+      toast.error(maybeMessage.trim() || "Import de facture impossible");
+    } finally {
+      setImportSubmitting(false);
     }
   };
 
@@ -1064,10 +1153,10 @@ function PurchasesPage() {
     if (row.statutRaw === "RECU_PARTIEL") {
       return [
         makeAction(
-          "create-invoice",
-          "Creer facture achat",
+          "import-invoice",
+          "Importer facture fournisseur",
           <FileEdit className="mr-2 h-4 w-4" />,
-          () => createSupplierInvoice(row.id),
+          () => openImportInvoiceModal(row.id),
         ),
         makeAction(
           "new-reception",
@@ -1099,10 +1188,10 @@ function PurchasesPage() {
     if (row.statutRaw === "RECU_TOTAL") {
       return [
         makeAction(
-          "create-invoice",
-          "Creer facture achat",
+          "import-invoice",
+          "Importer facture fournisseur",
           <FileEdit className="mr-2 h-4 w-4" />,
-          () => createSupplierInvoice(row.id),
+          () => openImportInvoiceModal(row.id),
         ),
         makeAction(
           "download-pdf",
@@ -1959,6 +2048,161 @@ function PurchasesPage() {
             ))}
           </div>
         ) : null}
+      </AppModal>
+
+      <AppModal
+        open={importOpen}
+        onOpenChange={(open) => {
+          setImportOpen(open);
+          if (!open) {
+            setImportOrder(null);
+            setImportFile(null);
+            setImportedInvoices([]);
+            if (importPreviewUrl) {
+              URL.revokeObjectURL(importPreviewUrl);
+              setImportPreviewUrl(null);
+            }
+          }
+        }}
+        title="Import facture fournisseur"
+        description={
+          importOrder
+            ? `Bon ${importOrder.ref} - importer un document fournisseur (PDF, DOC, DOCX)`
+            : ""
+        }
+        size="xxl"
+        position="center"
+        footer={
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              variant="outline"
+              disabled={importSubmitting}
+              onClick={() => setImportOpen(false)}
+            >
+              Annuler
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="bg-red-600 text-white hover:bg-red-700 border-red-700 text-white"
+                disabled={importSubmitting || !importFile}
+                onClick={() => void submitImportInvoiceDecision("REJETER")}
+              >
+                {importSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Rejeter
+              </Button>
+              <Button
+                disabled={importSubmitting || !importFile}
+                onClick={() => void submitImportInvoiceDecision("VALIDER")}
+              >
+                {importSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Valider
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplier-invoice-file">
+                Fichier facture fournisseur (PDF, DOC, DOCX)
+              </Label>
+              <Input
+                id="supplier-invoice-file"
+                type="file"
+                accept="application/pdf,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(e) =>
+                  onImportFileChange(e.target.files?.[0] || null)
+                }
+              />
+              {importFile ? (
+                <p className="text-xs text-muted-foreground">
+                  {importFile.name} ·{" "}
+                  {(importFile.size / 1024 / 1024).toFixed(2)} Mo
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Ajoutez la facture fournisseur puis choisissez Valider ou
+                  Rejéter.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-md border border-border p-3">
+              <p className="mb-2 text-sm font-medium">
+                Factures déjà importées
+              </p>
+              {importedInvoicesLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
+                </div>
+              ) : importedInvoices.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Aucune facture importee pour ce bon.
+                </p>
+              ) : (
+                <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
+                  {importedInvoices.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-md border border-border/70 px-3 py-2 text-sm"
+                    >
+                      <p className="font-medium text-foreground">
+                        {item.numeroFacture}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Decision: {item.decision || "-"} · Statut: {item.statut}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleString("fr-FR")
+                          : "-"}
+                        {" · "}
+                        {fmtCurrency(Number(item.totalTtc || 0))}
+                      </p>
+                      {item.fileUrl ? (
+                        <a
+                          href={`${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, "") || "http://localhost:3000"}${item.fileUrl}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-primary underline"
+                        >
+                          Ouvrir le fichier
+                        </a>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-border p-2">
+            {importFile ? (
+              importFile.type === "application/pdf" && importPreviewUrl ? (
+                <iframe
+                  src={importPreviewUrl}
+                  title="Apercu facture fournisseur"
+                  className="h-[68vh] w-full rounded-md"
+                />
+              ) : (
+                <div className="flex h-[68vh] items-center justify-center text-center text-sm text-muted-foreground">
+                  Apercu integre indisponible pour ce format.\nLe document sera
+                  tout de meme importe.
+                </div>
+              )
+            ) : (
+              <div className="flex h-[68vh] items-center justify-center text-sm text-muted-foreground">
+                Selectionnez un fichier pour afficher l'apercu.
+              </div>
+            )}
+          </div>
+        </div>
       </AppModal>
 
       <AppModal
