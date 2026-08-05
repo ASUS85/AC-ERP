@@ -24,6 +24,7 @@ export function DataTable<T extends Record<string, any>>({
   withActions = true,
   rowActions,
   isRowActionLoading,
+  onRowClick,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -36,6 +37,7 @@ export function DataTable<T extends Record<string, any>>({
     onClick: () => void;
   }>;
   isRowActionLoading?: (row: T) => boolean;
+  onRowClick?: (row: T) => void;
 }) {
   const align = (a?: string) =>
     a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left";
@@ -66,13 +68,17 @@ export function DataTable<T extends Record<string, any>>({
           {rows.map((row) => (
             <tr
               key={rowKey(row)}
-              className="border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/40"
+              className={cn(
+                "border-b border-border/60 transition-colors last:border-0 hover:bg-secondary/40",
+                onRowClick ? "cursor-pointer" : "",
+              )}
+              onClick={() => onRowClick?.(row)}
             >
               {columns.map((c, index) => (
                 <td
                   key={`${c.key}-${index}`}
                   className={cn(
-                    "px-3 py-3.5 first:pl-1",
+                    "px-3 py-2 first:pl-1",
                     align(c.align),
                     c.className,
                   )}
@@ -86,7 +92,7 @@ export function DataTable<T extends Record<string, any>>({
               ))}
 
               {withActions && (
-                <td className="px-3 py-3.5 text-right">
+                <td className="px-3 py-1 text-right">
                   {rowActions ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -100,6 +106,7 @@ export function DataTable<T extends Record<string, any>>({
                               aria-label={
                                 isBusy ? "Action en cours" : "Actions"
                               }
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {isBusy ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -121,7 +128,10 @@ export function DataTable<T extends Record<string, any>>({
                                 action.destructive &&
                                   "text-destructive focus:text-destructive",
                               )}
-                              onClick={action.onClick}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                action.onClick();
+                              }}
                             >
                               {action.icon}
                               {action.label}

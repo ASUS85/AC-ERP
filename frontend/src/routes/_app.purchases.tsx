@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Truck,
   PackageCheck,
+  ReceiptText,
   Loader2,
   Trash2,
   ArrowRight,
@@ -24,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { fmtCurrency } from "@/lib/erp-data";
 import { cn } from "@/lib/utils";
@@ -55,6 +57,23 @@ type BonCommandeApi = {
   totalTtc?: number | string;
   statut: string;
   fournisseur?: { raisonSociale?: string | null } | null;
+  receptions?: Array<{
+    id: string;
+    dateReception?: string;
+    statut: string;
+    notes?: string | null;
+    createdAt?: string;
+    utilisateur?: {
+      nom?: string | null;
+      prenom?: string | null;
+      email?: string | null;
+    } | null;
+    lignes?: Array<{
+      id: string;
+      quantiteRecue?: number;
+      idLigneBcf?: string;
+    }>;
+  }>;
   lignes?: Array<{
     id: string;
     idProduit: string;
@@ -80,6 +99,19 @@ type PurchaseRow = {
   articles: number;
   date: string;
   montant: number;
+  statut: string;
+  statutRaw: string;
+  factureRecue: boolean;
+};
+
+type ReceptionRow = {
+  id: string;
+  reference: string;
+  date: string;
+  fournisseur: string;
+  utilisateur: string;
+  lignes: number;
+  quantiteRecue: number;
   statut: string;
   statutRaw: string;
 };
@@ -166,34 +198,8 @@ const toInputDate = (date: Date) => {
   return local.toISOString().slice(0, 10);
 };
 
-const cols: Column<PurchaseRow>[] = [
-  {
-    key: "ref",
-    header: "Bon de commande",
-    render: (o) => <span className="font-medium text-foreground">{o.ref}</span>,
-  },
-  { key: "fournisseur", header: "Fournisseur" },
-  { key: "articles", header: "Articles", align: "right" },
-  { key: "date", header: "Date" },
-  {
-    key: "montant",
-    header: "Montant",
-    align: "right",
-    render: (o) => (
-      <span className="font-medium text-foreground">
-        {fmtCurrency(o.montant)}
-      </span>
-    ),
-  },
-  {
-    key: "statut",
-    header: "Statut",
-    align: "right",
-    render: (o) => <StatusBadge status={o.statut} />,
-  },
-];
-
 const PAGE_SIZE = 10;
+const RECEPTION_PAGE_SIZE = 8;
 
 const STATUS_LABELS: Record<string, string> = {
   BROUILLON: "Brouillon",
@@ -209,6 +215,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 const normalizeStatus = (status?: string) =>
   STATUS_LABELS[status || ""] || status || "-";
+
+const normalizeReceptionStatus = (status?: string) => {
+  if (status === "CONFORME") return "Valide";
+  if (status === "PARTIELLE") return "Brouillon";
+  if (status === "NON_CONFORME") return "Annule";
+  return status || "-";
+};
 
 const toNumber = (value: unknown, fallback = 0) => {
   const n = Number(value);
@@ -256,7 +269,12 @@ function PurchasesPage() {
   const [confirmationError, setConfirmationError] = useState("");
 
   const [receptionOpen, setReceptionOpen] = useState(false);
+  const [receptionStep, setReceptionStep] = useState(1);
   const [receptionSubmitting, setReceptionSubmitting] = useState(false);
+  const [receptionGeneralForm, setReceptionGeneralForm] = useState({
+    date: todayDate,
+    observations: "",
+  });
   const [rowActionPendingById, setRowActionPendingById] = useState<
     Record<string, string>
   >({});
@@ -283,6 +301,28 @@ function PurchasesPage() {
     ImportedInvoiceItem[]
   >([]);
   const [importedInvoicesLoading, setImportedInvoicesLoading] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsOrder, setDetailsOrder] = useState<BonCommandeApi | null>(null);
+  const [receptionRowsSearch, setReceptionRowsSearch] = useState("");
+  const [receptionRowsStatusFilter, setReceptionRowsStatusFilter] =
+    useState("");
+  const [receptionRowsPage, setReceptionRowsPage] = useState(1);
+  const [invoiceWizardOpen, setInvoiceWizardOpen] = useState(false);
+  const [invoiceWizardStep, setInvoiceWizardStep] = useState(1);
+  const [invoiceWizardSubmitting, setInvoiceWizardSubmitting] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState({
+    numeroFacture: "",
+    dateFacture: todayDate,
+    dateEcheance: "",
+    montantHt: "",
+    tva: "",
+    ttc: "",
+    remise: "",
+    transport: "",
+    observations: "",
+  });
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
 
   const resetCreateWizard = () => {
     setCreateStep(1);
@@ -313,20 +353,42 @@ function PurchasesPage() {
         data?: BonCommandeApi[];
       };
       const bcf = Array.isArray(response?.data) ? response.data : [];
-      setRows(
-        bcf.map((item) => ({
-          id: item.id,
-          ref: item.numeroBcf,
-          fournisseur: item.fournisseur?.raisonSociale || "-",
-          articles: item.lignes?.length || 0,
-          date: item.dateCommande
-            ? new Date(item.dateCommande).toLocaleDateString("fr-FR")
-            : "-",
-          montant: Number(item.totalTtc || 0),
-          statut: normalizeStatus(item.statut),
-          statutRaw: item.statut,
-        })),
+      const rowsWithInvoiceState = await Promise.all(
+        bcf.map(async (item) => {
+          let factureRecue = item.statut === "FACTURE_RECU";
+
+          if (!factureRecue) {
+            try {
+              const invoiceResponse = (await getFacturesImporteesBcf(
+                item.id,
+              )) as {
+                data?: ImportedInvoiceItem[];
+              };
+              factureRecue = Array.isArray(invoiceResponse?.data)
+                ? invoiceResponse.data.length > 0
+                : false;
+            } catch {
+              factureRecue = false;
+            }
+          }
+
+          return {
+            id: item.id,
+            ref: item.numeroBcf,
+            fournisseur: item.fournisseur?.raisonSociale || "-",
+            articles: item.lignes?.length || 0,
+            date: item.dateCommande
+              ? new Date(item.dateCommande).toLocaleDateString("fr-FR")
+              : "-",
+            montant: Number(item.totalTtc || 0),
+            statut: normalizeStatus(item.statut),
+            statutRaw: item.statut,
+            factureRecue,
+          };
+        }),
       );
+
+      setRows(rowsWithInvoiceState);
     } catch {
       setRows([]);
       toast.error("Impossible de charger les bons de commande");
@@ -362,6 +424,10 @@ function PurchasesPage() {
     setPage(1);
   }, [search, statusFilter]);
 
+  useEffect(() => {
+    setReceptionRowsPage(1);
+  }, [receptionRowsSearch, receptionRowsStatusFilter]);
+
   const filterOptions = useMemo(
     () => [
       { label: "Tous les statuts", value: "" },
@@ -389,6 +455,160 @@ function PurchasesPage() {
   const paginatedRows = useMemo(
     () => filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [filteredRows, page],
+  );
+
+  const receptionRows = useMemo<ReceptionRow[]>(() => {
+    if (!detailsOrder) return [];
+    const supplierName = detailsOrder.fournisseur?.raisonSociale || "-";
+    return (detailsOrder.receptions || []).map((item, index) => {
+      const userName = item.utilisateur
+        ? [item.utilisateur.prenom, item.utilisateur.nom]
+            .filter(Boolean)
+            .join(" ")
+        : "-";
+      const quantiteRecue = (item.lignes || []).reduce(
+        (acc, line) => acc + toNumber(line.quantiteRecue, 0),
+        0,
+      );
+      return {
+        id: item.id,
+        reference: `REC-${String(index + 1).padStart(3, "0")}`,
+        date: item.dateReception
+          ? new Date(item.dateReception).toLocaleDateString("fr-FR")
+          : "-",
+        fournisseur: supplierName,
+        utilisateur: userName || "-",
+        lignes: item.lignes?.length || 0,
+        quantiteRecue,
+        statut: normalizeReceptionStatus(item.statut),
+        statutRaw: item.statut,
+      };
+    });
+  }, [detailsOrder]);
+
+  const receptionFilterOptions = useMemo(
+    () => [
+      { label: "Tous les statuts", value: "" },
+      ...Array.from(new Set(receptionRows.map((row) => row.statutRaw)))
+        .filter(Boolean)
+        .map((status) => ({
+          label: normalizeReceptionStatus(status),
+          value: status,
+        })),
+    ],
+    [receptionRows],
+  );
+
+  const filteredReceptionRows = useMemo(() => {
+    const q = receptionRowsSearch.trim().toLowerCase();
+    return receptionRows.filter((row) => {
+      const searchMatch =
+        !q ||
+        row.reference.toLowerCase().includes(q) ||
+        row.fournisseur.toLowerCase().includes(q) ||
+        row.utilisateur.toLowerCase().includes(q);
+      const statusMatch =
+        !receptionRowsStatusFilter ||
+        row.statutRaw === receptionRowsStatusFilter;
+      return searchMatch && statusMatch;
+    });
+  }, [receptionRows, receptionRowsSearch, receptionRowsStatusFilter]);
+
+  const receptionTotalPages = Math.max(
+    1,
+    Math.ceil(filteredReceptionRows.length / RECEPTION_PAGE_SIZE),
+  );
+
+  const paginatedReceptionRows = useMemo(
+    () =>
+      filteredReceptionRows.slice(
+        (receptionRowsPage - 1) * RECEPTION_PAGE_SIZE,
+        receptionRowsPage * RECEPTION_PAGE_SIZE,
+      ),
+    [filteredReceptionRows, receptionRowsPage],
+  );
+
+  const openInvoiceWizard = async (orderId?: string) => {
+    const selectedOrderId = orderId || detailsOrder?.id;
+    if (!selectedOrderId) return;
+
+    const row = rows.find((item) => item.id === selectedOrderId);
+    if (!detailsOrder || detailsOrder.id !== selectedOrderId) {
+      await openDetailsModal(selectedOrderId);
+    }
+    setImportOrder({ id: selectedOrderId, ref: row?.ref || "BCF" });
+    setInvoiceWizardStep(1);
+    setInvoiceWizardOpen(true);
+  };
+
+  const purchaseColumns: Column<PurchaseRow>[] = [
+    {
+      key: "ref",
+      header: "Bon de commande",
+      render: (o) => (
+        <span className="font-medium text-foreground">{o.ref}</span>
+      ),
+    },
+    { key: "fournisseur", header: "Fournisseur" },
+    { key: "articles", header: "Articles", align: "right" },
+    { key: "date", header: "Date" },
+    {
+      key: "montant",
+      header: "Montant",
+      align: "right",
+      render: (o) => (
+        <span className="font-medium text-foreground">
+          {fmtCurrency(o.montant)}
+        </span>
+      ),
+    },
+    {
+      key: "statut",
+      header: "Statut",
+      align: "right",
+      render: (o) => <StatusBadge status={o.statut} />,
+    },
+    {
+      key: "factureRecue",
+      header: "Facture recue",
+      align: "center",
+      render: (o) => (
+        <div
+          className="flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Switch
+            checked={o.factureRecue}
+            onCheckedChange={() => {
+              void openInvoiceWizard(o.id);
+            }}
+            aria-label={`Facture recue pour ${o.ref}`}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const receptionColumns = useMemo<Column<ReceptionRow>[]>(
+    () => [
+      { key: "reference", header: "Reference" },
+      { key: "date", header: "Date" },
+      { key: "fournisseur", header: "Fournisseur" },
+      { key: "utilisateur", header: "Utilisateur" },
+      { key: "lignes", header: "Lignes", align: "right" },
+      {
+        key: "quantiteRecue",
+        header: "Quantite recue",
+        align: "right",
+      },
+      {
+        key: "statut",
+        header: "Statut",
+        align: "right",
+        render: (row) => <StatusBadge status={row.statut} />,
+      },
+    ],
+    [],
   );
 
   const steps = useMemo(() => {
@@ -696,7 +916,25 @@ function PurchasesPage() {
     }
   };
 
-  const openReceptionModal = async (orderId: string) => {
+  const buildReceptionLinesFromOrder = (
+    order: BonCommandeApi,
+  ): ReceptionLine[] =>
+    (order.lignes || []).map((line) => {
+      const commandee = toNumber(line.quantiteCommandee, 0);
+      const dejaRecue = toNumber(line.quantiteRecue, 0);
+      const restant = Math.max(0, commandee - dejaRecue);
+      return {
+        idLigneBcf: line.id,
+        produit: `${line.produit?.designation || "Produit"} (${line.produit?.reference || "-"})`,
+        quantiteCommandee: commandee,
+        quantiteDejaRecue: dejaRecue,
+        restant,
+        quantiteARecevoir: 0,
+      };
+    });
+
+  const openDetailsModal = async (orderId: string) => {
+    setDetailsLoading(true);
     try {
       const response = (await getBonCommandeFournisseurById(orderId)) as {
         data?: BonCommandeApi;
@@ -706,27 +944,51 @@ function PurchasesPage() {
         toast.error("Bon de commande introuvable");
         return;
       }
-      const receptionLines: ReceptionLine[] = (order.lignes || []).map(
-        (line) => {
-          const commandee = toNumber(line.quantiteCommandee, 0);
-          const dejaRecue = toNumber(line.quantiteRecue, 0);
-          const restant = Math.max(0, commandee - dejaRecue);
-          return {
-            idLigneBcf: line.id,
-            produit: `${line.produit?.designation || "Produit"} (${line.produit?.reference || "-"})`,
-            quantiteCommandee: commandee,
-            quantiteDejaRecue: dejaRecue,
-            restant,
-            quantiteARecevoir: 0,
-          };
-        },
-      );
+      try {
+        const imported = (await getFacturesImporteesBcf(order.id)) as {
+          data?: ImportedInvoiceItem[];
+        };
+        setImportedInvoices(Array.isArray(imported?.data) ? imported.data : []);
+      } catch {
+        setImportedInvoices([]);
+      }
+      setDetailsOrder(order);
+      setReceptionRowsSearch("");
+      setReceptionRowsStatusFilter("");
+      setReceptionRowsPage(1);
+      setDetailsOpen(true);
+    } catch {
+      toast.error("Impossible de charger le detail du bon");
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const openReceptionModal = async (orderId?: string) => {
+    const selectedOrderId = orderId || detailsOrder?.id;
+    if (!selectedOrderId) return;
+
+    try {
+      const response = (await getBonCommandeFournisseurById(
+        selectedOrderId,
+      )) as {
+        data?: BonCommandeApi;
+      };
+      const order = response?.data;
+      if (!order) {
+        toast.error("Bon de commande introuvable");
+        return;
+      }
+      const receptionLines = buildReceptionLinesFromOrder(order);
       setReceptionOrder({
         id: order.id,
         ref: order.numeroBcf,
         lines: receptionLines,
       });
+      setReceptionGeneralForm({ date: todayDate, observations: "" });
+      setReceptionStep(1);
       setReceptionOpen(true);
+      setDetailsOrder(order);
     } catch {
       toast.error("Impossible de charger le detail du bon");
     }
@@ -753,7 +1015,9 @@ function PurchasesPage() {
       toast.success("Reception enregistree");
       setReceptionOpen(false);
       setReceptionOrder(null);
+      setReceptionStep(1);
       await loadRows();
+      await openDetailsModal(receptionOrder.id);
     } catch {
       toast.error("Impossible d'enregistrer la reception");
     } finally {
@@ -1154,9 +1418,9 @@ function PurchasesPage() {
       return [
         makeAction(
           "import-invoice",
-          "Importer facture fournisseur",
+          "Ajouter facture fournisseur",
           <FileEdit className="mr-2 h-4 w-4" />,
-          () => openImportInvoiceModal(row.id),
+          () => openInvoiceWizard(row.id),
         ),
         makeAction(
           "new-reception",
@@ -1189,9 +1453,9 @@ function PurchasesPage() {
       return [
         makeAction(
           "import-invoice",
-          "Importer facture fournisseur",
+          "Ajouter facture fournisseur",
           <FileEdit className="mr-2 h-4 w-4" />,
-          () => openImportInvoiceModal(row.id),
+          () => openInvoiceWizard(row.id),
         ),
         makeAction(
           "download-pdf",
@@ -1322,11 +1586,14 @@ function PurchasesPage() {
         ) : (
           <>
             <DataTable
-              columns={cols}
+              columns={purchaseColumns}
               rows={paginatedRows}
               rowKey={(o) => o.id}
               rowActions={actionsByStatus}
               isRowActionLoading={(o) => Boolean(rowActionPendingById[o.id])}
+              onRowClick={(row) => {
+                void openDetailsModal(row.id);
+              }}
             />
             <Pagination
               count={filteredRows.length}
@@ -1338,6 +1605,89 @@ function PurchasesPage() {
           </>
         )}
       </SectionCard>
+
+      <AppModal
+        open={detailsOpen}
+        onOpenChange={(open) => {
+          setDetailsOpen(open);
+          if (!open) setDetailsOrder(null);
+        }}
+        title={detailsOrder ? `Bon ${detailsOrder.numeroBcf}` : "Detail bon"}
+        description="Receptions independantes et facture fournisseur"
+        size="xxl"
+        footer={
+          <div className="flex items-center justify-end">
+            <Button variant="outline" onClick={() => setDetailsOpen(false)}>
+              Fermer
+            </Button>
+          </div>
+        }
+      >
+        {detailsLoading ? (
+          <div className="flex justify-center py-14">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : detailsOrder ? (
+          <div className="space-y-6">
+            <PageHeader
+              title={`Receptions - ${detailsOrder.numeroBcf}`}
+              description="Pilotage des receptions et facture fournisseur"
+              breadcrumb={["Achats", "Bon de commande", "Receptions"]}
+              actions={
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void openInvoiceWizard(detailsOrder.id)}
+                  >
+                    <ReceiptText className="mr-1 h-4 w-4" /> Ajouter facture
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => void openReceptionModal(detailsOrder.id)}
+                  >
+                    <Plus className="mr-1 h-4 w-4" /> Nouvelle reception
+                  </Button>
+                </div>
+              }
+            />
+
+            <SectionCard title="Liste des receptions">
+              <div className="mb-4">
+                <Toolbar
+                  placeholder="Rechercher une reception..."
+                  searchValue={receptionRowsSearch}
+                  onSearchChange={setReceptionRowsSearch}
+                  filterOptions={receptionFilterOptions}
+                  selectedFilter={receptionRowsStatusFilter}
+                  onFilterChange={setReceptionRowsStatusFilter}
+                  filterPlaceholder="Filtrer par statut"
+                  filterSearchPlaceholder="Rechercher un statut"
+                />
+              </div>
+
+              <DataTable
+                columns={receptionColumns}
+                rows={paginatedReceptionRows}
+                rowKey={(row) => row.id}
+                withActions={false}
+              />
+
+              <Pagination
+                count={filteredReceptionRows.length}
+                currentPage={receptionRowsPage}
+                totalPages={receptionTotalPages}
+                pageSize={RECEPTION_PAGE_SIZE}
+                onPageChange={setReceptionRowsPage}
+              />
+            </SectionCard>
+          </div>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Aucun detail disponible.
+          </p>
+        )}
+      </AppModal>
 
       <AppModal
         open={createOpen}
@@ -1965,15 +2315,15 @@ function PurchasesPage() {
           if (!receptionSubmitting) setReceptionOpen(open);
           if (!open) setReceptionOrder(null);
         }}
-        title="Reception des marchandises"
+        title="Nouvelle reception"
         description={
           receptionOrder
-            ? `Bon ${receptionOrder.ref} - saisir les quantites recues`
+            ? `Bon ${receptionOrder.ref} - wizard de reception`
             : ""
         }
-        size="xl"
+        size="xxl"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-between gap-2">
             <Button
               variant="outline"
               disabled={receptionSubmitting}
@@ -1982,92 +2332,245 @@ function PurchasesPage() {
                 setReceptionOrder(null);
               }}
             >
-              Fermer
+              Annuler
             </Button>
-            <Button
-              disabled={receptionSubmitting}
-              onClick={() => void submitReception()}
-            >
-              {receptionSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <div className="flex items-center gap-2">
+              {receptionStep > 1 ? (
+                <Button
+                  variant="outline"
+                  disabled={receptionSubmitting}
+                  onClick={() =>
+                    setReceptionStep((prev) => Math.max(1, prev - 1))
+                  }
+                >
+                  <ArrowLeft className="mr-1 h-4 w-4" /> Retour
+                </Button>
               ) : null}
-              Enregistrer la reception
-            </Button>
+              {receptionStep < 3 ? (
+                <Button
+                  disabled={receptionSubmitting}
+                  onClick={() => {
+                    if (receptionStep === 2) {
+                      const hasAnyQty =
+                        receptionOrder?.lines.some(
+                          (line) => line.quantiteARecevoir > 0,
+                        ) ?? false;
+                      if (!hasAnyQty) {
+                        toast.error("Saisissez au moins une quantite recue");
+                        return;
+                      }
+                    }
+                    setReceptionStep((prev) => Math.min(3, prev + 1));
+                  }}
+                >
+                  Suivant <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  disabled={receptionSubmitting}
+                  onClick={() => void submitReception()}
+                >
+                  {receptionSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Valider la reception
+                </Button>
+              )}
+            </div>
           </div>
         }
       >
         {receptionOrder ? (
-          <div className="space-y-3">
-            {receptionOrder.lines.map((line) => (
-              <div
-                key={line.idLigneBcf}
-                className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-[2fr_1fr_1fr_1fr]"
-              >
-                <div>
-                  <p className="text-sm font-medium">{line.produit}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Commandee: {line.quantiteCommandee} · Deja recue:{" "}
-                    {line.quantiteDejaRecue}
-                  </p>
+          <div className="space-y-4">
+            <div className="mb-2 flex items-center gap-2">
+              {[1, 2, 3].map((step) => (
+                <div key={step} className="flex items-center gap-2">
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${receptionStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                  >
+                    {step}
+                  </span>
+                  {step < 3 ? <span className="h-0.5 w-8 bg-border" /> : null}
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Restant</p>
-                  <p className="text-sm font-semibold">{line.restant}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor={`recv-${line.idLigneBcf}`}>
-                    Quantite recue
-                  </Label>
+              ))}
+            </div>
+
+            {receptionStep === 1 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Fournisseur</Label>
                   <Input
-                    id={`recv-${line.idLigneBcf}`}
-                    type="number"
-                    min={0}
-                    max={line.restant}
-                    value={line.quantiteARecevoir}
-                    onChange={(e) => {
-                      const value = Math.max(
-                        0,
-                        Math.min(line.restant, toNumber(e.target.value, 0)),
-                      );
-                      setReceptionOrder((prev) =>
-                        prev
-                          ? {
-                              ...prev,
-                              lines: prev.lines.map((l) =>
-                                l.idLigneBcf === line.idLigneBcf
-                                  ? { ...l, quantiteARecevoir: value }
-                                  : l,
-                              ),
-                            }
-                          : prev,
-                      );
-                    }}
+                    value={
+                      detailsOrder?.fournisseur?.raisonSociale ||
+                      rows.find((item) => item.id === receptionOrder.id)
+                        ?.fournisseur ||
+                      "-"
+                    }
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bon de commande</Label>
+                  <Input value={receptionOrder.ref} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reception-date">Date</Label>
+                  <Input
+                    id="reception-date"
+                    type="date"
+                    value={receptionGeneralForm.date}
+                    onChange={(e) =>
+                      setReceptionGeneralForm((prev) => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="reception-observations">Observations</Label>
+                  <Textarea
+                    id="reception-observations"
+                    value={receptionGeneralForm.observations}
+                    onChange={(e) =>
+                      setReceptionGeneralForm((prev) => ({
+                        ...prev,
+                        observations: e.target.value,
+                      }))
+                    }
+                    placeholder="Observations de reception"
                   />
                 </div>
               </div>
-            ))}
+            ) : null}
+
+            {receptionStep === 2 ? (
+              <div className="space-y-3">
+                {receptionOrder.lines.map((line) => (
+                  <div
+                    key={line.idLigneBcf}
+                    className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{line.produit}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Commandee</p>
+                      <p className="text-sm font-semibold">
+                        {line.quantiteCommandee}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Deja recue
+                      </p>
+                      <p className="text-sm font-semibold">
+                        {line.quantiteDejaRecue}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Reste</p>
+                      <p className="text-sm font-semibold">{line.restant}</p>
+                    </div>
+                    <div>
+                      <Label htmlFor={`recv-${line.idLigneBcf}`}>
+                        Recu maintenant
+                      </Label>
+                      <Input
+                        id={`recv-${line.idLigneBcf}`}
+                        type="number"
+                        min={0}
+                        max={line.restant}
+                        value={line.quantiteARecevoir}
+                        onChange={(e) => {
+                          const value = Math.max(
+                            0,
+                            Math.min(line.restant, toNumber(e.target.value, 0)),
+                          );
+                          setReceptionOrder((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  lines: prev.lines.map((l) =>
+                                    l.idLigneBcf === line.idLigneBcf
+                                      ? { ...l, quantiteARecevoir: value }
+                                      : l,
+                                  ),
+                                }
+                              : prev,
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {receptionStep === 3 ? (
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="rounded-md border border-border p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Nombre de produits
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {receptionOrder.lines.length}
+                  </p>
+                </div>
+                <div className="rounded-md border border-border p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Quantite totale recue
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {receptionOrder.lines.reduce(
+                      (acc, line) => acc + line.quantiteARecevoir,
+                      0,
+                    )}
+                  </p>
+                </div>
+                <div className="rounded-md border border-border p-3">
+                  <p className="text-xs text-muted-foreground">
+                    Valeur reception
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {fmtCurrency(
+                      receptionOrder.lines.reduce((acc, line) => {
+                        const sourceLine = detailsOrder?.lignes?.find(
+                          (item) => item.id === line.idLigneBcf,
+                        );
+                        return (
+                          acc +
+                          line.quantiteARecevoir *
+                            toNumber(sourceLine?.prixUnitaireHt, 0)
+                        );
+                      }, 0),
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </AppModal>
 
       <AppModal
-        open={importOpen}
+        open={invoiceWizardOpen}
         onOpenChange={(open) => {
-          setImportOpen(open);
+          setInvoiceWizardOpen(open);
           if (!open) {
             setImportOrder(null);
             setImportFile(null);
-            setImportedInvoices([]);
+            setInvoiceWizardStep(1);
             if (importPreviewUrl) {
               URL.revokeObjectURL(importPreviewUrl);
               setImportPreviewUrl(null);
             }
           }
         }}
-        title="Import facture fournisseur"
+        title="Creation facture fournisseur"
         description={
           importOrder
-            ? `Bon ${importOrder.ref} - importer un document fournisseur (PDF, DOC, DOCX)`
+            ? `Bon ${importOrder.ref} - wizard facture fournisseur`
             : ""
         }
         size="xxl"
@@ -2076,132 +2579,286 @@ function PurchasesPage() {
           <div className="flex items-center justify-between gap-2">
             <Button
               variant="outline"
-              disabled={importSubmitting}
-              onClick={() => setImportOpen(false)}
+              disabled={invoiceWizardSubmitting}
+              onClick={() => setInvoiceWizardOpen(false)}
             >
               Annuler
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="bg-red-600 text-white hover:bg-red-700 border-red-700 text-white"
-                disabled={importSubmitting || !importFile}
-                onClick={() => void submitImportInvoiceDecision("REJETER")}
-              >
-                {importSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Rejeter
-              </Button>
-              <Button
-                disabled={importSubmitting || !importFile}
-                onClick={() => void submitImportInvoiceDecision("VALIDER")}
-              >
-                {importSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Valider
-              </Button>
+              {invoiceWizardStep > 1 ? (
+                <Button
+                  variant="outline"
+                  disabled={invoiceWizardSubmitting}
+                  onClick={() =>
+                    setInvoiceWizardStep((prev) => Math.max(1, prev - 1))
+                  }
+                >
+                  <ArrowLeft className="mr-1 h-4 w-4" /> Retour
+                </Button>
+              ) : null}
+              {invoiceWizardStep < 3 ? (
+                <Button
+                  disabled={invoiceWizardSubmitting}
+                  onClick={() => {
+                    if (invoiceWizardStep === 2 && !importFile) {
+                      toast.error("Importez d'abord un fichier PDF");
+                      return;
+                    }
+                    setInvoiceWizardStep((prev) => Math.min(3, prev + 1));
+                  }}
+                >
+                  Suivant <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  disabled={invoiceWizardSubmitting || !importFile}
+                  onClick={async () => {
+                    setInvoiceWizardSubmitting(true);
+                    await submitImportInvoiceDecision("VALIDER");
+                    setInvoiceWizardSubmitting(false);
+                    setInvoiceWizardOpen(false);
+                    if (importOrder?.id) {
+                      await openDetailsModal(importOrder.id);
+                      await loadRows();
+                    }
+                  }}
+                >
+                  {invoiceWizardSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Valider la facture
+                </Button>
+              )}
             </div>
           </div>
         }
       >
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="supplier-invoice-file">
-                Fichier facture fournisseur (PDF, DOC, DOCX)
-              </Label>
-              <Input
-                id="supplier-invoice-file"
-                type="file"
-                accept="application/pdf,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(e) =>
-                  onImportFileChange(e.target.files?.[0] || null)
-                }
-              />
-              {importFile ? (
-                <p className="text-xs text-muted-foreground">
-                  {importFile.name} ·{" "}
-                  {(importFile.size / 1024 / 1024).toFixed(2)} Mo
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Ajoutez la facture fournisseur puis choisissez Valider ou
-                  Rejéter.
-                </p>
-              )}
-            </div>
-
-            <div className="rounded-md border border-border p-3">
-              <p className="mb-2 text-sm font-medium">
-                Factures déjà importées
-              </p>
-              {importedInvoicesLoading ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Chargement...
-                </div>
-              ) : importedInvoices.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Aucune facture importee pour ce bon.
-                </p>
-              ) : (
-                <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1">
-                  {importedInvoices.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-md border border-border/70 px-3 py-2 text-sm"
-                    >
-                      <p className="font-medium text-foreground">
-                        {item.numeroFacture}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Decision: {item.decision || "-"} · Statut: {item.statut}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.createdAt
-                          ? new Date(item.createdAt).toLocaleString("fr-FR")
-                          : "-"}
-                        {" · "}
-                        {fmtCurrency(Number(item.totalTtc || 0))}
-                      </p>
-                      {item.fileUrl ? (
-                        <a
-                          href={`${import.meta.env.VITE_API_URL?.replace(/\/api\/v1\/?$/, "") || "http://localhost:3000"}${item.fileUrl}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs text-primary underline"
-                        >
-                          Ouvrir le fichier
-                        </a>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-md border border-border p-2">
-            {importFile ? (
-              importFile.type === "application/pdf" && importPreviewUrl ? (
-                <iframe
-                  src={importPreviewUrl}
-                  title="Apercu facture fournisseur"
-                  className="h-[68vh] w-full rounded-md"
-                />
-              ) : (
-                <div className="flex h-[68vh] items-center justify-center text-center text-sm text-muted-foreground">
-                  Apercu integre indisponible pour ce format.\nLe document sera
-                  tout de meme importe.
-                </div>
-              )
-            ) : (
-              <div className="flex h-[68vh] items-center justify-center text-sm text-muted-foreground">
-                Selectionnez un fichier pour afficher l'apercu.
+        <div className="space-y-4">
+          <div className="mb-2 flex items-center gap-2">
+            {[1, 2, 3].map((step) => (
+              <div key={step} className="flex items-center gap-2">
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${invoiceWizardStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                >
+                  {step}
+                </span>
+                {step < 3 ? <span className="h-0.5 w-8 bg-border" /> : null}
               </div>
-            )}
+            ))}
           </div>
+
+          {invoiceWizardStep === 1 ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="invoice-number">Numero facture</Label>
+                <Input
+                  id="invoice-number"
+                  value={invoiceForm.numeroFacture}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      numeroFacture: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-date">Date facture</Label>
+                <Input
+                  id="invoice-date"
+                  type="date"
+                  value={invoiceForm.dateFacture}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      dateFacture: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-due">Date echeance</Label>
+                <Input
+                  id="invoice-due"
+                  type="date"
+                  value={invoiceForm.dateEcheance}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      dateEcheance: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-ht">Montant HT</Label>
+                <Input
+                  id="invoice-ht"
+                  type="number"
+                  min={0}
+                  value={invoiceForm.montantHt}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      montantHt: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-tva">TVA</Label>
+                <Input
+                  id="invoice-tva"
+                  type="number"
+                  min={0}
+                  value={invoiceForm.tva}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      tva: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-ttc">TTC</Label>
+                <Input
+                  id="invoice-ttc"
+                  type="number"
+                  min={0}
+                  value={invoiceForm.ttc}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      ttc: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-remise">Remise</Label>
+                <Input
+                  id="invoice-remise"
+                  type="number"
+                  min={0}
+                  value={invoiceForm.remise}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      remise: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invoice-transport">Transport</Label>
+                <Input
+                  id="invoice-transport"
+                  type="number"
+                  min={0}
+                  value={invoiceForm.transport}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      transport: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="invoice-observations">Observations</Label>
+                <Textarea
+                  id="invoice-observations"
+                  value={invoiceForm.observations}
+                  onChange={(e) =>
+                    setInvoiceForm((prev) => ({
+                      ...prev,
+                      observations: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {invoiceWizardStep === 2 ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="supplier-invoice-file">Fichier PDF</Label>
+                <Input
+                  id="supplier-invoice-file"
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) =>
+                    onImportFileChange(e.target.files?.[0] || null)
+                  }
+                />
+                {importFile ? (
+                  <p className="text-xs text-muted-foreground">
+                    {importFile.name} ·{" "}
+                    {(importFile.size / 1024 / 1024).toFixed(2)} Mo
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Importez le PDF de facture fournisseur.
+                  </p>
+                )}
+              </div>
+              <div className="rounded-md border border-border p-2">
+                {importFile &&
+                importFile.type === "application/pdf" &&
+                importPreviewUrl ? (
+                  <iframe
+                    src={importPreviewUrl}
+                    title="Apercu facture fournisseur"
+                    className="h-[58vh] w-full rounded-md"
+                  />
+                ) : (
+                  <div className="flex h-[58vh] items-center justify-center text-sm text-muted-foreground">
+                    Selectionnez un PDF pour afficher l'apercu.
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {invoiceWizardStep === 3 ? (
+            <div className="space-y-3">
+              <div className="rounded-md border border-border p-3">
+                <p className="text-sm font-semibold">Revue generale</p>
+                <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
+                  <p>
+                    <span className="text-muted-foreground">Numero:</span>{" "}
+                    {invoiceForm.numeroFacture || "-"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Date:</span>{" "}
+                    {invoiceForm.dateFacture || "-"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Echeance:</span>{" "}
+                    {invoiceForm.dateEcheance || "-"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Montant HT:</span>{" "}
+                    {invoiceForm.montantHt || "-"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">TVA:</span>{" "}
+                    {invoiceForm.tva || "-"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">TTC:</span>{" "}
+                    {invoiceForm.ttc || "-"}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                La validation cree la facture fournisseur et la dette associee
+                dans le workflow existant.
+              </p>
+            </div>
+          ) : null}
         </div>
       </AppModal>
 

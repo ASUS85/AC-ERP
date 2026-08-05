@@ -33,7 +33,19 @@ export const achatsRepository = {
   bcfById(id) {
     return prisma.bonCommandeFournisseur.findUnique({
       where: { id },
-      include: { fournisseur: true, lignes: { include: { produit: true } } },
+      include: {
+        fournisseur: true,
+        lignes: { include: { produit: true } },
+        receptions: {
+          include: {
+            utilisateur: {
+              select: { nom: true, prenom: true, email: true },
+            },
+            lignes: true,
+          },
+          orderBy: { dateReception: "desc" },
+        },
+      },
     });
   },
   createBcf(data) {

@@ -16,6 +16,7 @@ import { getEntreprise } from "@/lib/api/parametres.service";
 import { getMe } from "@/lib/api/auth.service";
 import { AUTH_STORAGE_KEYS, clearAuthSession } from "@/lib/auth-session";
 import { setStoredCurrency } from "@/lib/currency";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context, location }) => {
@@ -50,6 +51,7 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   const [open, setOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -65,11 +67,35 @@ function AppLayout() {
       .catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("erp_sidebar_collapsed");
+    setSidebarCollapsed(stored === "true");
+  }, []);
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("erp_sidebar_collapsed", String(next));
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Desktop fixed sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
-        <SidebarNav />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden transition-[width] duration-200 lg:block",
+          sidebarCollapsed ? "w-20" : "w-64",
+        )}
+      >
+        <SidebarNav
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={toggleSidebarCollapsed}
+        />
       </aside>
 
       {/* Mobile drawer */}
@@ -79,7 +105,12 @@ function AppLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-screen flex-col lg:pl-64">
+      <div
+        className={cn(
+          "flex min-h-screen flex-col transition-[padding-left] duration-200",
+          sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
+        )}
+      >
         <Topbar onMenu={() => setOpen(true)} />
         <main className="main-scrollbar relative flex-1 p-4 md:p-6 lg:p-8">
           <Outlet />

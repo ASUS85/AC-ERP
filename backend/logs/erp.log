@@ -3221,3 +3221,49 @@ Invalid value for argument `statut`. Expected StatutBonCommandeFournisseur. {"st
 2026-08-05T10:31:23.540Z info: Base de donnees connectee
 2026-08-05T10:31:23.561Z info: Serveur demarre port 3000
 2026-08-05T10:31:38.199Z info: Socket connecte 845x8ygfQJDrzKQsAAAJ
+2026-08-05T11:02:48.168Z info: Socket deconnecte 845x8ygfQJDrzKQsAAAJ
+2026-08-05T11:03:08.099Z info: Socket connecte lKpqspy2MUJ4p4MSAAAN
+2026-08-05T11:03:08.236Z info: Socket deconnecte lKpqspy2MUJ4p4MSAAAN
+2026-08-05T11:03:10.715Z info: Socket connecte 4vrgJXxqfvTZpktvAAAP
+2026-08-05T11:03:12.308Z info: Socket deconnecte 4vrgJXxqfvTZpktvAAAP
+2026-08-05T11:04:01.195Z info: Socket connecte Z_381iXOLas7AopNAAAR
+2026-08-05T11:04:01.588Z info: Socket deconnecte Z_381iXOLas7AopNAAAR
+2026-08-05T11:04:05.094Z info: Socket connecte VXVMSRP3Bw-aaQloAAAV
+2026-08-05T11:04:06.286Z info: Socket deconnecte VXVMSRP3Bw-aaQloAAAV
+2026-08-05T11:04:58.696Z info: Socket connecte yp46JzLQVgmuj5x2AAAX
+2026-08-05T11:05:07.254Z info: Socket connecte HshdGpkMm2ksCSBfAAAZ
+2026-08-05T11:05:07.474Z info: Socket deconnecte HshdGpkMm2ksCSBfAAAZ
+2026-08-05T11:05:43.767Z info: Socket deconnecte yp46JzLQVgmuj5x2AAAX
+2026-08-05T11:10:17.002Z info: Base de donnees connectee
+2026-08-05T11:10:17.142Z info: Serveur demarre port 3000
+2026-08-05T11:10:57.472Z info: Base de donnees connectee
+2026-08-05T11:10:57.521Z info: Serveur demarre port 3000
+2026-08-05T11:10:58.704Z info: Base de donnees connectee
+2026-08-05T11:10:58.731Z info: Serveur demarre port 3000
+2026-08-05T11:11:37.657Z info: Socket connecte DeHjJWY-Mh37MjzGAAAB
+2026-08-05T11:12:13.046Z info: Socket deconnecte DeHjJWY-Mh37MjzGAAAB
+2026-08-05T11:12:26.558Z info: Socket connecte fcvDLOnUgUmq-4YQAAAD
+2026-08-05T11:13:09.673Z info: Socket deconnecte fcvDLOnUgUmq-4YQAAAD
+2026-08-05T11:13:13.388Z info: Socket connecte fxWmWTB1GayI_n5fAAAF
+2026-08-05T11:13:43.848Z info: Socket deconnecte fxWmWTB1GayI_n5fAAAF
+2026-08-05T11:14:03.756Z info: Socket connecte aOJh67wZd-UBFJ0pAAAH
+2026-08-05T11:17:05.849Z info: Socket deconnecte aOJh67wZd-UBFJ0pAAAH
+2026-08-05T11:17:09.909Z info: Socket connecte HQAzqmtmaS_I6vSIAAAJ
+2026-08-05T11:17:40.856Z info: Socket deconnecte HQAzqmtmaS_I6vSIAAAJ
+2026-08-05T11:17:44.597Z info: Socket connecte yl0TBLpGI7kXAgAmAAAL
+2026-08-05T11:24:06.363Z info: Socket deconnecte yl0TBLpGI7kXAgAmAAAL
+2026-08-05T11:24:25.019Z info: Socket connecte IUu1eY8FfGHbMqYUAAAN
+2026-08-05T11:34:58.012Z info: Socket connecte QZuiucSAmPfl2NfaAAAP
+2026-08-05T11:35:32.619Z info: Socket deconnecte IUu1eY8FfGHbMqYUAAAN
+2026-08-05T11:36:58.186Z info: Socket deconnecte QZuiucSAmPfl2NfaAAAP
+2026-08-05T11:37:22.576Z info: Socket connecte xfuA9-uKmhtvJa3cAAAR
+2026-08-05T11:38:03.835Z info: Socket deconnecte xfuA9-uKmhtvJa3cAAAR
+2026-08-05T11:38:44.084Z info: Socket connecte ckv-aLulZ-eyKT35AAAT
+2026-08-05T11:39:16.650Z info: Socket deconnecte ckv-aLulZ-eyKT35AAAT
+2026-08-05T11:40:19.377Z info: Socket connecte kr6Hxr_z1pj2FmyJAAAW
+2026-08-05T11:50:12.969Z info: Socket deconnecte kr6Hxr_z1pj2FmyJAAAW
+2026-08-05T11:52:42.839Z info: Socket connecte c3dmwwJWrYhik23mAAAY
+2026-08-05T11:58:32.495Z info: Socket deconnecte c3dmwwJWrYhik23mAAAY
+2026-08-05T11:58:58.546Z info: Socket connecte btqD8oS6aFncsH6vAAAa
+2026-08-05T12:11:26.777Z info: Socket deconnecte btqD8oS6aFncsH6vAAAa
+2026-08-05T12:11:30.256Z info: Socket connecte fxTlV1_vGzBbN7JYAAAc
