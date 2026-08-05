@@ -149,7 +149,7 @@ function ResetPasswordPage() {
 
           {done ? (
             <div>
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
                 <ShieldCheck className="h-6 w-6" />
               </span>
               <h1 className="text-2xl font-bold text-foreground">

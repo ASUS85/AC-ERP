@@ -335,7 +335,7 @@ function RolesPage() {
                   key={role.id}
                   type="button"
                   onClick={() => setSelectedRoleId(role.id)}
-                  className={`rounded-xl border p-4 text-left shadow-card transition ${isActive ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
+                  className={`rounded-sm border p-4 text-left shadow-card transition ${isActive ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">

@@ -446,7 +446,7 @@ function LoginPage() {
               >
                 <ArrowLeft className="h-4 w-4" /> Retour à la connexion
               </button>
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
                 <MailCheck className="h-6 w-6" />
               </span>
               <h1 className="text-2xl font-bold text-foreground">
@@ -521,7 +521,7 @@ function LoginPage() {
               >
                 <ArrowLeft className="h-4 w-4" /> Choisir une autre méthode
               </button>
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
                 <KeyRound className="h-6 w-6" />
               </span>
               <h1 className="text-2xl font-bold text-foreground">

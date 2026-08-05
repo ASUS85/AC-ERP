@@ -32,6 +32,10 @@ import {
 } from "@/lib/api/stocks.service";
 import { fmtNumber, fmtCurrency } from "@/lib/erp-data";
 import { getCurrencyMeta } from "@/lib/currency";
+import {
+  formatGroupedInputNumber,
+  normalizeNumberInput,
+} from "@/lib/number-input";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "Stocks — AC ERP" }] }),
@@ -950,12 +954,20 @@ function InventoryPage() {
             <Label htmlFor="adj-qte">Quantite</Label>
             <Input
               id="adj-qte"
-              type="number"
-              value={adjForm.quantite}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(adjForm.quantite || ""), {
+                allowNegative: true,
+              })}
               onChange={(e) =>
                 setAdjForm((p) => ({
                   ...p,
-                  quantite: Number(e.target.value) || 0,
+                  quantite:
+                    Number(
+                      normalizeNumberInput(e.target.value, {
+                        allowNegative: true,
+                      }),
+                    ) || 0,
                 }))
               }
               placeholder="Positif = entree, negatif = sortie"

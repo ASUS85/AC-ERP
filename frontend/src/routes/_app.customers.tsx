@@ -45,6 +45,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  formatGroupedInputNumber,
+  normalizeNumberInput,
+} from "@/lib/number-input";
 
 export const Route = createFileRoute("/_app/customers")({
   head: () => ({ meta: [{ title: "Clients — AC ERP" }] }),
@@ -705,11 +709,14 @@ function CustomersPage() {
           >
             <Input
               id="plafond"
-              type="number"
-              min="0"
-              value={form.plafondCredit || ""}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.plafondCredit || ""))}
               onChange={(e) =>
-                setField("plafondCredit", Number(e.target.value) || 0)
+                setField(
+                  "plafondCredit",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
               }
               placeholder="0"
             />
@@ -722,11 +729,14 @@ function CustomersPage() {
           >
             <Input
               id="delai"
-              type="number"
-              min="0"
-              value={form.delaiPaiement || ""}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.delaiPaiement || ""))}
               onChange={(e) =>
-                setField("delaiPaiement", Number(e.target.value) || 0)
+                setField(
+                  "delaiPaiement",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
               }
               placeholder="30"
             />

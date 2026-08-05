@@ -109,7 +109,7 @@ export function SidebarNav({
         <nav
           className={cn(
             "sidebar-scrollbar flex-1 space-y-5 overflow-y-auto py-4",
-            collapsed ? "px-2" : "px-3",
+            collapsed ? "px-0" : "px-0",
           )}
         >
           {visibleGroups.map((group, groupIndex) => (
@@ -119,7 +119,16 @@ export function SidebarNav({
                   className="flex items-center justify-center py-1 text-[10px] tracking-[0.35em] text-sidebar-foreground/30"
                   aria-hidden="true"
                 >
-                  ...
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    class="bi bi-three-dots"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />
+                  </svg>
                 </div>
               ) : null}
               {!collapsed ? (
@@ -135,7 +144,7 @@ export function SidebarNav({
                       to={item.url}
                       onClick={onNavigate}
                       className={cn(
-                        "group flex items-center rounded-lg py-2 text-sm font-medium transition-all",
+                        "group flex items-center py-2 text-sm font-medium transition-all",
                         collapsed ? "justify-center px-2" : "gap-3 px-3",
                         active
                           ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"

@@ -165,7 +165,7 @@ function NotificationsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="gap-1.5 bg-primary text-primary-foreground shadow hover:bg-primary/90 hover:text-primary-foreground/90"
             onClick={markAllAsRead}
           >
             <CheckCheck className="h-4 w-4" /> Tout marquer comme lu

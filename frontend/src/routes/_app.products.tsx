@@ -42,6 +42,10 @@ import {
   type ProduitPayload,
 } from "@/lib/api/produits.service";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import {
+  formatGroupedInputNumber,
+  normalizeNumberInput,
+} from "@/lib/number-input";
 
 export const Route = createFileRoute("/_app/products")({
   head: () => ({ meta: [{ title: "Produits — AC ERP" }] }),
@@ -649,10 +653,15 @@ function ProductsPage() {
           >
             <Input
               id="prixAchatHt"
-              type="number"
-              min="0"
-              value={form.prixAchatHt}
-              onChange={(e) => setField("prixAchatHt", Number(e.target.value))}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.prixAchatHt || ""))}
+              onChange={(e) =>
+                setField(
+                  "prixAchatHt",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
+              }
               placeholder="Entrez un prix de d'achat"
             />
           </Field>
@@ -664,10 +673,15 @@ function ProductsPage() {
             <span class="ml-1 text-destructive">*</span>
             <Input
               id="prixVenteHt"
-              type="number"
-              min="0"
-              value={form.prixVenteHt}
-              onChange={(e) => setField("prixVenteHt", Number(e.target.value))}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.prixVenteHt || ""))}
+              onChange={(e) =>
+                setField(
+                  "prixVenteHt",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
+              }
               placeholder="Entrez un prix de vente"
             />
           </Field>
@@ -675,10 +689,15 @@ function ProductsPage() {
             <span class="ml-1 text-destructive">*</span>
             <Input
               id="tauxTva"
-              type="number"
-              min="0"
-              value={form.tauxTva}
-              onChange={(e) => setField("tauxTva", Number(e.target.value))}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.tauxTva || ""))}
+              onChange={(e) =>
+                setField(
+                  "tauxTva",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
+              }
               placeholder="Entrez la TVA(%)"
             />
           </Field>
@@ -690,10 +709,15 @@ function ProductsPage() {
             <span class="ml-1 text-destructive">*</span>
             <Input
               id="stockMinimum"
-              type="number"
-              min="0"
-              value={form.stockMinimum}
-              onChange={(e) => setField("stockMinimum", Number(e.target.value))}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(String(form.stockMinimum || ""))}
+              onChange={(e) =>
+                setField(
+                  "stockMinimum",
+                  Number(normalizeNumberInput(e.target.value)) || 0,
+                )
+              }
               placeholder="Entrez le stock minimum"
             />
           </Field>
@@ -705,11 +729,16 @@ function ProductsPage() {
             >
               <Input
                 id="stockInitial"
-                type="number"
-                min="0"
-                value={form.stockInitial}
+                type="text"
+                inputMode="decimal"
+                value={formatGroupedInputNumber(
+                  String(form.stockInitial || ""),
+                )}
                 onChange={(e) =>
-                  setField("stockInitial", Number(e.target.value))
+                  setField(
+                    "stockInitial",
+                    Number(normalizeNumberInput(e.target.value)) || 0,
+                  )
                 }
                 placeholder="Entrez le stock initial"
               />

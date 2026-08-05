@@ -72,7 +72,7 @@ function AssistantPage() {
       />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <aside className="hidden lg:block">
-          <div className="rounded-xl border border-border bg-card p-3 shadow-card">
+          <div className="rounded-sm border border-border bg-card p-3 shadow-card">
             <Button
               className="w-full gap-1.5"
               onClick={() => setMessages(messages.slice(0, 1))}
@@ -96,7 +96,7 @@ function AssistantPage() {
         </aside>
 
         <div className="lg:col-span-3">
-          <div className="flex h-[68vh] flex-col rounded-xl border border-border bg-card shadow-card">
+          <div className="flex h-[68vh] flex-col rounded-sm border border-border bg-card shadow-card">
             <div className="flex-1 space-y-5 overflow-y-auto p-5">
               {messages.map((m, i) => (
                 <div

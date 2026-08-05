@@ -32,6 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { fmtCurrency } from "@/lib/erp-data";
+import {
+  formatGroupedInputNumber,
+  normalizeNumberInput,
+} from "@/lib/number-input";
 
 export const Route = createFileRoute("/_app/suppliers")({
   head: () => ({ meta: [{ title: "Fournisseurs — AC ERP" }] }),
@@ -420,11 +424,16 @@ function SuppliersPage() {
           <Field label="Delai livraison (jours)" htmlFor="delaiLivraisonMoyen">
             <Input
               id="delaiLivraisonMoyen"
-              type="number"
-              min="1"
-              value={form.delaiLivraisonMoyen}
+              type="text"
+              inputMode="decimal"
+              value={formatGroupedInputNumber(
+                String(form.delaiLivraisonMoyen || ""),
+              )}
               onChange={(e) =>
-                setField("delaiLivraisonMoyen", Number(e.target.value) || 7)
+                setField(
+                  "delaiLivraisonMoyen",
+                  Number(normalizeNumberInput(e.target.value)) || 7,
+                )
               }
             />
           </Field>
