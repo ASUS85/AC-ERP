@@ -93,7 +93,7 @@ export function AppModal({
         )}
       >
         <div className="flex max-h-[90vh] flex-col">
-          <div className="border-b border-border px-6 py-5">
+          <div className="border-b border-border px-6 py-3">
             <DialogHeader className="space-y-2">
               <DialogTitle>{title}</DialogTitle>
               {description ? (

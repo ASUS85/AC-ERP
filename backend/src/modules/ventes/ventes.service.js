@@ -15,6 +15,7 @@ import {
   verifyDevisClientToken,
 } from "../../services/public-link.service.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
+import { clientsRepository } from "../clients/clients.repository.js";
 import { ventesRepository } from "./ventes.repository.js";
 
 function lineAmounts(l) {
@@ -277,6 +278,38 @@ export const ventesService = {
 
     const total = totals(lignes);
     const paidAmount = Number(data.paiement?.montant || 0);
+
+    if (typeClient === "OCCASIONNEL") {
+      if (paidAmount < total.totalTtc) {
+        throw new ApiError(
+          400,
+          "FULL_PAYMENT_REQUIRED_FOR_OCCASIONAL",
+          "Pour un client occasionnel, la vente doit être réglée en totalité immédiatement (aucun crédit accordé).",
+        );
+      }
+    } else if (typeClient === "ENREGISTRE" && idClient) {
+      const client = await clientsRepository.findById(idClient);
+      if (!client) {
+        throw new ApiError(404, "CLIENT_NOT_FOUND", "Client introuvable");
+      }
+      const encoursActuel = await clientsRepository.getEncours(idClient);
+      const montantRestantFacture = Math.max(0, total.totalTtc - paidAmount);
+      const nouvelEncours = encoursActuel + montantRestantFacture;
+      const plafondCredit = Number(client.plafondCredit || 0);
+
+      if (nouvelEncours > plafondCredit) {
+        const montantMinAPayer = Math.max(
+          0,
+          encoursActuel + total.totalTtc - plafondCredit,
+        );
+        throw new ApiError(
+          400,
+          "CREDIT_LIMIT_EXCEEDED",
+          `Plafond de crédit dépassé pour ce client. Plafond : ${plafondCredit.toLocaleString("fr-FR")} FCFA | Encours actuel : ${encoursActuel.toLocaleString("fr-FR")} FCFA | Montant à crédit demandé : ${montantRestantFacture.toLocaleString("fr-FR")} FCFA (Nouvel encours : ${nouvelEncours.toLocaleString("fr-FR")} FCFA). Le client doit régler au moins ${Math.ceil(montantMinAPayer).toLocaleString("fr-FR")} FCFA immédiatement pour valider cette vente.`,
+        );
+      }
+    }
+
     let paiement = null;
     if (paidAmount > 0) {
       const modePaiement = data.paiement?.modePaiement || "ESPECES";

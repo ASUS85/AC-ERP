@@ -290,7 +290,7 @@ function buildFactureHtml(facture, entreprise = {}) {
       }
 
       .items-table th {
-        background-color: #000000;
+        background-color: #0759f0c9;
         color: #ffffff;
         font-weight: bold;
         text-align: right;
@@ -327,7 +327,7 @@ function buildFactureHtml(facture, entreprise = {}) {
       .totals-table .grand-total {
         font-weight: bold;
         font-size: 11pt;
-        background-color: #f0f0f0;
+        background-color: #0759f0c9;
       }
 
       .payment-info {
@@ -465,13 +465,239 @@ function buildFactureHtml(facture, entreprise = {}) {
   </html>`;
 }
 
+function buildFactureAchatHtml(facture, entreprise = {}) {
+  const currency = entreprise.devise || "XAF";
+  const fournisseur = facture.fournisseur || {};
+  const lignes = facture.lignes || [];
+
+  const formatDateStr = (d) =>
+    d ? new Date(d).toLocaleDateString("fr-FR", { day: 'numeric', month: 'long', year: 'numeric' }) : "-";
+
+  const ht = Number(facture.totalHt || 0);
+  const ttc = Number(facture.totalTtc || 0);
+  const tva = ht > 0 ? ttc - ht : 0;
+
+  const htmlLines = lignes.map((l, i) => {
+    const qte = Number(l.quantite || 0);
+    const pu = Number(l.prixUnitaireHt || 0);
+    const mHt = Number(l.montantHt || 0);
+    return `
+      <tr>
+          <td class="text-center">${String(i + 1).padStart(2, "0")}</td>
+          <td>${escapeHtml(l.id || "-").slice(0, 8)}</td>
+          <td>${escapeHtml(l.designation || "-")}</td>
+          <td class="text-center">${qte}</td>
+          <td class="text-right">${money(pu, "")}</td>
+          <td class="text-right">${money(mHt, "")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture d'Achat Fournisseur</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 9pt;
+                color: #555555;
+            }
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        .invoice-header { border-bottom: 2px solid #000000; padding-bottom: 12px; margin-bottom: 20px; }
+        .supplier-title { font-size: 20pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; }
+        .supplier-subtitle { font-size: 10pt; font-style: italic; margin-bottom: 10px; }
+        .supplier-details { font-size: 9.5pt; line-height: 1.3; }
+
+        .meta-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; }
+        .meta-table td { padding: 3px 0; font-size: 10pt; }
+
+        .buyer-box { border: 1px solid #000000; padding: 12px 15px; margin-bottom: 25px; background-color: #fafafa; }
+        .buyer-title { font-weight: bold; text-transform: uppercase; font-size: 10pt; border-bottom: 1px dashed #666666; padding-bottom: 4px; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .buyer-info-table { width: 100%; border-collapse: collapse; }
+        .buyer-info-table td { padding: 3px 0; vertical-align: top; font-size: 10pt; }
+        .label { font-weight: bold; width: 25%; }
+
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .items-table th { background-color: #000000; color: #ffffff; font-weight: bold; text-align: left; padding: 8px; font-size: 10pt; text-transform: uppercase; border: 1px solid #000000; }
+        .items-table td { border: 1px solid #000000; padding: 8px; font-size: 10pt; }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        .totals-wrapper { width: 100%; margin-top: 10px; margin-bottom: 30px; }
+        .totals-table { width: 48%; margin-left: auto; border-collapse: collapse; }
+        .totals-table td { padding: 6px 8px; border: 1px solid #000000; font-size: 10pt; }
+        .totals-table .grand-total { font-weight: bold; font-size: 11pt; background-color: #f0f0f0; }
+
+        .payment-info { border-top: 1px solid #000000; padding-top: 12px; margin-top: 25px; font-size: 9.5pt; }
+        .payment-info h4 { margin: 0 0 6px 0; font-size: 10pt; text-transform: uppercase; }
+
+        .signatures { width: 100%; margin-top: 35px; border-collapse: collapse; }
+        .signatures td { width: 50%; vertical-align: top; font-size: 10pt; }
+        .sig-box { height: 65px; }
+
+        .footer-note { margin-top: 25px; text-align: center; font-size: 8.5pt; border-top: 1px solid #cccccc; padding-top: 8px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="vertical-align: top;">
+                    <div class="supplier-title">${escapeHtml(fournisseur.raisonSociale || "FOURNISSEUR")}</div>
+                    <div class="supplier-subtitle">Fournisseur de biens / services</div>
+                    <div class="supplier-details">
+                        ${escapeHtml(fournisseur.adresse || "Adresse non renseignee")}<br>
+                        Tél : ${escapeHtml(fournisseur.telephone || "-")}<br>
+                        Email : ${escapeHtml(fournisseur.email || "-")}
+                    </div>
+                </td>
+                <td style="vertical-align: top; text-align: right; width: 38%;">
+                    <div style="border: 2px solid #000000; padding: 10px; text-align: center;">
+                        <span style="font-size: 13pt; font-weight: bold; display: block; text-transform: uppercase;">FACTURE FOURNISSEUR</span>
+                        <span style="font-size: 10pt; font-weight: bold;">N° ${escapeHtml(facture.numeroFacture)}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td><strong>Date de facture :</strong> ${formatDateStr(facture.createdAt)}</td>
+            <td class="text-right"><strong>Référence :</strong> ${escapeHtml(facture.numeroFacture)}</td>
+        </tr>
+        <tr>
+            <td><strong>Date de livraison :</strong> -</td>
+            <td class="text-right"><strong>N° Bon :</strong> ${escapeHtml(facture.idBl || "-")}</td>
+        </tr>
+        <tr>
+            <td><strong>Conditions de paiement :</strong> -</td>
+            <td class="text-right"><strong>Date d'échéance :</strong> ${formatDateStr(facture.dateEcheance)}</td>
+        </tr>
+    </table>
+
+    <div class="buyer-box">
+        <div class="buyer-title">Client / Destinataire (Acheteur)</div>
+        <table class="buyer-info-table">
+            <tr>
+                <td class="label">Raison Sociale :</td>
+                <td><strong>${escapeHtml(entreprise.nom || "MON ENTREPRISE")}</strong></td>
+                <td class="label">N° NIU :</td>
+                <td>${escapeHtml(entreprise.numeroFiscal || "-")}</td>
+            </tr>
+            <tr>
+                <td class="label">Adresse / Siège :</td>
+                <td>${escapeHtml(entreprise.adresse || "-")}</td>
+                <td class="label">N° Registre du Com. :</td>
+                <td>${escapeHtml(entreprise.numeroRc || "-")}</td>
+            </tr>
+            <tr>
+                <td class="label">Contact Achats :</td>
+                <td>Tél : ${escapeHtml(entreprise.telephone || "-")}</td>
+                <td class="label">Email :</td>
+                <td>${escapeHtml(entreprise.email || "-")}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 6%;">N°</th>
+                <th style="width: 14%;">Réf. Article</th>
+                <th style="width: 38%;">Désignation des Équipements / Produits</th>
+                <th style="width: 8%;" class="text-center">Qté</th>
+                <th style="width: 16%;" class="text-right">P.U. HT (${escapeHtml(currency)})</th>
+                <th style="width: 18%;" class="text-right">Total HT (${escapeHtml(currency)})</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${htmlLines}
+        </tbody>
+    </table>
+
+    <div class="totals-wrapper">
+        <table class="totals-table">
+            <tr>
+                <td><strong>Total Brut HT</strong></td>
+                <td class="text-right">${money(ht, currency)}</td>
+            </tr>
+            <tr>
+                <td><strong>Total Net HT</strong></td>
+                <td class="text-right"><strong>${money(ht, currency)}</strong></td>
+            </tr>
+            <tr>
+                <td>TVA</td>
+                <td class="text-right">${money(tva, currency)}</td>
+            </tr>
+            <tr class="grand-total">
+                <td><strong>TOTAL TTC À PAYER</strong></td>
+                <td class="text-right"><strong>${money(ttc, currency)}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="payment-info">
+        <h4>Modalités et Coordonnées de Règlement</h4>
+        <p style="margin: 0 0 4px 0;"><strong>Veuillez régler la somme de :</strong> ${money(ttc, currency)}</p>
+        <p style="margin: 0;"><em>Veuillez rappeler le numéro de facture <strong>${escapeHtml(facture.numeroFacture)}</strong> dans vos correspondances.</em></p>
+    </div>
+
+    <table class="signatures">
+        <tr>
+            <td>
+                <strong>Accusé de Réception / Client :</strong><br>
+                <span style="font-size: 8.5pt; font-style: italic;">(Date, Nom du récepteur, Cachet "Conforme")</span>
+                <div class="sig-box"></div>
+            </td>
+            <td style="text-align: right;">
+                <strong>Pour le Fournisseur (Service Facturation) :</strong><br>
+                <span style="font-size: 8.5pt; font-style: italic;">(Signature autorisée et Stamp officiel)</span>
+                <div class="sig-box"></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer-note">
+        ${escapeHtml(fournisseur.raisonSociale || "Fournisseur")} — ${escapeHtml(fournisseur.adresse || "-")}
+    </div>
+</body>
+</html>`;
+}
+
 export async function buildFacturePdf(facture, entreprise) {
+  const isAchat = facture.typeFacture === "ACHAT";
+  const html = isAchat 
+    ? buildFactureAchatHtml(facture, entreprise) 
+    : buildFactureHtml(facture, entreprise);
+
   const { buffer } = await renderPdfDocument({
-    html: buildFactureHtml(facture, entreprise),
+    html,
     pdfOptions: {
       format: "A4",
       printBackground: true,
-      margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
+      margin: isAchat 
+        ? { top: "15mm", right: "15mm", bottom: "15mm", left: "15mm" }
+        : { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
     },
   });
   return buffer;

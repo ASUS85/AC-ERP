@@ -39,8 +39,20 @@ export const clientsService = {
       clientsRepository.count(where),
     ]);
 
+    const enrichedData = await Promise.all(
+      data.map(async (client) => {
+        const encoursActuel = await clientsRepository.getEncours(client.id);
+        const plafondCredit = Number(client.plafondCredit || 0);
+        return {
+          ...client,
+          encoursActuel,
+          creditDisponible: Math.max(0, plafondCredit - encoursActuel),
+        };
+      }),
+    );
+
     return {
-      data,
+      data: enrichedData,
       meta: buildMeta(total, page, limit),
     };
   },
@@ -52,7 +64,18 @@ export const clientsService = {
       throw new ApiError(404, "NOT_FOUND", "Client introuvable");
     }
 
-    return client;
+    const encoursActuel = await clientsRepository.getEncours(client.id);
+    const plafondCredit = Number(client.plafondCredit || 0);
+
+    return {
+      ...client,
+      encoursActuel,
+      creditDisponible: Math.max(0, plafondCredit - encoursActuel),
+    };
+  },
+
+  async getEncours(id) {
+    return clientsRepository.getEncours(id);
   },
 
   async create(data) {

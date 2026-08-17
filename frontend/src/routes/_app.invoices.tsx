@@ -20,6 +20,9 @@ import { DataTable, type Column } from "@/components/erp/DataTable";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import logo from "@/assets/erp-logo.png";
 import { fmtCurrency } from "@/lib/erp-data";
 import {
@@ -63,6 +66,7 @@ type InvoiceRow = {
   montant: number;
   statut: string;
   statutRaw: string;
+  typeFacture: string;
 };
 
 const cols: Column<InvoiceRow>[] = [
@@ -120,6 +124,7 @@ function InvoicesPage() {
   const [rows, setRows] = useState<InvoiceRow[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [page, setPage] = useState(1);
 
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
@@ -155,6 +160,7 @@ function InvoicesPage() {
         montant: toNumber(item.totalTtc, 0),
         statut: normalizeStatus(item.statut),
         statutRaw: item.statut,
+        typeFacture: item.typeFacture || "VENTE",
       }));
       setRows(mapped);
       if (!selectedInvoiceId && mapped.length > 0) {
@@ -189,7 +195,7 @@ function InvoicesPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, typeFilter]);
 
   useEffect(() => {
     if (!rows.length) {
@@ -226,9 +232,10 @@ function InvoicesPage() {
         r.ref.toLowerCase().includes(q) ||
         r.tiers.toLowerCase().includes(q);
       const statusMatch = !statusFilter || r.statut === statusFilter;
-      return searchMatch && statusMatch;
+      const typeMatch = !typeFilter || r.typeFacture === typeFilter;
+      return searchMatch && statusMatch && typeMatch;
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, statusFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const paginatedRows = useMemo(
@@ -371,7 +378,7 @@ function InvoicesPage() {
         <Eye className="mr-2 h-4 w-4" />,
         async () => {
           setSelectedInvoiceId(row.id);
-          await loadPreview(row.id);
+          await openPdf(row.id);
         },
       ),
       makeAction(
@@ -418,15 +425,6 @@ function InvoicesPage() {
         title="Factures"
         description="Liste, détails, impression PDF et statuts de paiement"
         breadcrumb={["Transactions", "Factures"]}
-        actions={
-          <Button
-            size="sm"
-            className="gap-1.5"
-            onClick={() => toast.info("Nouvelle facture")}
-          >
-            <Plus className="h-4 w-4" /> Nouvelle facture
-          </Button>
-        }
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -455,19 +453,39 @@ function InvoicesPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <SectionCard title="Liste des factures" className="lg:col-span-3">
-          <div className="mb-4">
-            <Toolbar
-              placeholder="Rechercher une facture..."
-              searchValue={search}
-              onSearchChange={setSearch}
-              filterOptions={filterOptions}
-              selectedFilter={statusFilter}
-              onFilterChange={setStatusFilter}
-              filterPlaceholder="Filtrer par statut"
-              filterSearchPlaceholder="Rechercher un statut"
-            />
+      <div className="w-full">
+        <SectionCard title="Liste des factures">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une facture..."
+                className="h-9 pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <SearchableSelect
+                value={typeFilter}
+                onValueChange={setTypeFilter}
+                options={[
+                  { label: "Tous les types", value: "" },
+                  { label: "Ventes", value: "VENTE" },
+                  { label: "Achats", value: "ACHAT" },
+                ]}
+                placeholder="Type de facture..."
+                className="w-[180px]"
+              />
+              <SearchableSelect
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+                options={filterOptions}
+                placeholder="Filtrer par statut..."
+                searchPlaceholder="Rechercher statut..."
+                className="w-[180px]"
+              />
+            </div>
           </div>
           {loading ? (
             <div className="flex justify-center py-10">
@@ -492,138 +510,6 @@ function InvoicesPage() {
             </>
           )}
         </SectionCard>
-
-        <SectionCard
-          title="Aperçu facture"
-          description={selectedPreviewRef}
-          className="lg:col-span-2"
-          action={
-            <div className="flex gap-1.5">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={!selectedInvoiceId || previewLoading}
-                onClick={() =>
-                  selectedInvoiceId ? void openPdf(selectedInvoiceId) : null
-                }
-              >
-                <Printer className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={!selectedInvoiceId || previewLoading}
-                onClick={() =>
-                  selectedInvoiceId ? void openPdf(selectedInvoiceId) : null
-                }
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          }
-        >
-          <div className="rounded-lg border border-border bg-card p-5 text-sm">
-            {previewLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : null}
-
-            {!previewLoading && !preview ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Selectionnez une facture pour voir son detail.
-              </p>
-            ) : null}
-
-            {!previewLoading && preview ? (
-              <>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      width={32}
-                      height={32}
-                      className="h-8 w-8"
-                    />
-                    <div>
-                      <p className="font-display font-bold text-foreground">
-                        AC ERP
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        12 rue du Commerce, Lyon
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-foreground">FACTURE</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedPreviewRef}
-                    </p>
-                  </div>
-                </div>
-                <div className="my-4 border-t border-border pt-3 text-xs text-muted-foreground">
-                  <p className="font-medium text-foreground">
-                    Facture a : {selectedPreviewTier}
-                  </p>
-                  <p>Lyon, France · Echeance : {selectedPreviewEcheance}</p>
-                </div>
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="pb-2 font-medium">Désignation</th>
-                      <th className="pb-2 text-center font-medium">Qté</th>
-                      <th className="pb-2 text-right font-medium">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewLines.map((l) => (
-                      <tr key={l.id} className="border-b border-border/60">
-                        <td className="py-2 text-foreground">
-                          {l.designation || "Produit"}
-                        </td>
-                        <td className="py-2 text-center text-muted-foreground">
-                          {toNumber(l.quantite, 0)}
-                        </td>
-                        <td className="py-2 text-right text-foreground">
-                          {fmtCurrency(
-                            toNumber(l.montantTtc, toNumber(l.montantHt, 0)),
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {previewLines.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-4 text-center text-muted-foreground"
-                        >
-                          Aucune ligne de facture
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-                <div className="mt-3 space-y-1 text-xs">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Total HT</span>
-                    <span>{fmtCurrency(previewHt)}</span>
-                  </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>TVA</span>
-                    <span>{fmtCurrency(previewTva)}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-border pt-1 font-bold text-foreground">
-                    <span>Total TTC</span>
-                    <span>{fmtCurrency(previewTtc)}</span>
-                  </div>
-                </div>
-              </>
-            ) : null}
-          </div>
-        </SectionCard>
       </div>
 
       <AppModal
@@ -638,7 +524,7 @@ function InvoicesPage() {
         }}
         title="Apercu PDF facture"
         description={pdfFilename}
-        size="xxl"
+        size="xl"
         footer={
           <div className="flex items-center justify-between gap-2">
             <Button variant="outline" onClick={() => setPdfModalOpen(false)}>

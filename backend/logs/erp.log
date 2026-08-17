@@ -3495,3 +3495,829 @@ Transaction API error: Transaction already closed: A query cannot be executed on
 2026-08-17T14:24:02.582Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
 2026-08-17T14:24:02.790Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
 2026-08-17T14:38:23.621Z info: Socket connecte 1SDCYpCtDjsOpjapAAAC
+2026-08-17T15:43:30.052Z info: Socket deconnecte 1SDCYpCtDjsOpjapAAAC
+2026-08-17T17:00:23.430Z info: Socket connecte hI0xH-7srDyy2WsvAAAE
+2026-08-17T17:02:47.174Z info: Base de donnees connectee
+2026-08-17T17:02:47.211Z info: Serveur demarre port 3000
+2026-08-17T17:02:50.710Z info: Socket connecte tFJAmfZ4FkfQCCUHAAAB
+2026-08-17T17:02:57.538Z info: Socket deconnecte tFJAmfZ4FkfQCCUHAAAB
+2026-08-17T17:03:03.473Z info: Socket connecte JnlBHJjQgD5G8FruAAAD
+2026-08-17T17:09:23.895Z info: Base de donnees connectee
+2026-08-17T17:09:23.911Z info: Serveur demarre port 3000
+2026-08-17T17:09:23.986Z info: Socket connecte rdtdm0Xed50-MEU4AAAB
+2026-08-17T17:09:34.672Z info: Base de donnees connectee
+2026-08-17T17:09:34.688Z info: Serveur demarre port 3000
+2026-08-17T17:09:35.014Z info: Socket connecte E3Z83LsJSxlDGHvUAAAB
+2026-08-17T17:09:44.120Z info: Base de donnees connectee
+2026-08-17T17:09:44.131Z info: Serveur demarre port 3000
+2026-08-17T17:09:46.524Z info: Socket connecte O3nLun9TeiHQDJ-hAAAB
+2026-08-17T17:09:51.608Z info: Base de donnees connectee
+2026-08-17T17:09:51.619Z info: Serveur demarre port 3000
+2026-08-17T17:09:55.020Z info: Socket connecte pHxhVnM7gZg4ai-VAAAB
+2026-08-17T17:10:32.763Z info: Base de donnees connectee
+2026-08-17T17:10:32.774Z info: Serveur demarre port 3000
+2026-08-17T17:10:33.594Z info: Socket connecte T7WivyxXED6pWf6bAAAB
+2026-08-17T17:11:41.056Z info: Base de donnees connectee
+2026-08-17T17:11:41.099Z info: Serveur demarre port 3000
+2026-08-17T17:11:50.671Z info: Base de donnees connectee
+2026-08-17T17:11:50.688Z info: Serveur demarre port 3000
+2026-08-17T17:11:51.020Z info: Socket connecte R7I-VGmdz7BAWBeeAAAB
+2026-08-17T17:12:12.255Z info: Base de donnees connectee
+2026-08-17T17:12:12.270Z info: Serveur demarre port 3000
+2026-08-17T17:12:13.055Z info: Socket connecte 8wR9pTtSv6YJhS7ZAAAB
+2026-08-17T17:29:16.479Z info: Arret du serveur
+2026-08-17T18:13:57.468Z error: Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientInitializationError: Can't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at r (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:112:2770)\n    at async connectDB (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/config/database.js:17:5)\n    at async bootstrap (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/server.js:10:3)"}
+2026-08-17T18:13:58.757Z error: Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientInitializationError: Can't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at r (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:112:2770)\n    at async connectDB (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/config/database.js:17:5)\n    at async bootstrap (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/server.js:10:3)"}
+2026-08-17T18:15:57.351Z info: Base de donnees connectee
+2026-08-17T18:15:57.371Z info: Serveur demarre port 3000
+2026-08-17T18:15:57.647Z info: Socket connecte KHPCsHyJj7CDV8oVAAAB
+2026-08-17T18:16:31.969Z info: Socket deconnecte KHPCsHyJj7CDV8oVAAAB
+2026-08-17T18:16:44.747Z info: Socket connecte L5E8lxaI2aOANrYwAAAD
+2026-08-17T18:17:42.253Z info: Socket deconnecte L5E8lxaI2aOANrYwAAAD
+2026-08-17T18:17:42.435Z info: Socket connecte dnCMUheL6EJn4Fn0AAAF
+2026-08-17T18:52:44.705Z error: Un inventaire est deja en cours {"stack":"ApiError: Un inventaire est deja en cours\n    at Object.createInventaire (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/stocks/stocks.service.js:67:13)\n    at async createInventaire (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/stocks/stocks.controller.js:10:74)","code":"BUSINESS_RULE_VIOLATION"}
+2026-08-17T19:38:14.433Z info: Base de donnees connectee
+2026-08-17T19:38:14.451Z info: Serveur demarre port 3000
+2026-08-17T19:38:20.048Z info: Socket connecte W7OyDaJB_epnAJloAAAB
+2026-08-17T19:38:30.960Z info: Base de donnees connectee
+2026-08-17T19:38:30.986Z info: Serveur demarre port 3000
+2026-08-17T19:38:32.027Z info: Socket connecte Obl48QWMyIJhtehHAAAB
+2026-08-17T19:38:43.091Z info: Base de donnees connectee
+2026-08-17T19:38:43.108Z info: Serveur demarre port 3000
+2026-08-17T19:38:43.274Z info: Socket connecte e5Mb4-IOESVxbWytAAAB
+2026-08-17T19:39:15.883Z info: Base de donnees connectee
+2026-08-17T19:39:15.899Z info: Serveur demarre port 3000
+2026-08-17T19:39:16.012Z info: Socket connecte m4IbSpt6Cydk5pO_AAAB
+2026-08-17T19:39:25.994Z info: Base de donnees connectee
+2026-08-17T19:39:26.011Z info: Serveur demarre port 3000
+2026-08-17T19:39:27.009Z info: Socket connecte QW1Mup9d6vxx2pp_AAAB
+2026-08-17T19:40:03.266Z info: Base de donnees connectee
+2026-08-17T19:40:03.277Z info: Serveur demarre port 3000
+2026-08-17T19:40:05.038Z info: Socket connecte L50u4ZEWXnHPib-fAAAB
+2026-08-17T19:40:15.965Z info: Base de donnees connectee
+2026-08-17T19:40:15.986Z info: Serveur demarre port 3000
+2026-08-17T19:40:18.029Z info: Socket connecte uB8c7amxcu6qprcoAAAB
+2026-08-17T19:40:32.753Z info: Socket deconnecte uB8c7amxcu6qprcoAAAB
+2026-08-17T19:40:42.970Z info: Socket connecte f3EsJeQa1sP6zsp1AAAD
+2026-08-17T20:13:47.627Z info: Socket deconnecte f3EsJeQa1sP6zsp1AAAD
+2026-08-17T20:13:47.922Z info: Socket connecte iQxffEltO3EzAMZKAAAF
+2026-08-17T20:17:36.314Z info: Base de donnees connectee
+2026-08-17T20:17:36.351Z info: Serveur demarre port 3000
+2026-08-17T20:17:38.692Z info: Socket connecte 6e2IjRFuYJiiZ4-OAAAB
+2026-08-17T20:19:04.580Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:19:04.968Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:19:13.083Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:23:38.933Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:23:39.396Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:23:55.239Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:24:33.220Z error: Token d'authentification requis {"stack":"ApiError: Token d'authentification requis\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:10:13)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-08-17T20:24:58.291Z info: Base de donnees connectee
+2026-08-17T20:24:58.308Z info: Serveur demarre port 3000
+2026-08-17T20:25:00.598Z info: Socket connecte bK8FsT3khDsmKiM7AAAB
+2026-08-17T20:25:50.251Z info: Base de donnees connectee
+2026-08-17T20:25:50.266Z info: Serveur demarre port 3000
+2026-08-17T20:25:50.346Z info: Socket connecte LzJyGwrPrFTzAE6GAAAB
+2026-08-17T20:26:02.482Z error: Token invalide {"stack":"ApiError: Token invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/middlewares/auth.middleware.js:25:46)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)\n    at trimPrefix (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:342:13)\n    at C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:297:9\n    at processParams (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:582:12)\n    at next (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:291:5)\n    at Function.handle (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:186:3)\n    at router (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\index.js:60:12)\n    at Layer.handleRequest (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\router\\lib\\layer.js:152:17)","code":"UNAUTHORIZED"}
+2026-08-17T20:27:37.193Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:27:37.343Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:28:36.678Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:28:36.884Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    where: {},
+    ~~~~~
+?   AND?: PaiementWhereInput | PaiementWhereInput[],
+?   OR?: PaiementWhereInput[],
+?   NOT?: PaiementWhereInput | PaiementWhereInput[],
+?   id?: StringFilter | String,
+?   idFacture?: StringFilter | String,
+?   idUtilisateur?: StringFilter | String,
+?   montant?: DecimalFilter | Decimal,
+?   datePaiement?: DateTimeFilter | DateTime,
+?   modePaiement?: EnumModePaiementFilter | ModePaiement,
+?   reference?: StringNullableFilter | String | Null,
+?   notes?: StringNullableFilter | String | Null,
+?   createdAt?: DateTimeFilter | DateTime,
+?   facture?: FactureScalarRelationFilter | FactureWhereInput,
+?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput
+  }
+}
+
+Unknown argument `where`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    where: {},\n    ~~~~~\n?   AND?: PaiementWhereInput | PaiementWhereInput[],\n?   OR?: PaiementWhereInput[],\n?   NOT?: PaiementWhereInput | PaiementWhereInput[],\n?   id?: StringFilter | String,\n?   idFacture?: StringFilter | String,\n?   idUtilisateur?: StringFilter | String,\n?   montant?: DecimalFilter | Decimal,\n?   datePaiement?: DateTimeFilter | DateTime,\n?   modePaiement?: EnumModePaiementFilter | ModePaiement,\n?   reference?: StringNullableFilter | String | Null,\n?   notes?: StringNullableFilter | String | Null,\n?   createdAt?: DateTimeFilter | DateTime,\n?   facture?: FactureScalarRelationFilter | FactureWhereInput,\n?   utilisateur?: UtilisateurScalarRelationFilter | UtilisateurWhereInput\n  }\n}\n\nUnknown argument `where`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:29:25.067Z info: Base de donnees connectee
+2026-08-17T20:29:25.086Z info: Serveur demarre port 3000
+2026-08-17T20:29:25.139Z info: Socket connecte o-QYHmn8NZToZYBRAAAB
+2026-08-17T20:30:42.024Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "c"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "c"
+        }
+      },
+      {
+        notes: {
+          contains: "c"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"c\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"c\"\n        }\n      },\n      {\n        notes: {\n          contains: \"c\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:42.126Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "ch"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "ch"
+        }
+      },
+      {
+        notes: {
+          contains: "ch"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"ch\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"ch\"\n        }\n      },\n      {\n        notes: {\n          contains: \"ch\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:42.375Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "che"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "che"
+        }
+      },
+      {
+        notes: {
+          contains: "che"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"che\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"che\"\n        }\n      },\n      {\n        notes: {\n          contains: \"che\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:42.984Z error: 
+Invalid `prisma.paiement.findMany()` invocation:
+
+{
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "chequ"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "chequ"
+        }
+      },
+      {
+        notes: {
+          contains: "chequ"
+        }
+      }
+    ]
+  },
+  skip: 0,
+  take: 10,
+  orderBy: {
+    createdAt: "asc"
+  },
+  include: {
+    facture: {
+      select: {
+        id: true,
+        numeroFacture: true,
+        totalTtc: true,
+        montantPaye: true,
+        statut: true
+      }
+    },
+    utilisateur: {
+      select: {
+        id: true,
+        nom: true,
+        prenom: true
+      }
+    }
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.findMany()` invocation:\n\n{\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"chequ\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"chequ\"\n        }\n      },\n      {\n        notes: {\n          contains: \"chequ\"\n        }\n      }\n    ]\n  },\n  skip: 0,\n  take: 10,\n  orderBy: {\n    createdAt: \"asc\"\n  },\n  include: {\n    facture: {\n      select: {\n        id: true,\n        numeroFacture: true,\n        totalTtc: true,\n        montantPaye: true,\n        statut: true\n      }\n    },\n    utilisateur: {\n      select: {\n        id: true,\n        nom: true,\n        prenom: true\n      }\n    }\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:43.131Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "cheq"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "cheq"
+        }
+      },
+      {
+        notes: {
+          contains: "cheq"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"cheq\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"cheq\"\n        }\n      },\n      {\n        notes: {\n          contains: \"cheq\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:43.187Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "cheque"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "cheque"
+        }
+      },
+      {
+        notes: {
+          contains: "cheque"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"cheque\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"cheque\"\n        }\n      },\n      {\n        notes: {\n          contains: \"cheque\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:48.959Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "chequ"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "chequ"
+        }
+      },
+      {
+        notes: {
+          contains: "chequ"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"chequ\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"chequ\"\n        }\n      },\n      {\n        notes: {\n          contains: \"chequ\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:49.474Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "cheq"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "cheq"
+        }
+      },
+      {
+        notes: {
+          contains: "cheq"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"cheq\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"cheq\"\n        }\n      },\n      {\n        notes: {\n          contains: \"cheq\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:49.569Z error: 
+Invalid `prisma.paiement.findMany()` invocation:
+
+{
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "che"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "che"
+        }
+      },
+      {
+        notes: {
+          contains: "che"
+        }
+      }
+    ]
+  },
+  skip: 0,
+  take: 10,
+  orderBy: {
+    createdAt: "asc"
+  },
+  include: {
+    facture: {
+      select: {
+        id: true,
+        numeroFacture: true,
+        totalTtc: true,
+        montantPaye: true,
+        statut: true
+      }
+    },
+    utilisateur: {
+      select: {
+        id: true,
+        nom: true,
+        prenom: true
+      }
+    }
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.findMany()` invocation:\n\n{\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"che\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"che\"\n        }\n      },\n      {\n        notes: {\n          contains: \"che\"\n        }\n      }\n    ]\n  },\n  skip: 0,\n  take: 10,\n  orderBy: {\n    createdAt: \"asc\"\n  },\n  include: {\n    facture: {\n      select: {\n        id: true,\n        numeroFacture: true,\n        totalTtc: true,\n        montantPaye: true,\n        statut: true\n      }\n    },\n    utilisateur: {\n      select: {\n        id: true,\n        nom: true,\n        prenom: true\n      }\n    }\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:49.649Z error: 
+Invalid `prisma.paiement.count()` invocation:
+
+{
+  select: {
+    _count: {
+      select: {
+        _all: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "ch"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "ch"
+        }
+      },
+      {
+        notes: {
+          contains: "ch"
+        }
+      }
+    ]
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.count()` invocation:\n\n{\n  select: {\n    _count: {\n      select: {\n        _all: true\n      }\n    }\n  },\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"ch\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"ch\"\n        }\n      },\n      {\n        notes: {\n          contains: \"ch\"\n        }\n      }\n    ]\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 1)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:30:49.742Z error: 
+Invalid `prisma.paiement.findMany()` invocation:
+
+{
+  where: {
+    OR: [
+      {
+        reference: {
+          contains: "c"
+        }
+      },
+      {
+        modePaiement: {
+          contains: "c"
+        }
+      },
+      {
+        notes: {
+          contains: "c"
+        }
+      }
+    ]
+  },
+  skip: 0,
+  take: 10,
+  orderBy: {
+    createdAt: "asc"
+  },
+  include: {
+    facture: {
+      select: {
+        id: true,
+        numeroFacture: true,
+        totalTtc: true,
+        montantPaye: true,
+        statut: true
+      }
+    },
+    utilisateur: {
+      select: {
+        id: true,
+        nom: true,
+        prenom: true
+      }
+    }
+  }
+}
+
+Unknown argument `contains`. Available options are marked with ?. {"stack":"PrismaClientValidationError: \nInvalid `prisma.paiement.findMany()` invocation:\n\n{\n  where: {\n    OR: [\n      {\n        reference: {\n          contains: \"c\"\n        }\n      },\n      {\n        modePaiement: {\n          contains: \"c\"\n        }\n      },\n      {\n        notes: {\n          contains: \"c\"\n        }\n      }\n    ]\n  },\n  skip: 0,\n  take: 10,\n  orderBy: {\n    createdAt: \"asc\"\n  },\n  include: {\n    facture: {\n      select: {\n        id: true,\n        numeroFacture: true,\n        totalTtc: true,\n        montantPaye: true,\n        statut: true\n      }\n    },\n    utilisateur: {\n      select: {\n        id: true,\n        nom: true,\n        prenom: true\n      }\n    }\n  }\n}\n\nUnknown argument `contains`. Available options are marked with ?.\n    at Nn (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:29:1363)\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6911)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/paiements/paiements.service.js:51:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/_shared/controller.factory.js:7:24)"}
+2026-08-17T20:34:09.086Z info: Base de donnees connectee
+2026-08-17T20:34:09.099Z info: Serveur demarre port 3000
+2026-08-17T20:34:09.289Z info: Socket connecte BIBOV7LRhHeFrfn9AAAB
+2026-08-17T20:39:26.258Z info: Base de donnees connectee
+2026-08-17T20:39:26.270Z info: Serveur demarre port 3000
+2026-08-17T20:39:26.334Z info: Socket connecte 55D-XBkMA1fqwGdRAAAB
+2026-08-17T20:43:54.236Z info: Socket deconnecte 55D-XBkMA1fqwGdRAAAB
+2026-08-17T20:44:11.091Z info: Socket connecte hg3uHnEMfnYQ7qiqAAAD
+2026-08-17T20:46:39.240Z info: Base de donnees connectee
+2026-08-17T20:46:39.264Z info: Serveur demarre port 3000
+2026-08-17T20:46:39.459Z info: Socket connecte ncBT5WfaPPDVU_pyAAAB

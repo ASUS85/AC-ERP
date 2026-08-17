@@ -47,6 +47,7 @@ import {
   formatGroupedInputNumber,
   normalizeNumberInput,
 } from "@/lib/number-input";
+import { resolveMediaUrl } from "@/lib/avatar";
 
 export const Route = createFileRoute("/_app/products")({
   head: () => ({ meta: [{ title: "Produits — AC ERP" }] }),
@@ -432,12 +433,15 @@ function ProductsPage() {
       header: "Produit",
       render: (product) => (
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
             {product.photo ? (
               <img
-                src={product.photo}
+                src={resolveMediaUrl(product.photo)}
                 alt={product.designation}
                 className="h-full w-full rounded-lg object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = "none";
+                }}
               />
             ) : (
               <Package className="h-4 w-4" />
@@ -663,9 +667,12 @@ function ProductsPage() {
               {form.photo ? (
                 <div className="rounded-md border border-border p-2">
                   <img
-                    src={form.photo}
+                    src={resolveMediaUrl(form.photo)}
                     alt="Aperçu produit"
                     className="h-24 w-24 rounded object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = "none";
+                    }}
                   />
                 </div>
               ) : null}

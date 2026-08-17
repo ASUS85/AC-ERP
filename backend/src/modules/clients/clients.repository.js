@@ -77,4 +77,25 @@ export const clientsRepository = {
       },
     });
   },
+
+  async getEncours(idClient) {
+    const factures = await prisma.facture.findMany({
+      where: {
+        idClient,
+        typeFacture: "VENTE",
+        statut: {
+          notIn: ["SOLDEE", "ANNULEE", "BROUILLON"],
+        },
+      },
+      select: {
+        totalTtc: true,
+        montantPaye: true,
+      },
+    });
+
+    return factures.reduce((acc, f) => {
+      const restant = Math.max(0, Number(f.totalTtc) - Number(f.montantPaye));
+      return acc + restant;
+    }, 0);
+  },
 };

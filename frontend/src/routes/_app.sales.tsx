@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
   Loader2,
   Minus,
   Plus,
@@ -10,6 +13,7 @@ import {
   Trash2,
   User,
   UserRound,
+  Wallet,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, Pagination } from "@/components/erp/widgets";
@@ -37,7 +41,10 @@ import {
   createVenteDirecte,
   type VenteDirectePayload,
 } from "@/lib/api/ventes.service";
+import { createPaiement } from "@/lib/api/paiements.service";
 import { toast } from "sonner";
+import { resolveMediaUrl } from "@/lib/avatar";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/sales")({
   head: () => ({ meta: [{ title: "Ventes — AC ERP" }] }),
@@ -63,6 +70,9 @@ type ClientApi = {
   nom: string;
   email?: string | null;
   telephone?: string | null;
+  encoursActuel?: number;
+  creditDisponible?: number;
+  plafondCredit?: number | string;
 };
 
 type CartLine = {
@@ -212,6 +222,14 @@ function SalesPage() {
   const [historyDetail, setHistoryDetail] = useState<FactureDetailsApi | null>(
     null,
   );
+
+  const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
+  const [newPaymentAmount, setNewPaymentAmount] = useState("");
+  const [newPaymentMode, setNewPaymentMode] = useState<PaymentMode>("ESPECES");
+  const [newPaymentDate, setNewPaymentDate] = useState("");
+  const [newPaymentRef, setNewPaymentRef] = useState("");
+  const [newPaymentNotes, setNewPaymentNotes] = useState("");
+  const [addPaymentSubmitting, setAddPaymentSubmitting] = useState(false);
 
   const cols: Column<SaleRow>[] = [
     {
@@ -440,6 +458,21 @@ function SalesPage() {
       toast.error("Le montant payé est invalide");
       return false;
     }
+    if (clientMode === "OCCASIONNEL" && paid < totals.totalTtc) {
+      toast.error("Un client occasionnel doit payer l'intégralité de la facture");
+      return false;
+    }
+    if (clientMode === "ENREGISTRE" && selectedClient) {
+      const resteAPayer = totals.totalTtc - paid;
+      if (
+        resteAPayer > 0 &&
+        selectedClient.creditDisponible !== undefined &&
+        resteAPayer > selectedClient.creditDisponible
+      ) {
+        toast.error("Le plafond de crédit du client est dépassé");
+        return false;
+      }
+    }
     return true;
   };
 
@@ -467,12 +500,12 @@ function SalesPage() {
         clientOccasionnelInfo:
           clientMode === "OCCASIONNEL" && hasOccasionalInfo
             ? {
-                nom: clientOccasionnelInfo.nom.trim() || undefined,
-                prenom: clientOccasionnelInfo.prenom.trim() || undefined,
-                sexe: clientOccasionnelInfo.sexe.trim() || undefined,
-                numeroCni: clientOccasionnelInfo.numeroCni.trim() || undefined,
-                telephone: clientOccasionnelInfo.telephone.trim() || undefined,
-              }
+              nom: clientOccasionnelInfo.nom.trim() || undefined,
+              prenom: clientOccasionnelInfo.prenom.trim() || undefined,
+              sexe: clientOccasionnelInfo.sexe.trim() || undefined,
+              numeroCni: clientOccasionnelInfo.numeroCni.trim() || undefined,
+              telephone: clientOccasionnelInfo.telephone.trim() || undefined,
+            }
             : undefined,
         lignes: cart.map((line) => ({
           idProduit: line.idProduit,
@@ -483,10 +516,10 @@ function SalesPage() {
         paiement:
           paid > 0
             ? {
-                montant: paid,
-                modePaiement: paymentMode,
-                notes: "Paiement vente directe",
-              }
+              montant: paid,
+              modePaiement: paymentMode,
+              notes: "Paiement vente directe",
+            }
             : undefined,
       };
       const response = (await createVenteDirecte(payload)) as {
@@ -566,6 +599,47 @@ function SalesPage() {
     }
   };
 
+  const handleAddPayment = async () => {
+    if (!historyDetail?.id) return;
+    const amount = Number(newPaymentAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Veuillez saisir un montant valide");
+      return;
+    }
+    const soldeDu = historyDetail.montantTtc - historyDetail.montantPaye;
+    if (amount > soldeDu) {
+      toast.error("Le montant dépasse le reste à payer");
+      return;
+    }
+
+    setAddPaymentSubmitting(true);
+    try {
+      await createPaiement({
+        idFacture: historyDetail.id,
+        montant: amount,
+        modePaiement: newPaymentMode,
+        datePaiement: newPaymentDate || new Date().toISOString(),
+        referenceDocument: newPaymentRef || undefined,
+        notes: newPaymentNotes || undefined,
+      });
+
+      toast.success("Paiement ajouté avec succès");
+      setAddPaymentModalOpen(false);
+      setNewPaymentAmount("");
+      setNewPaymentDate("");
+      setNewPaymentRef("");
+      setNewPaymentNotes("");
+
+      // Refresh details and history
+      void openHistoryDetail({ id: historyDetail.id } as SaleRow);
+      void loadHistory();
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de l'ajout du paiement");
+    } finally {
+      setAddPaymentSubmitting(false);
+    }
+  };
+
   const selectedClient = clients.find(
     (client) => client.id === selectedClientId,
   );
@@ -630,12 +704,15 @@ function SalesPage() {
                         onClick={() => addProduct(product)}
                         className="group rounded-lg border border-border p-3 text-left transition-all hover:border-primary/40 hover:shadow-card"
                       >
-                        <div className="mb-2 flex h-16 items-center justify-center rounded-md bg-secondary/60 text-primary">
+                        <div className="mb-2 flex h-16 items-center justify-center overflow-hidden rounded-md bg-secondary/60 text-primary">
                           {product.photo ? (
                             <img
-                              src={product.photo}
+                              src={resolveMediaUrl(product.photo)}
                               alt={product.designation}
                               className="h-full w-full rounded-md object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = "none";
+                              }}
                             />
                           ) : (
                             <ShoppingCart className="h-6 w-6 opacity-70" />
@@ -686,17 +763,37 @@ function SalesPage() {
                   </Button>
                 </div>
                 {clientMode === "ENREGISTRE" ? (
-                  <SearchableSelect
-                    value={selectedClientId}
-                    onValueChange={setSelectedClientId}
-                    placeholder="Sélectionner un client"
-                    searchPlaceholder="Rechercher un client..."
-                    emptyMessage="Aucun client trouvé"
-                    options={clients.map((client) => ({
-                      value: client.id,
-                      label: client.nom,
-                    }))}
-                  />
+                  <div className="space-y-2">
+                    <SearchableSelect
+                      value={selectedClientId}
+                      onValueChange={setSelectedClientId}
+                      placeholder="Sélectionner un client"
+                      searchPlaceholder="Rechercher un client..."
+                      emptyMessage="Aucun client trouvé"
+                      options={clients.map((client) => ({
+                        value: client.id,
+                        label: client.nom,
+                      }))}
+                    />
+                    {selectedClient && (
+                      <div className="rounded border bg-muted/50 p-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Plafond de crédit:</span>
+                          <span className="font-medium">{selectedClient.plafondCredit ? fmtCurrency(Number(selectedClient.plafondCredit)) : "Non défini"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Encours actuel:</span>
+                          <span className="font-medium">{fmtCurrency(selectedClient.encoursActuel || 0)}</span>
+                        </div>
+                        <div className="flex justify-between border-t border-border mt-1 pt-1">
+                          <span className="text-muted-foreground">Crédit disponible:</span>
+                          <span className={cn("font-bold", (selectedClient.creditDisponible ?? 0) > 0 ? "text-green-600 dark:text-green-400" : "text-destructive")}>
+                            {selectedClient.creditDisponible !== undefined ? fmtCurrency(selectedClient.creditDisponible) : "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : null}
               </div>
 
@@ -1032,20 +1129,14 @@ function SalesPage() {
         onOpenChange={setHistoryDetailOpen}
         title="Détail de la facture"
         description={historyDetail?.numeroFacture || "Facture"}
-        size="lg"
+        size="xl"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end w-full">
             <Button
               variant="outline"
               onClick={() => setHistoryDetailOpen(false)}
             >
               Fermer
-            </Button>
-            <Button
-              onClick={() => void downloadHistoryDetailPdf()}
-              disabled={!historyDetail?.id}
-            >
-              Télécharger la facture
             </Button>
           </div>
         }
@@ -1055,61 +1146,228 @@ function SalesPage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : historyDetail ? (
-          <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <p>
-                <strong>Client :</strong>{" "}
-                {historyDetail.client?.nom || "Client occasionnel"}
-              </p>
-              <p>
-                <strong>Statut :</strong>{" "}
-                {statusLabels[historyDetail.statut] || historyDetail.statut}
-              </p>
-              <p>
-                <strong>Date émission :</strong>{" "}
-                {formatDate(historyDetail.dateEmission)}
-              </p>
-              <p>
-                <strong>Date échéance :</strong>{" "}
-                {formatDate(historyDetail.dateEcheance)}
-              </p>
-              <p>
-                <strong>Total HT :</strong>{" "}
-                {fmtCurrency(toNumber(historyDetail.totalHt))}
-              </p>
-              <p>
-                <strong>TVA :</strong>{" "}
-                {fmtCurrency(toNumber(historyDetail.totalTva))}
-              </p>
-              <p>
-                <strong>Total TTC :</strong>{" "}
-                {fmtCurrency(toNumber(historyDetail.totalTtc))}
-              </p>
-              <p>
-                <strong>Montant payé :</strong>{" "}
-                {fmtCurrency(toNumber(historyDetail.montantPaye))}
-              </p>
-              <p>
-                <strong>Reste à payer :</strong>{" "}
-                {fmtCurrency(
-                  Math.max(
-                    0,
-                    toNumber(historyDetail.totalTtc) -
-                      toNumber(historyDetail.montantPaye),
-                  ),
+          <Tabs defaultValue="details" className="w-full">
+            <div className="flex items-center justify-between mb-4 border-b border-border pb-2">
+              <TabsList>
+                <TabsTrigger value="details">Détails</TabsTrigger>
+                <TabsTrigger value="paiements">Paiements</TabsTrigger>
+              </TabsList>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void downloadHistoryDetailPdf()}
+                  disabled={!historyDetail?.id}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Télécharger
+                </Button>
+                {(historyDetail.statut === "PARTIELLEMENT_PAYEE" || historyDetail.statut === "EMISE") && (
+                  <Button size="sm" onClick={() => setAddPaymentModalOpen(true)}>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Ajouter un paiement
+                  </Button>
                 )}
-              </p>
-              <p>
-                <strong>Mode paiement :</strong>{" "}
-                {historyDetail.paiements?.[0]?.modePaiement || "-"}
-              </p>
+              </div>
+            </div>
+
+            <TabsContent value="details">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Total TTC</p>
+                    <p className="text-2xl font-bold">{fmtCurrency(toNumber(historyDetail.totalTtc))}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Montant Payé</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {fmtCurrency(toNumber(historyDetail.montantPaye))}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Reste à payer</p>
+                    <p className="text-2xl font-bold text-destructive">
+                      {fmtCurrency(Math.max(0, toNumber(historyDetail.totalTtc) - toNumber(historyDetail.montantPaye)))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2 border-b pb-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Informations Client
+                    </h3>
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground">Nom :</span>
+                        <span className="font-medium">{historyDetail.client?.nom || "Client occasionnel"}</span>
+                      </div>
+                      {historyDetail.client?.telephone && (
+                        <div className="flex justify-between items-center py-1">
+                          <span className="text-muted-foreground">Téléphone :</span>
+                          <span>{historyDetail.client.telephone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2 border-b pb-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      Détails Facture
+                    </h3>
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground">Statut :</span>
+                        <span className="font-medium bg-muted px-2 py-0.5 rounded-md text-xs uppercase tracking-wider">
+                          {statusLabels[historyDetail.statut] || historyDetail.statut}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground">Date d'émission :</span>
+                        <span>{formatDate(historyDetail.dateEmission)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground">Échéance :</span>
+                        <span>{formatDate(historyDetail.dateEcheance)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-muted-foreground">Mode de paiement :</span>
+                        <span>{historyDetail.paiements?.[0]?.modePaiement || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="paiements">
+              {historyDetail.paiements && historyDetail.paiements.length > 0 ? (
+                <div className="rounded-md border border-border">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-muted text-muted-foreground">
+                      <tr>
+                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Mode</th>
+                        <th className="px-4 py-3 font-medium">Référence</th>
+                        <th className="px-4 py-3 font-medium text-right">Montant</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {historyDetail.paiements.map((p) => (
+                        <tr key={p.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3">{formatDate(p.datePaiement)}</td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                              {p.modePaiement}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">{p.referenceDocument || "-"}</td>
+                          <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
+                            {fmtCurrency(toNumber(p.montant))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg border-dashed">
+                  <Wallet className="h-8 w-8 text-muted-foreground mb-3 opacity-50" />
+                  <p className="text-sm font-medium text-foreground">Aucun paiement</p>
+                  <p className="text-xs text-muted-foreground mt-1">Il n'y a pas encore de paiement enregistré pour cette facture.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+            <AlertCircle className="h-8 w-8 mb-3 opacity-50" />
+            <p>Détail indisponible pour cette facture.</p>
+          </div>
+        )}
+      </AppModal>
+
+      <AppModal
+        open={addPaymentModalOpen}
+        onOpenChange={setAddPaymentModalOpen}
+        title="Ajouter un paiement"
+        description="Enregistrer un nouveau paiement pour cette facture"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button
+              variant="outline"
+              onClick={() => setAddPaymentModalOpen(false)}
+              disabled={addPaymentSubmitting}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={() => void handleAddPayment()}
+              disabled={addPaymentSubmitting}
+            >
+              {addPaymentSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmer le paiement
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Montant à payer</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={formatGroupedInputNumber(newPaymentAmount)}
+                onChange={(e) => {
+                  const val = normalizeNumberInput(e.target.value);
+                  if (val === "" || !isNaN(Number(val))) {
+                    setNewPaymentAmount(val);
+                  }
+                }}
+                placeholder="Montant..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mode de paiement</Label>
+              <SearchableSelect
+                value={newPaymentMode}
+                onValueChange={(val) => setNewPaymentMode(val as PaymentMode)}
+                options={paymentModes}
+                placeholder="Mode..."
+              />
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Détail indisponible pour cette facture.
-          </p>
-        )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Date du paiement</Label>
+              <Input
+                type="date"
+                value={newPaymentDate}
+                onChange={(e) => setNewPaymentDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Référence</Label>
+              <Input
+                value={newPaymentRef}
+                onChange={(e) => setNewPaymentRef(e.target.value)}
+                placeholder="N° chèque, transaction..."
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Input
+              value={newPaymentNotes}
+              onChange={(e) => setNewPaymentNotes(e.target.value)}
+              placeholder="Commentaires éventuels"
+            />
+          </div>
+        </div>
       </AppModal>
     </>
   );

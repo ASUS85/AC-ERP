@@ -15,6 +15,15 @@ export type ClientPayload = {
   statut?: "ACTIF" | "INACTIF" | "ARCHIVE";
 };
 
+export type ClientItem = ClientPayload & {
+  id: string;
+  codeClient: string;
+  encoursActuel?: number;
+  creditDisponible?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type ApiMeta = {
   total: number;
   page: number;
