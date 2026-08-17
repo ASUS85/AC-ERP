@@ -2467,17 +2467,18 @@ function PurchasesPage() {
             setReceptionOrder(null);
             setReceptionGeneralErrors({});
             setReceptionLinesError("");
+            setReceptionStep(1);
           }
         }}
-        title="Nouvelle reception"
+        title="Nouvelle réception"
         description={
           receptionOrder
-            ? `Bon ${receptionOrder.ref} - wizard de reception`
+            ? `Bon ${receptionOrder.ref} - Enregistrement d'une réception`
             : ""
         }
         size="xxl"
         footer={
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 w-full">
             <Button
               variant="outline"
               disabled={receptionSubmitting}
@@ -2488,236 +2489,197 @@ function PurchasesPage() {
             >
               Annuler
             </Button>
-            <div className="flex items-center gap-2">
-              {receptionStep > 1 ? (
-                <Button
-                  variant="outline"
-                  disabled={receptionSubmitting}
-                  onClick={() =>
-                    setReceptionStep((prev) => Math.max(1, prev - 1))
-                  }
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" /> Retour
-                </Button>
+            <Button
+              disabled={receptionSubmitting}
+              onClick={() => {
+                if (!validateReceptionStep1() || !validateReceptionStep2()) {
+                  return;
+                }
+                void submitReception();
+              }}
+            >
+              {receptionSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {receptionStep < 3 ? (
-                <Button
-                  disabled={receptionSubmitting}
-                  onClick={() => {
-                    if (receptionStep === 1 && !validateReceptionStep1()) {
-                      return;
-                    }
-                    if (receptionStep === 2 && !validateReceptionStep2()) {
-                      return;
-                    }
-                    setReceptionStep((prev) => Math.min(3, prev + 1));
-                  }}
-                >
-                  Suivant <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  disabled={receptionSubmitting}
-                  onClick={() => void submitReception()}
-                >
-                  {receptionSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Valider la reception
-                </Button>
-              )}
-            </div>
+              Valider la réception
+            </Button>
           </div>
         }
       >
         {receptionOrder ? (
-          <div className="space-y-4">
-            <div className="mb-2 flex items-center gap-2">
-              {[1, 2, 3].map((step) => (
-                <div key={step} className="flex items-center gap-2">
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${receptionStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                  >
-                    {step}
-                  </span>
-                  {step < 3 ? <span className="h-0.5 w-8 bg-border" /> : null}
-                </div>
-              ))}
-            </div>
-
-            {receptionStep === 1 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Fournisseur</Label>
-                  <Input
-                    value={
-                      detailsOrder?.fournisseur?.raisonSociale ||
-                      rows.find((item) => item.id === receptionOrder.id)
-                        ?.fournisseur ||
-                      "-"
-                    }
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bon de commande</Label>
-                  <Input value={receptionOrder.ref} disabled />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reception-date">Date</Label>
-                  <Input
-                    id="reception-date"
-                    type="date"
-                    className={cn(
-                      receptionGeneralErrors.date ? "border-destructive" : "",
-                    )}
-                    value={receptionGeneralForm.date}
-                    onChange={(e) =>
-                      setReceptionGeneralForm((prev) => ({
-                        ...prev,
-                        date: e.target.value,
-                      }))
-                    }
-                  />
-                  {receptionGeneralErrors.date ? (
-                    <p className="text-xs text-destructive">
-                      {receptionGeneralErrors.date}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="reception-observations">Observations</Label>
-                  <Textarea
-                    id="reception-observations"
-                    value={receptionGeneralForm.observations}
-                    onChange={(e) =>
-                      setReceptionGeneralForm((prev) => ({
-                        ...prev,
-                        observations: e.target.value,
-                      }))
-                    }
-                    placeholder="Observations de reception"
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            {receptionStep === 2 ? (
-              <div className="space-y-3">
-                {receptionLinesError ? (
-                  <p className="text-xs text-destructive">
-                    {receptionLinesError}
-                  </p>
-                ) : null}
-                {receptionOrder.lines.map((line) => (
-                  <div
-                    key={line.idLigneBcf}
-                    className="grid gap-2 rounded-md border border-border p-3 md:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{line.produit}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Commandee</p>
-                      <p className="text-sm font-semibold">
-                        {line.quantiteCommandee}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">
-                        Deja recue
-                      </p>
-                      <p className="text-sm font-semibold">
-                        {line.quantiteDejaRecue}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Reste</p>
-                      <p className="text-sm font-semibold">{line.restant}</p>
-                    </div>
-                    <div>
-                      <Label htmlFor={`recv-${line.idLigneBcf}`}>
-                        Recu maintenant
-                      </Label>
+          <div className="h-[65vh] overflow-y-auto pr-2 space-y-6">
+            <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+              
+              <div className="space-y-6">
+                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">1</span>
+                    Informations Générales
+                  </h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Fournisseur</Label>
                       <Input
-                        id={`recv-${line.idLigneBcf}`}
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0"
-                        value={formatGroupedInputNumber(
-                          String(line.quantiteARecevoir),
-                        )}
-                        onChange={(e) => {
-                          const value = Math.max(
-                            0,
-                            Math.min(
-                              line.restant,
-                              toNumber(normalizeNumberInput(e.target.value), 0),
-                            ),
-                          );
-                          setReceptionOrder((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  lines: prev.lines.map((l) =>
-                                    l.idLigneBcf === line.idLigneBcf
-                                      ? { ...l, quantiteARecevoir: value }
-                                      : l,
-                                  ),
-                                }
-                              : prev,
-                          );
-                          setReceptionLinesError("");
-                        }}
+                        value={
+                          detailsOrder?.fournisseur?.raisonSociale ||
+                          rows.find((item) => item.id === receptionOrder.id)?.fournisseur ||
+                          "-"
+                        }
+                        disabled
+                        className="bg-muted/40 font-medium"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Bon de commande</Label>
+                      <Input value={receptionOrder.ref} disabled className="bg-muted/40 font-medium" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="reception-date">Date de réception</Label>
+                      <Input
+                        id="reception-date"
+                        type="date"
+                        className={cn(receptionGeneralErrors.date ? "border-destructive focus-visible:ring-destructive" : "")}
+                        value={receptionGeneralForm.date}
+                        onChange={(e) =>
+                          setReceptionGeneralForm((prev) => ({
+                            ...prev,
+                            date: e.target.value,
+                          }))
+                        }
+                      />
+                      {receptionGeneralErrors.date && (
+                        <p className="text-xs text-destructive">{receptionGeneralErrors.date}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="reception-observations">Observations</Label>
+                      <Textarea
+                        id="reception-observations"
+                        value={receptionGeneralForm.observations}
+                        onChange={(e) =>
+                          setReceptionGeneralForm((prev) => ({
+                            ...prev,
+                            observations: e.target.value,
+                          }))
+                        }
+                        placeholder="Ajoutez vos observations de réception..."
+                        className="resize-none h-20"
                       />
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : null}
+                </div>
 
-            {receptionStep === 3 ? (
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-md border border-border p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Nombre de produits
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {receptionOrder.lines.length}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Quantite totale recue
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {receptionOrder.lines.reduce(
-                      (acc, line) => acc + line.quantiteARecevoir,
-                      0,
+                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">2</span>
+                    Articles à réceptionner
+                  </h4>
+                  <div className="space-y-3">
+                    {receptionLinesError && (
+                      <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                        {receptionLinesError}
+                      </div>
                     )}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Valeur reception
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {fmtCurrency(
-                      receptionOrder.lines.reduce((acc, line) => {
-                        const sourceLine = detailsOrder?.lignes?.find(
-                          (item) => item.id === line.idLigneBcf,
-                        );
-                        return (
-                          acc +
-                          line.quantiteARecevoir *
-                            toNumber(sourceLine?.prixUnitaireHt, 0)
-                        );
-                      }, 0),
-                    )}
-                  </p>
+                    {receptionOrder.lines.map((line) => (
+                      <div
+                        key={line.idLigneBcf}
+                        className="group flex flex-col gap-4 rounded-lg border border-border/60 bg-muted/20 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-foreground">{line.produit}</p>
+                          <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>Cmd: <strong className="text-foreground">{line.quantiteCommandee}</strong></span>
+                            <span>•</span>
+                            <span>Reçu: <strong className="text-foreground">{line.quantiteDejaRecue}</strong></span>
+                            <span>•</span>
+                            <span className="text-amber-600 font-medium">Reste: {line.restant}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 sm:w-48">
+                          <Label htmlFor={`recv-${line.idLigneBcf}`} className="sr-only">Recu maintenant</Label>
+                          <div className="relative w-full">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">Qté:</span>
+                            <Input
+                              id={`recv-${line.idLigneBcf}`}
+                              type="text"
+                              inputMode="decimal"
+                              placeholder="0"
+                              className="pl-9 font-medium"
+                              value={formatGroupedInputNumber(String(line.quantiteARecevoir))}
+                              onChange={(e) => {
+                                const value = Math.max(
+                                  0,
+                                  Math.min(
+                                    line.restant,
+                                    toNumber(normalizeNumberInput(e.target.value), 0),
+                                  ),
+                                );
+                                setReceptionOrder((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        lines: prev.lines.map((l) =>
+                                          l.idLigneBcf === line.idLigneBcf
+                                            ? { ...l, quantiteARecevoir: value }
+                                            : l,
+                                        ),
+                                      }
+                                    : prev,
+                                );
+                                setReceptionLinesError("");
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            ) : null}
+
+              
+              <div className="space-y-6">
+                <div className="sticky top-0 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+                  <h4 className="mb-4 text-sm font-semibold text-primary flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">3</span>
+                    Résumé de la réception
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+                      <span className="text-sm text-muted-foreground">Produits concernés</span>
+                      <span className="font-semibold">{receptionOrder.lines.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-primary/10 pb-3">
+                      <span className="text-sm text-muted-foreground">Quantité totale</span>
+                      <span className="font-semibold text-primary">
+                        {receptionOrder.lines.reduce(
+                          (acc, line) => acc + line.quantiteARecevoir,
+                          0,
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-sm text-muted-foreground">Valeur estimée</span>
+                      <span className="text-lg font-bold text-foreground">
+                        {fmtCurrency(
+                          receptionOrder.lines.reduce((acc, line) => {
+                            const sourceLine = detailsOrder?.lignes?.find(
+                              (item) => item.id === line.idLigneBcf,
+                            );
+                            return (
+                              acc +
+                              line.quantiteARecevoir *
+                                toNumber(sourceLine?.prixUnitaireHt, 0)
+                            );
+                          }, 0),
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         ) : null}
       </AppModal>
@@ -2737,16 +2699,16 @@ function PurchasesPage() {
             }
           }
         }}
-        title="Creation facture fournisseur"
+        title="Création facture fournisseur"
         description={
           importOrder
-            ? `Bon ${importOrder.ref} - wizard facture fournisseur`
+            ? `Bon ${importOrder.ref} - Enregistrement de la facture`
             : ""
         }
         size="xxl"
         position="center"
         footer={
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 w-full">
             <Button
               variant="outline"
               disabled={invoiceWizardSubmitting}
@@ -2754,374 +2716,254 @@ function PurchasesPage() {
             >
               Annuler
             </Button>
-            <div className="flex items-center gap-2">
-              {invoiceWizardStep > 1 ? (
-                <Button
-                  variant="outline"
-                  disabled={invoiceWizardSubmitting}
-                  onClick={() =>
-                    setInvoiceWizardStep((prev) => Math.max(1, prev - 1))
-                  }
-                >
-                  <ArrowLeft className="mr-1 h-4 w-4" /> Retour
-                </Button>
+            <Button
+              disabled={invoiceWizardSubmitting || !importFile}
+              onClick={async () => {
+                if (!validateInvoiceStep1()) {
+                  return;
+                }
+                if (!importFile) {
+                  setInvoiceFormErrors((prev) => ({
+                    ...prev,
+                    file: "Le fichier PDF est requis",
+                  }));
+                  return;
+                }
+                setInvoiceWizardSubmitting(true);
+                await submitImportInvoiceDecision("VALIDER");
+                setInvoiceWizardSubmitting(false);
+                setInvoiceWizardOpen(false);
+                if (importOrder?.id) {
+                  await openDetailsModal(importOrder.id);
+                  await loadRows();
+                }
+              }}
+            >
+              {invoiceWizardSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {invoiceWizardStep < 3 ? (
-                <Button
-                  disabled={invoiceWizardSubmitting}
-                  onClick={() => {
-                    if (invoiceWizardStep === 1 && !validateInvoiceStep1()) {
-                      return;
-                    }
-                    if (invoiceWizardStep === 2 && !importFile) {
-                      setInvoiceFormErrors((prev) => ({
-                        ...prev,
-                        file: "Le fichier PDF est requis",
-                      }));
-                      return;
-                    }
-                    setInvoiceFormErrors((prev) => ({
-                      ...prev,
-                      file: undefined,
-                    }));
-                    setInvoiceWizardStep((prev) => Math.min(3, prev + 1));
-                  }}
-                >
-                  Suivant <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  disabled={invoiceWizardSubmitting || !importFile}
-                  onClick={async () => {
-                    setInvoiceWizardSubmitting(true);
-                    await submitImportInvoiceDecision("VALIDER");
-                    setInvoiceWizardSubmitting(false);
-                    setInvoiceWizardOpen(false);
-                    if (importOrder?.id) {
-                      await openDetailsModal(importOrder.id);
-                      await loadRows();
-                    }
-                  }}
-                >
-                  {invoiceWizardSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Valider la facture
-                </Button>
-              )}
-            </div>
+              Valider la facture
+            </Button>
           </div>
         }
       >
-        <div className="space-y-4">
-          <div className="mb-2 flex items-center gap-2">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center gap-2">
-                <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${invoiceWizardStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
-                >
-                  {step}
-                </span>
-                {step < 3 ? <span className="h-0.5 w-8 bg-border" /> : null}
-              </div>
-            ))}
-          </div>
-
-          {invoiceWizardStep === 1 ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="invoice-number">Numero facture</Label>
-                <Input
-                  id="invoice-number"
-                  placeholder="Ex: FAC-2026-0001"
-                  className={cn(
-                    invoiceFormErrors.numeroFacture ? "border-destructive" : "",
-                  )}
-                  value={invoiceForm.numeroFacture}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      numeroFacture: e.target.value,
-                    }))
-                  }
-                />
-                {invoiceFormErrors.numeroFacture ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.numeroFacture}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-date">Date facture</Label>
-                <Input
-                  id="invoice-date"
-                  type="date"
-                  className={cn(
-                    invoiceFormErrors.dateFacture ? "border-destructive" : "",
-                  )}
-                  value={invoiceForm.dateFacture}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      dateFacture: e.target.value,
-                    }))
-                  }
-                />
-                {invoiceFormErrors.dateFacture ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.dateFacture}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-due">Date echeance</Label>
-                <Input
-                  id="invoice-due"
-                  type="date"
-                  className={cn(
-                    invoiceFormErrors.dateEcheance ? "border-destructive" : "",
-                  )}
-                  value={invoiceForm.dateEcheance}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      dateEcheance: e.target.value,
-                    }))
-                  }
-                />
-                {invoiceFormErrors.dateEcheance ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.dateEcheance}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-ht">Montant HT</Label>
-                <Input
-                  id="invoice-ht"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  className={cn(
-                    invoiceFormErrors.montantHt ? "border-destructive" : "",
-                  )}
-                  value={formatGroupedInputNumber(invoiceForm.montantHt)}
-                  onChange={(e) => {
-                    const montantHt = normalizeNumberInput(e.target.value);
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      montantHt,
-                      ttc: computeTtcFromHtAndTva(montantHt, prev.tva),
-                    }));
-                  }}
-                />
-                {invoiceFormErrors.montantHt ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.montantHt}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-tva">TVA</Label>
-                <Input
-                  id="invoice-tva"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  className={cn(
-                    invoiceFormErrors.tva ? "border-destructive" : "",
-                  )}
-                  value={formatGroupedInputNumber(invoiceForm.tva)}
-                  onChange={(e) => {
-                    const tva = normalizeNumberInput(e.target.value);
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      tva,
-                      ttc: computeTtcFromHtAndTva(prev.montantHt, tva),
-                    }));
-                  }}
-                />
-                {invoiceFormErrors.tva ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.tva}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-ttc">TTC</Label>
-                <Input
-                  id="invoice-ttc"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  readOnly
-                  className={cn(
-                    "bg-muted/40",
-                    invoiceFormErrors.ttc ? "border-destructive" : "",
-                  )}
-                  value={formatGroupedInputNumber(invoiceForm.ttc)}
-                />
-                {invoiceFormErrors.ttc ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.ttc}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-remise">Remise</Label>
-                <Input
-                  id="invoice-remise"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  className={cn(
-                    invoiceFormErrors.remise ? "border-destructive" : "",
-                  )}
-                  value={formatGroupedInputNumber(invoiceForm.remise)}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      remise: normalizeNumberInput(e.target.value),
-                    }))
-                  }
-                />
-                {invoiceFormErrors.remise ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.remise}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invoice-transport">Transport</Label>
-                <Input
-                  id="invoice-transport"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0"
-                  className={cn(
-                    invoiceFormErrors.transport ? "border-destructive" : "",
-                  )}
-                  value={formatGroupedInputNumber(invoiceForm.transport)}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      transport: normalizeNumberInput(e.target.value),
-                    }))
-                  }
-                />
-                {invoiceFormErrors.transport ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.transport}
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="invoice-observations">Observations</Label>
-                <Textarea
-                  id="invoice-observations"
-                  placeholder="Commentaires sur la facture fournisseur"
-                  value={invoiceForm.observations}
-                  onChange={(e) =>
-                    setInvoiceForm((prev) => ({
-                      ...prev,
-                      observations: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {invoiceWizardStep === 2 ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="supplier-invoice-file">Fichier PDF</Label>
-                <Input
-                  id="supplier-invoice-file"
-                  type="file"
-                  accept="application/pdf,.pdf"
-                  className={cn(
-                    invoiceFormErrors.file ? "border-destructive" : "",
-                  )}
-                  onChange={(e) => {
-                    onImportFileChange(e.target.files?.[0] || null);
-                    setInvoiceFormErrors((prev) => ({
-                      ...prev,
-                      file: undefined,
-                    }));
-                  }}
-                />
-                {invoiceFormErrors.file ? (
-                  <p className="text-xs text-destructive">
-                    {invoiceFormErrors.file}
-                  </p>
-                ) : null}
-                {importFile ? (
-                  <p className="text-xs text-muted-foreground">
-                    {importFile.name} ·{" "}
-                    {(importFile.size / 1024 / 1024).toFixed(2)} Mo
-                  </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Importez le PDF de facture fournisseur.
-                  </p>
-                )}
-              </div>
-              <div className="rounded-md border border-border p-2">
-                {importFile &&
-                importFile.type === "application/pdf" &&
-                importPreviewUrl ? (
-                  <iframe
-                    src={importPreviewUrl}
-                    title="Apercu facture fournisseur"
-                    className="h-[58vh] w-full rounded-md"
-                  />
-                ) : (
-                  <div className="flex h-[58vh] items-center justify-center text-sm text-muted-foreground">
-                    Selectionnez un PDF pour afficher l'apercu.
+        <div className="h-[75vh] overflow-y-auto pr-2">
+          <div className="grid gap-6 xl:grid-cols-[450px_1fr]">
+            
+            <div className="space-y-6">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">1</span>
+                  Informations de la facture
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="invoice-number">Numéro de la facture</Label>
+                    <Input
+                      id="invoice-number"
+                      placeholder="Ex: FAC-2026-0001"
+                      className={cn(invoiceFormErrors.numeroFacture ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={invoiceForm.numeroFacture}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          numeroFacture: e.target.value,
+                        }))
+                      }
+                    />
+                    {invoiceFormErrors.numeroFacture && <p className="text-xs text-destructive">{invoiceFormErrors.numeroFacture}</p>}
                   </div>
-                )}
-              </div>
-            </div>
-          ) : null}
-
-          {invoiceWizardStep === 3 ? (
-            <div className="space-y-3">
-              <div className="rounded-md border border-border p-3">
-                <p className="text-sm font-semibold">Revue generale</p>
-                <div className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-                  <p>
-                    <span className="text-muted-foreground">Numero:</span>{" "}
-                    {invoiceForm.numeroFacture || "-"}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Date:</span>{" "}
-                    {invoiceForm.dateFacture || "-"}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Echeance:</span>{" "}
-                    {invoiceForm.dateEcheance || "-"}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">Montant HT:</span>{" "}
-                    {formatGroupedNumber(invoiceForm.montantHt)}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">TVA:</span>{" "}
-                    {formatGroupedNumber(invoiceForm.tva)}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">TTC:</span>{" "}
-                    {formatGroupedNumber(invoiceForm.ttc)}
-                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-date">Date facture</Label>
+                    <Input
+                      id="invoice-date"
+                      type="date"
+                      className={cn(invoiceFormErrors.dateFacture ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={invoiceForm.dateFacture}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          dateFacture: e.target.value,
+                        }))
+                      }
+                    />
+                    {invoiceFormErrors.dateFacture && <p className="text-xs text-destructive">{invoiceFormErrors.dateFacture}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-due">Échéance</Label>
+                    <Input
+                      id="invoice-due"
+                      type="date"
+                      className={cn(invoiceFormErrors.dateEcheance ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={invoiceForm.dateEcheance}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          dateEcheance: e.target.value,
+                        }))
+                      }
+                    />
+                    {invoiceFormErrors.dateEcheance && <p className="text-xs text-destructive">{invoiceFormErrors.dateEcheance}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-ht">Montant HT</Label>
+                    <Input
+                      id="invoice-ht"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      className={cn(invoiceFormErrors.montantHt ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={formatGroupedInputNumber(invoiceForm.montantHt)}
+                      onChange={(e) => {
+                        const montantHt = normalizeNumberInput(e.target.value);
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          montantHt,
+                          ttc: computeTtcFromHtAndTva(montantHt, prev.tva),
+                        }));
+                      }}
+                    />
+                    {invoiceFormErrors.montantHt && <p className="text-xs text-destructive">{invoiceFormErrors.montantHt}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-tva">TVA</Label>
+                    <Input
+                      id="invoice-tva"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      className={cn(invoiceFormErrors.tva ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={formatGroupedInputNumber(invoiceForm.tva)}
+                      onChange={(e) => {
+                        const tva = normalizeNumberInput(e.target.value);
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          tva,
+                          ttc: computeTtcFromHtAndTva(prev.montantHt, tva),
+                        }));
+                      }}
+                    />
+                    {invoiceFormErrors.tva && <p className="text-xs text-destructive">{invoiceFormErrors.tva}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-remise">Remise</Label>
+                    <Input
+                      id="invoice-remise"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      className={cn(invoiceFormErrors.remise ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={formatGroupedInputNumber(invoiceForm.remise)}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          remise: normalizeNumberInput(e.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="invoice-transport">Transport</Label>
+                    <Input
+                      id="invoice-transport"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      className={cn(invoiceFormErrors.transport ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={formatGroupedInputNumber(invoiceForm.transport)}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          transport: normalizeNumberInput(e.target.value),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="invoice-ttc">Total TTC</Label>
+                    <Input
+                      id="invoice-ttc"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      readOnly
+                      className={cn("bg-muted/40 font-bold text-primary", invoiceFormErrors.ttc ? "border-destructive focus-visible:ring-destructive" : "")}
+                      value={formatGroupedInputNumber(invoiceForm.ttc)}
+                    />
+                    {invoiceFormErrors.ttc && <p className="text-xs text-destructive">{invoiceFormErrors.ttc}</p>}
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="invoice-observations">Observations</Label>
+                    <Textarea
+                      id="invoice-observations"
+                      placeholder="Commentaires sur la facture fournisseur"
+                      value={invoiceForm.observations}
+                      onChange={(e) =>
+                        setInvoiceForm((prev) => ({
+                          ...prev,
+                          observations: e.target.value,
+                        }))
+                      }
+                      className="resize-none h-20"
+                    />
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                La validation cree la facture fournisseur et la dette associee
-                dans le workflow existant.
-              </p>
             </div>
-          ) : null}
+
+            
+            <div className="space-y-6 flex flex-col h-full">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm flex-1 flex flex-col">
+                <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">2</span>
+                  Document PDF
+                </h4>
+                <div className="space-y-4 flex-1 flex flex-col">
+                  <div>
+                    <Label htmlFor="supplier-invoice-file" className="sr-only">Fichier PDF</Label>
+                    <Input
+                      id="supplier-invoice-file"
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      className={cn("file:bg-primary/10 file:text-primary file:border-0 hover:file:bg-primary/20", invoiceFormErrors.file ? "border-destructive focus-visible:ring-destructive" : "")}
+                      onChange={(e) => {
+                        onImportFileChange(e.target.files?.[0] || null);
+                        setInvoiceFormErrors((prev) => ({
+                          ...prev,
+                          file: undefined,
+                        }));
+                      }}
+                    />
+                    {invoiceFormErrors.file ? (
+                      <p className="mt-1 text-xs text-destructive">{invoiceFormErrors.file}</p>
+                    ) : importFile ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {importFile.name} · {(importFile.size / 1024 / 1024).toFixed(2)} Mo
+                      </p>
+                    ) : null}
+                  </div>
+                  
+                  <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/20 min-h-[400px]">
+                    {importFile && importFile.type === "application/pdf" && importPreviewUrl ? (
+                      <iframe
+                        src={importPreviewUrl}
+                        title="Apercu facture fournisseur"
+                        className="h-full w-full border-0"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileEdit className="h-8 w-8 opacity-20" />
+                          <p>Sélectionnez un PDF pour afficher l'aperçu</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </AppModal>
 
