@@ -22,6 +22,39 @@ function escapeHtml(value = "") {
 }
 
 let cachedLogoDataUri = null;
+const OCCASIONAL_INFO_MARKER = "[[OCCASIONNEL_INFO]]";
+
+function parseMentions(mentions = "") {
+  const text = String(mentions || "");
+  const index = text.indexOf(OCCASIONAL_INFO_MARKER);
+  if (index === -1) {
+    return {
+      legalText: text,
+      clientOccasionnelInfo: null,
+    };
+  }
+
+  const legalText = text.slice(0, index).trim();
+  const payload = text.slice(index + OCCASIONAL_INFO_MARKER.length).trim();
+  try {
+    const parsed = JSON.parse(payload);
+    return {
+      legalText,
+      clientOccasionnelInfo: {
+        nom: String(parsed?.nom || "").trim(),
+        prenom: String(parsed?.prenom || "").trim(),
+        sexe: String(parsed?.sexe || "").trim(),
+        numeroCni: String(parsed?.numeroCni || "").trim(),
+        telephone: String(parsed?.telephone || "").trim(),
+      },
+    };
+  } catch {
+    return {
+      legalText,
+      clientOccasionnelInfo: null,
+    };
+  }
+}
 
 function getLogoDataUri() {
   if (cachedLogoDataUri) return cachedLogoDataUri;
@@ -43,23 +76,100 @@ function getLogoDataUri() {
 function buildFactureHtml(facture, entreprise = {}) {
   const currency = entreprise.devise || "XAF";
   const tiersNom =
-    facture.client?.nom || facture.fournisseur?.raisonSociale || "-";
+    facture.client?.nom ||
+    facture.fournisseur?.raisonSociale ||
+    "Client occasionnel";
+  const { legalText, clientOccasionnelInfo } = parseMentions(
+    facture.mentionsLegales,
+  );
+  const hasClientEnregistre = Boolean(facture.client?.id);
+  const hasOccasionnelDetails = Boolean(
+    clientOccasionnelInfo &&
+    Object.values(clientOccasionnelInfo).some((value) => value.length > 0),
+  );
+  const factureVariant = hasClientEnregistre
+    ? "Facture client enregistre"
+    : "Facture client occasionnel";
   const logoDataUri = getLogoDataUri();
 
+  const modePaiement = facture.paiements?.[0]?.modePaiement || "-";
+  const statut = String(facture.statut || "-")
+    .replaceAll("_", " ")
+    .toLowerCase();
+
+  const entrepriseLigne1 = entreprise.adresse
+    ? escapeHtml(entreprise.adresse)
+    : "Siege Social : Adresse non renseignee";
+  const entrepriseLigne2 = `N RC : ${escapeHtml(entreprise.numeroRc || "-")} | NIU : ${escapeHtml(entreprise.numeroFiscal || "-")}`;
+  const entrepriseLigne3 = `Tel : ${escapeHtml(entreprise.telephone || "-")}`;
+  const entrepriseLigne4 = `Email : ${escapeHtml(entreprise.email || "-")}`;
+
+  const clientInfoBlock = hasClientEnregistre
+    ? `
+    <div class="client-box">
+      <div class="client-title">Informations du Client</div>
+      <table class="client-table">
+        <tr>
+          <td class="label">Nom / Raison Sociale :</td>
+          <td>${escapeHtml(facture.client?.nom || "-")}</td>
+          <td class="label">Telephone :</td>
+          <td>${escapeHtml(facture.client?.telephone || "-")}</td>
+        </tr>
+        <tr>
+          <td class="label">Adresse Email :</td>
+          <td>${escapeHtml(facture.client?.email || "-")}</td>
+          <td class="label">Ville / Pays :</td>
+          <td>${escapeHtml(facture.client?.ville || "-")}, ${escapeHtml(facture.client?.pays || "-")}</td>
+        </tr>
+      </table>
+    </div>
+    `
+    : hasOccasionnelDetails
+      ? `
+    <div class="client-box">
+      <div class="client-title">Informations du Client (Particulier)</div>
+      <table class="client-table">
+        <tr>
+          <td class="label">Nom :</td>
+          <td>${escapeHtml(clientOccasionnelInfo?.nom || "-")}</td>
+          <td class="label">Prenom :</td>
+          <td>${escapeHtml(clientOccasionnelInfo?.prenom || "-")}</td>
+        </tr>
+        <tr>
+          <td class="label">Sexe :</td>
+          <td>${escapeHtml(clientOccasionnelInfo?.sexe || "-")}</td>
+          <td class="label">Telephone :</td>
+          <td>${escapeHtml(clientOccasionnelInfo?.telephone || "-")}</td>
+        </tr>
+        <tr>
+          <td class="label">N CNI :</td>
+          <td colspan="3">${escapeHtml(clientOccasionnelInfo?.numeroCni || "-")}</td>
+        </tr>
+      </table>
+    </div>
+    `
+      : `
+    <div class="client-box">
+      <div class="client-title">Information Client</div>
+      <p class="client-empty">Facture au comptoir / Client non specifie.</p>
+    </div>
+    `;
+
   const lignes = (facture.lignes || [])
-    .map((ligne) => {
+    .map((ligne, index) => {
       const designation =
         ligne.designation || ligne.produit?.designation || "Produit";
       const quantite = Number(ligne.quantite || 0);
       const prix = Number(ligne.prixUnitaireHt || 0);
       const montantHt = Number(ligne.montantHt || quantite * prix);
-      const montantTtc = Number(ligne.montantTtc || montantHt);
 
       return `
         <tr>
+          <td class="text-center">${String(index + 1).padStart(2, "0")}</td>
           <td>${escapeHtml(designation)}</td>
-          <td class="center">${quantite}</td>
-          <td class="right">${money(montantTtc, currency)}</td>
+          <td class="text-center">${quantite}</td>
+          <td class="text-right">${money(prix, currency)}</td>
+          <td class="text-right">${money(montantHt, currency)}</td>
         </tr>
       `;
     })
@@ -71,180 +181,286 @@ function buildFactureHtml(facture, entreprise = {}) {
     <meta charset="UTF-8" />
     <title>Facture ${escapeHtml(facture.numeroFacture)}</title>
     <style>
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+
       * { box-sizing: border-box; }
       body {
-        background: #ffffff;
-        color: #0f172a;
-        font-family: Arial, sans-serif;
+        font-family: 'Times New Roman', Times, serif;
+        color: #000000;
+        background-color: #ffffff;
         margin: 0;
-        padding: 28px;
+        padding: 0;
+        font-size: 11pt;
+        line-height: 1.4;
       }
-      .card {
-        border: 1px solid #d5dde7;
-        border-radius: 14px;
-        margin: 0 auto;
-        max-width: 860px;
-        padding: 18px 20px;
+
+      .invoice-header {
+        border-bottom: 2px solid #000000;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
       }
-      .top {
-        align-items: flex-start;
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
+
+      .company-title {
+        font-size: 20pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 4px 0;
       }
-      .brand {
-        align-items: center;
-        display: flex;
-        gap: 10px;
+
+      .company-subtitle {
+        font-size: 10pt;
+        font-style: italic;
+        margin-bottom: 10px;
       }
+
+      .company-details {
+        font-size: 9.5pt;
+        line-height: 1.3;
+      }
+
       .logo {
-        height: 30px;
-        width: 30px;
+        height: 52px;
+        width: 52px;
+        object-fit: contain;
+        margin-right: 10px;
       }
-      .brand-name {
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1;
-        margin: 0;
-      }
-      .brand-sub {
-        color: #5b6b7d;
-        font-size: 12px;
-        margin: 2px 0 0;
-      }
-      .doc {
-        text-align: right;
-      }
-      .doc-title {
-        font-size: 28px;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        margin: 0;
-      }
-      .doc-ref {
-        color: #425166;
-        font-size: 14px;
-        margin-top: 4px;
-      }
-      .sep {
-        border-top: 1px solid #d5dde7;
-        margin: 16px 0 14px;
-      }
-      .meta-main {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-      }
-      .meta-sub {
-        color: #5b6b7d;
-        font-size: 13px;
-        margin: 4px 0 0;
-      }
-      table {
-        border-collapse: collapse;
-        margin-top: 12px;
+
+      .meta-table {
         width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        margin-bottom: 20px;
       }
-      th {
-        border-bottom: 1px solid #d5dde7;
-        color: #506174;
-        font-size: 13px;
-        font-weight: 600;
-        padding: 12px 0 10px;
-        text-align: left;
+
+      .meta-table td {
+        padding: 3px 0;
+        font-size: 10pt;
       }
-      th.center { text-align: center; }
-      th.right { text-align: right; }
-      td {
-        border-bottom: 1px solid #e8edf4;
-        font-size: 14px;
-        padding: 12px 0;
-        vertical-align: top;
+
+      .text-center { text-align: center; }
+      .text-right { text-align: right; }
+
+      .client-box {
+        border: 1px solid #000000;
+        padding: 12px 15px;
+        margin-bottom: 25px;
+        background-color: #fafafa;
       }
-      td.center { text-align: center; }
-      td.right { text-align: right; }
-      .totals {
+
+      .client-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 10pt;
+        border-bottom: 1px dashed #666666;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+
+      .client-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .client-table td {
+        padding: 3px 0;
+        font-size: 10pt;
+      }
+
+      .client-table td.label {
+        font-weight: bold;
+        width: 25%;
+      }
+
+      .client-empty {
+        margin: 0;
+        font-size: 10pt;
+        font-style: italic;
+        color: #444444;
+      }
+
+      .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      .items-table th {
+        background-color: #000000;
+        color: #ffffff;
+        font-weight: bold;
+        text-align: right;
+        padding: 8px;
+        font-size: 10pt;
+        text-transform: uppercase;
+        border: 1px solid #000000;
+      }
+
+      .items-table td {
+        border: 1px solid #000000;
+        padding: 8px;
+        font-size: 10pt;
+      }
+
+      .totals-wrapper {
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 30px;
+      }
+
+      .totals-table {
+        width: 45%;
         margin-left: auto;
-        margin-top: 14px;
-        width: 48%;
+        border-collapse: collapse;
       }
-      .total-row {
-        color: #506174;
-        display: flex;
-        font-size: 14px;
-        justify-content: space-between;
-        padding: 8px 0;
+
+      .totals-table td {
+        padding: 6px 8px;
+        border: 1px solid #000000;
+        font-size: 10pt;
       }
-      .grand {
-        border-top: 1px solid #d5dde7;
-        color: #0b1726;
-        font-size: 16px;
-        font-weight: 700;
-        margin-top: 4px;
-        padding-top: 10px;
+
+      .totals-table .grand-total {
+        font-weight: bold;
+        font-size: 11pt;
+        background-color: #f0f0f0;
       }
-      .footer-note {
-        color: #6b7280;
-        font-size: 11px;
-        margin-top: 12px;
+
+      .payment-info {
+        border-top: 1px solid #000000;
+        padding-top: 12px;
+        margin-top: 30px;
+        font-size: 9.5pt;
+      }
+
+      .payment-info h4 {
+        margin: 0 0 6px 0;
+        font-size: 10pt;
+        text-transform: uppercase;
+      }
+
+      .signatures {
+        width: 100%;
+        margin-top: 40px;
+        border-collapse: collapse;
+      }
+
+      .signatures td {
+        width: 50%;
+        vertical-align: top;
+        font-size: 10pt;
+      }
+
+      .sig-box {
+        height: 70px;
       }
     </style>
   </head>
   <body>
-    <div class="card">
-      <div class="top">
-        <div class="brand">
-          ${
-            logoDataUri
-              ? `<img class="logo" src="${logoDataUri}" alt="Logo" />`
-              : `<div class="logo" style="border-radius:6px;background:#0f4b99;"></div>`
-          }
-          <div>
-            <p class="brand-name">${escapeHtml(entreprise.raisonSociale || "AC ERP")}</p>
-            <p class="brand-sub">${escapeHtml(entreprise.adresse || "12 rue du Commerce, Lyon")}</p>
-          </div>
-        </div>
-        <div class="doc">
-          <p class="doc-title">FACTURE</p>
-          <p class="doc-ref">${escapeHtml(facture.numeroFacture)}</p>
-        </div>
-      </div>
+    <div class="invoice-header">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="vertical-align: top;">
+            <table style="border-collapse: collapse; width: 100%;">
+              <tr>
+                ${
+                  logoDataUri
+                    ? `<td style="vertical-align: top; width: 62px;"><img class="logo" src="${logoDataUri}" alt="Logo" /></td>`
+                    : ""
+                }
+                <td style="vertical-align: top;">
+                  <div class="company-title">${escapeHtml(entreprise.raisonSociale || "AC ERP")}</div>
+                  <div class="company-subtitle">Gestion commerciale et facturation</div>
+                  <div class="company-details">
+                    ${entrepriseLigne1}<br>
+                    ${entrepriseLigne2}<br>
+                    ${entrepriseLigne3}<br>
+                    ${entrepriseLigne4}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="vertical-align: top; text-align: right; width: 35%;">
+            <div style="border: 2px solid #000000; padding: 10px; text-align: center;">
+              <span style="font-size: 14pt; font-weight: bold; display: block; text-transform: uppercase;">FACTURE</span>
+              <span style="font-size: 10pt; display:block;">N ${escapeHtml(facture.numeroFacture)}</span>
+              <span style="font-size: 9pt; display:block; margin-top: 3px; text-transform: uppercase;">${escapeHtml(factureVariant)}</span>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
 
-      <div class="sep"></div>
+    <table class="meta-table">
+      <tr>
+        <td><strong>Date d'emission :</strong> ${escapeHtml(date(facture.dateEmission))}</td>
+        <td class="text-right"><strong>Mode de reglement :</strong> ${escapeHtml(modePaiement)}</td>
+      </tr>
+      <tr>
+        <td><strong>Date d'echeance :</strong> ${escapeHtml(date(facture.dateEcheance))}</td>
+        <td class="text-right"><strong>Statut :</strong> ${escapeHtml(statut)}</td>
+      </tr>
+      <tr>
+        <td colspan="2"><strong>Client :</strong> ${escapeHtml(tiersNom)}</td>
+      </tr>
+    </table>
 
-      <p class="meta-main">Facture a : ${escapeHtml(tiersNom)}</p>
-      <p class="meta-sub">Lyon, France · Echeance : ${date(facture.dateEcheance)} · Emission : ${date(facture.dateEmission)}</p>
+    ${clientInfoBlock}
 
-      <table>
+    <table class="items-table">
         <thead>
           <tr>
-            <th>Designation</th>
-            <th class="center">Qte</th>
-            <th class="right">Total</th>
+            <th style="width: 8%;">N</th>
+            <th style="width: 47%;">Designation des Prestations / Articles</th>
+            <th style="width: 12%;" class="text-center">Qte</th>
+            <th style="width: 16%;" class="text-right">P.U. HT (${escapeHtml(currency)})</th>
+            <th style="width: 17%;" class="text-right">Total HT (${escapeHtml(currency)})</th>
           </tr>
         </thead>
-        <tbody>${lignes}</tbody>
+        <tbody>${lignes || `<tr><td colspan="5" class="text-center">Aucune ligne</td></tr>`}</tbody>
       </table>
 
-      <div class="totals">
-        <div class="total-row">
-          <span>Total HT</span>
-          <span>${money(facture.totalHt, currency)}</span>
-        </div>
-        <div class="total-row">
-          <span>TVA</span>
-          <span>${money(facture.totalTva, currency)}</span>
-        </div>
-        <div class="total-row grand">
-          <span>Total TTC</span>
-          <span>${money(facture.totalTtc, currency)}</span>
-        </div>
+      <div class="totals-wrapper">
+        <table class="totals-table">
+          <tr>
+            <td><strong>Total HT</strong></td>
+            <td class="text-right">${money(facture.totalHt, currency)}</td>
+          </tr>
+          <tr>
+            <td>TVA</td>
+            <td class="text-right">${money(facture.totalTva, currency)}</td>
+          </tr>
+          <tr class="grand-total">
+            <td><strong>TOTAL TTC A PAYER</strong></td>
+            <td class="text-right"><strong>${money(facture.totalTtc, currency)}</strong></td>
+          </tr>
+        </table>
       </div>
 
-      <div class="footer-note">
-        ${escapeHtml(facture.mentionsLegales || "Merci pour votre confiance.")}
+      <div class="payment-info">
+        <h4>Mentions et Informations complementaires</h4>
+        <p style="margin: 0;">${escapeHtml(legalText || "Merci pour votre confiance.")}</p>
       </div>
-    </div>
+
+      <table class="signatures">
+        <tr>
+          <td>
+            <strong>Le Client :</strong><br>
+            <span style="font-size: 8.5pt; font-style: italic;">(Mention "Bon pour accord")</span>
+            <div class="sig-box"></div>
+          </td>
+          <td style="text-align: right;">
+            <strong>La Direction :</strong><br>
+            <span style="font-size: 8.5pt; font-style: italic;">(Signature et Cachet)</span>
+            <div class="sig-box"></div>
+          </td>
+        </tr>
+      </table>
   </body>
   </html>`;
 }

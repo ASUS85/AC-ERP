@@ -4,6 +4,7 @@ import {
   generateNumeroBCC,
   generateNumeroDevis,
   generateNumeroBL,
+  generateNumeroFacture,
 } from "../../services/numero.service.js";
 import emitter from "../../events/emitter.js";
 import { sendDevisEmail } from "../../services/email.service.js";
@@ -34,6 +35,26 @@ function totals(lignes = []) {
     }),
     { totalHt: 0, totalTva: 0, totalTtc: 0 },
   );
+}
+
+const CLIENT_TYPES = new Set(["ENREGISTRE", "OCCASIONNEL"]);
+const PAYMENT_MODES = new Set([
+  "ESPECES",
+  "CHEQUE",
+  "VIREMENT",
+  "MOBILE_MONEY",
+  "CARTE",
+  "COMPENSATION",
+]);
+
+const OCCASIONAL_INFO_MARKER = "[[OCCASIONNEL_INFO]]";
+
+function requirePositiveNumber(value, code, message) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) {
+    throw new ApiError(400, code, message);
+  }
+  return number;
 }
 
 export const ventesService = {
@@ -158,5 +179,175 @@ export const ventesService = {
   },
   livraisons(id) {
     return ventesRepository.livraisons(id);
+  },
+  async createVenteDirecte(data, ctx) {
+    const clientOccasionnelInfo = {
+      nom: String(data.clientOccasionnelInfo?.nom || "").trim(),
+      prenom: String(data.clientOccasionnelInfo?.prenom || "").trim(),
+      sexe: String(data.clientOccasionnelInfo?.sexe || "").trim(),
+      numeroCni: String(data.clientOccasionnelInfo?.numeroCni || "").trim(),
+      telephone: String(data.clientOccasionnelInfo?.telephone || "").trim(),
+    };
+    const hasOccasionnelInfo = Object.values(clientOccasionnelInfo).some(
+      (value) => value.length > 0,
+    );
+
+    const typeClient = data.typeClient || "OCCASIONNEL";
+    if (!CLIENT_TYPES.has(typeClient)) {
+      throw new ApiError(
+        400,
+        "INVALID_CLIENT_TYPE",
+        "Le type de client est invalide",
+      );
+    }
+
+    let idClient = null;
+    if (typeClient === "ENREGISTRE") {
+      if (!data.idClient) {
+        throw new ApiError(
+          400,
+          "CLIENT_REQUIRED",
+          "Le client est obligatoire pour une vente a client enregistre",
+        );
+      }
+      const client = await ventesRepository.clientById(data.idClient);
+      if (!client)
+        throw new ApiError(404, "CLIENT_NOT_FOUND", "Client introuvable");
+      idClient = data.idClient;
+    }
+
+    const requestedLines = Array.isArray(data.lignes) ? data.lignes : [];
+    if (requestedLines.length === 0) {
+      throw new ApiError(
+        400,
+        "SALE_LINES_REQUIRED",
+        "La vente doit contenir au moins une ligne",
+      );
+    }
+
+    const productIds = [
+      ...new Set(requestedLines.map((line) => line.idProduit).filter(Boolean)),
+    ];
+    if (productIds.length !== requestedLines.length) {
+      throw new ApiError(
+        400,
+        "PRODUCT_REQUIRED",
+        "Chaque ligne de vente doit etre associee a un produit",
+      );
+    }
+
+    const products = await ventesRepository.produitsByIds(productIds);
+    const productById = new Map(
+      products.map((product) => [product.id, product]),
+    );
+
+    const lignes = requestedLines.map((line) => {
+      const product = productById.get(line.idProduit);
+      if (!product) {
+        throw new ApiError(404, "PRODUCT_NOT_FOUND", "Produit introuvable");
+      }
+      if (product.statut && product.statut !== "ACTIF") {
+        throw new ApiError(
+          400,
+          "PRODUCT_NOT_ACTIVE",
+          `${product.designation} n'est pas actif`,
+        );
+      }
+
+      const quantite = Math.trunc(
+        requirePositiveNumber(
+          line.quantite,
+          "INVALID_QUANTITY",
+          `Quantite invalide pour ${product.designation}`,
+        ),
+      );
+      const remise = Math.max(0, Number(line.remise || 0));
+      const tauxTva = Number.isFinite(Number(line.tauxTva))
+        ? Number(line.tauxTva)
+        : Number(product.tauxTva || 0);
+      return lineAmounts({
+        idProduit: product.id,
+        designation: product.designation,
+        quantite,
+        prixUnitaireHt: Number(product.prixVenteHt || 0),
+        remise,
+        tauxTva,
+      });
+    });
+
+    const total = totals(lignes);
+    const paidAmount = Number(data.paiement?.montant || 0);
+    let paiement = null;
+    if (paidAmount > 0) {
+      const modePaiement = data.paiement?.modePaiement || "ESPECES";
+      if (!PAYMENT_MODES.has(modePaiement)) {
+        throw new ApiError(
+          400,
+          "INVALID_PAYMENT_MODE",
+          "Le mode de paiement est invalide",
+        );
+      }
+      if (paidAmount > total.totalTtc) {
+        throw new ApiError(
+          400,
+          "PAYMENT_TOO_HIGH",
+          "Le montant paye ne peut pas depasser le total TTC",
+        );
+      }
+      paiement = {
+        montant: paidAmount,
+        modePaiement,
+        reference: data.paiement?.reference || null,
+        notes: data.paiement?.notes || "Paiement vente directe",
+      };
+    }
+
+    const baseMentionLegale =
+      data.mentionsLegales ||
+      (idClient
+        ? "Facture generee depuis une vente directe"
+        : "Facture generee pour client occasionnel");
+
+    const mentionAvecInfosOccasionnelles =
+      !idClient && hasOccasionnelInfo
+        ? `${baseMentionLegale}\n${OCCASIONAL_INFO_MARKER}${JSON.stringify(clientOccasionnelInfo)}`
+        : baseMentionLegale;
+
+    const facture = {
+      numeroFacture: await generateNumeroFacture(),
+      typeFacture: "VENTE",
+      idClient,
+      idUtilisateur: ctx.user.userId,
+      dateEcheance: data.dateEcheance
+        ? new Date(data.dateEcheance)
+        : dayjs()
+            .add(idClient ? 30 : 0, "day")
+            .toDate(),
+      statut: paiement && paidAmount >= total.totalTtc ? "SOLDEE" : "EMISE",
+      ...total,
+      montantPaye: paiement ? paidAmount : 0,
+      mentionsLegales: mentionAvecInfosOccasionnelles,
+    };
+
+    const created = await ventesRepository.createVenteDirecteFacturee({
+      facture,
+      lignes,
+      paiement,
+      userId: ctx.user.userId,
+    });
+
+    emitter.emit("facture.crud", {
+      action: "CREATE",
+      idFacture: created.id,
+      numeroFacture: created.numeroFacture,
+    });
+    emitter.emit("vente.directe", {
+      idFacture: created.id,
+      numeroFacture: created.numeroFacture,
+      idClient,
+      totalTtc: created.totalTtc,
+    });
+
+    return created;
   },
 };

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture de Vente Simple</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        /* En-tête de l'entreprise */
+        .invoice-header {
+            border-bottom: 2px solid #000000;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .company-title {
+            font-size: 20pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 4px 0;
+        }
+
+        .company-subtitle {
+            font-size: 10pt;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .company-details {
+            font-size: 9.5pt;
+            line-height: 1.3;
+        }
+
+        /* Table des métadonnées */
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .meta-table td {
+            padding: 3px 0;
+            font-size: 10pt;
+        }
+
+        /* Cadre Client */
+        .client-box {
+            border: 1px solid #000000;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            background-color: #fafafa;
+        }
+
+        .client-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10pt;
+            border-bottom: 1px dashed #666666;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tableau des prestations */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .items-table th {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            padding: 8px;
+            font-size: 10pt;
+            text-transform: uppercase;
+            border: 1px solid #000000;
+        }
+
+        .items-table td {
+            border: 1px solid #000000;
+            padding: 8px;
+            font-size: 10pt;
+        }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* Totaux */
+        .totals-wrapper {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 45%;
+            margin-left: auto;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 6px 8px;
+            border: 1px solid #000000;
+            font-size: 10pt;
+        }
+
+        .totals-table .grand-total {
+            font-weight: bold;
+            font-size: 11pt;
+            background-color: #f0f0f0;
+        }
+
+        /* Paiement & Signatures */
+        .payment-info {
+            border-top: 1px solid #000000;
+            padding-top: 12px;
+            margin-top: 30px;
+            font-size: 9.5pt;
+        }
+
+        .payment-info h4 {
+            margin: 0 0 6px 0;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+
+        .signatures {
+            width: 100%;
+            margin-top: 40px;
+            border-collapse: collapse;
+        }
+
+        .signatures td {
+            width: 50%;
+            vertical-align: top;
+            font-size: 10pt;
+        }
+
+        .sig-box {
+            height: 70px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="invoice-header">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="vertical-align: top;">
+                    <div class="company-title">TECH SOLUTIONS SARL</div>
+                    <div class="company-subtitle">Ingénierie Informatique & Prestations de Services</div>
+                    <div class="company-details">
+                        Siège Social : Avenue de l'Innovation, Douala - Cameroun<br>
+                        N° RC : RC/DLA/2024/B/1234 | NIU : M012345678901A<br>
+                        Tél : (+237) 690 00 00 00 / 670 00 00 00<br>
+                        Email : contact@techsolutions.cm | Site Web : www.techsolutions.cm
+                    </div>
+                </td>
+                <td style="vertical-align: top; text-align: right; width: 35%;">
+                    <div style="border: 2px solid #000000; padding: 10px; text-align: center;">
+                        <span style="font-size: 14pt; font-weight: bold; display: block; text-transform: uppercase;">FACTURE</span>
+                        <span style="font-size: 10pt;">N° FACT-2026-0842</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td><strong>Date d'émission :</strong> 17 Août 2026</td>
+            <td class="text-right"><strong>Mode de règlement :</strong> Espèces / Comptant</td>
+        </tr>
+        <tr>
+            <td><strong>Date d'échéance :</strong> Immédiate</td>
+            <td class="text-right"><strong>Statut :</strong> Payé</td>
+        </tr>
+    </table>
+
+    <!-- CLIENT ANONYME / AU COMPTOIR -->
+    <div class="client-box">
+        <div class="client-title">Information Client</div>
+        <p style="margin:0; font-size: 10pt; font-style: italic; color: #444444;">
+            Facture au comptoir / Client non spécifié.
+        </p>
+    </div>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 8%;">N°</th>
+                <th style="width: 47%;">Désignation des Prestations / Articles</th>
+                <th style="width: 12%;" class="text-center">Qté</th>
+                <th style="width: 16%;" class="text-right">P.U. HT (FCFA)</th>
+                <th style="width: 17%;" class="text-right">Total HT (FCFA)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-center">01</td>
+                <td>Développement de module Web sur-mesure (Laravel / Blade)</td>
+                <td class="text-center">1</td>
+                <td class="text-right">350 000</td>
+                <td class="text-right">350 000</td>
+            </tr>
+            <tr>
+                <td class="text-center">02</td>
+                <td>Configuration serveur VPS Ubuntu & Déploiement sécurisé</td>
+                <td class="text-center">1</td>
+                <td class="text-right">100 000</td>
+                <td class="text-right">100 000</td>
+            </tr>
+            <tr>
+                <td class="text-center">03</td>
+                <td>Maintenance préventive et support technique (forfait 3 mois)</td>
+                <td class="text-center">3</td>
+                <td class="text-right">25 000</td>
+                <td class="text-right">75 000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="totals-wrapper">
+        <table class="totals-table">
+            <tr>
+                <td><strong>Total HT</strong></td>
+                <td class="text-right">525 000 FCFA</td>
+            </tr>
+            <tr>
+                <td>TVA (19.2 %)</td>
+                <td class="text-right">100 800 FCFA</td>
+            </tr>
+            <tr>
+                <td>Précompte sur achat (2.2 %)</td>
+                <td class="text-right">11 550 FCFA</td>
+            </tr>
+            <tr class="grand-total">
+                <td><strong>TOTAL TTC A PAYER</strong></td>
+                <td class="text-right"><strong>637 350 FCFA</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="payment-info">
+        <h4>Coordonnées Bancaires pour le Règlement</h4>
+        <p style="margin: 0 0 5px 0;"><strong>Banque :</strong> CCA Bank Cameroun | <strong>Code Banque :</strong> 10025 | <strong>N° Compte :</strong> 00012345678-90</p>
+        <p style="margin: 0;"><strong>Intitulé du compte :</strong> TECH SOLUTIONS SARL</p>
+    </div>
+
+    <table class="signatures">
+        <tr>
+            <td>
+                <strong>Le Client :</strong><br>
+                <span style="font-size: 8.5pt; font-style: italic;">(Mention "Bon pour accord")</span>
+                <div class="sig-box"></div>
+            </td>
+            <td style="text-align: right;">
+                <strong>La Direction :</strong><br>
+                <span style="font-size: 8.5pt; font-style: italic;">(Signature et Cachet)</span>
+                <div class="sig-box"></div>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
+
+
+<!-- CLIENT AVEC CNI, SEXE & TEL -->
+    <div class="client-box">
+        <div class="client-title">Informations du Client (Particulier)</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="font-weight: bold; width: 25%; padding: 3px 0;">Nom & Prénom :</td>
+                <td style="padding: 3px 0;">EBOA NKONGHO Jean-Pierre</td>
+                <td style="font-weight: bold; width: 20%; padding: 3px 0;">Sexe :</td>
+                <td style="padding: 3px 0;">Masculin</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 3px 0;">N° CNI :</td>
+                <td style="padding: 3px 0;">102938475 (Délivrée à Douala)</td>
+                <td style="font-weight: bold; padding: 3px 0;">Téléphone :</td>
+                <td style="padding: 3px 0;">(+237) 699 88 77 66</td>
+            </tr>
+        </table>
+    </div>
+
+<!-- CLIENT AVEC EMAIL, VILLE & ADRESSE -->
+    <div class="client-box">
+        <div class="client-title">Informations du Client</div>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="font-weight: bold; width: 25%; padding: 3px 0;">Nom / Raison Sociale :</td>
+                <td style="padding: 3px 0;">MBARGA ESSOMBA Alain</td>
+                <td style="font-weight: bold; width: 20%; padding: 3px 0;">Téléphone :</td>
+                <td style="padding: 3px 0;">(+237) 677 11 22 33</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 3px 0;">Adresse Email :</td>
+                <td style="padding: 3px 0;">alain.mbarga@example.cm</td>
+                <td style="font-weight: bold; padding: 3px 0;">Ville / Pays :</td>
+                <td style="padding: 3px 0;">Yaoundé, Cameroun</td>
+            </tr>
+            <tr>
+                <td style="font-weight: bold; padding: 3px 0;">Adresse physique :</td>
+                <td colspan="3" style="padding: 3px 0;">Quartier Bastos, Rue 1.824, Immeuble Horizon, 2ème étage</td>
+            </tr>
+        </table>
+    </div>

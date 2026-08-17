@@ -147,7 +147,10 @@ function InvoicesPage() {
       const mapped = factures.map((item) => ({
         id: item.id,
         ref: item.numeroFacture,
-        tiers: item.client?.nom || item.fournisseur?.raisonSociale || "-",
+        tiers:
+          item.client?.nom ||
+          item.fournisseur?.raisonSociale ||
+          "Client occasionnel",
         echeance: formatDate(item.dateEcheance),
         montant: toNumber(item.totalTtc, 0),
         statut: normalizeStatus(item.statut),
@@ -404,7 +407,9 @@ function InvoicesPage() {
   const previewTva = toNumber(preview?.totalTva, previewTtc - previewHt);
   const selectedPreviewRef = preview?.numeroFacture || "-";
   const selectedPreviewTier =
-    preview?.client?.nom || preview?.fournisseur?.raisonSociale || "-";
+    preview?.client?.nom ||
+    preview?.fournisseur?.raisonSociale ||
+    "Client occasionnel";
   const selectedPreviewEcheance = formatDate(preview?.dateEcheance);
 
   return (

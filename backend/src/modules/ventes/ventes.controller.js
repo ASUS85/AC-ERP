@@ -21,4 +21,5 @@ export const ventesController = {
   async confirmerCommande(req, res, next) { try { return sendSuccess(res, await ventesService.confirmerCommande(req.params.id), "Commande confirmee"); } catch (e) { next(e); } },
   async creerLivraison(req, res, next) { try { return sendSuccess(res, await ventesService.creerLivraison(req.params.id, req.body, { user: req.user }), "Livraison creee"); } catch (e) { next(e); } },
   async livraisons(req, res, next) { try { return sendSuccess(res, await ventesService.livraisons(req.params.id), "Livraisons recuperees"); } catch (e) { next(e); } },
+  async createVenteDirecte(req, res, next) { try { return sendSuccess(res, await ventesService.createVenteDirecte(req.body, { user: req.user }), "Vente facturee", null, 201); } catch (e) { next(e); } },
 };

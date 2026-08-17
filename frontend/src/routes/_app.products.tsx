@@ -38,6 +38,7 @@ import {
   createProduit,
   getProduits,
   getProduitsPdf,
+  uploadProduitPhoto,
   updateProduit,
   type ProduitPayload,
 } from "@/lib/api/produits.service";
@@ -63,6 +64,7 @@ type Product = {
   id: string;
   reference: string;
   designation: string;
+  photo?: string | null;
   description?: string | null;
   uniteMesure: ProduitPayload["uniteMesure"];
   prixAchatHt: number | string;
@@ -78,6 +80,7 @@ type Product = {
 const emptyForm: ProduitPayload = {
   reference: "",
   designation: "",
+  photo: "",
   description: "",
   uniteMesure: "",
   prixAchatHt: "",
@@ -132,6 +135,7 @@ function ProductsPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const pageSize = 40;
 
@@ -215,6 +219,7 @@ function ProductsPage() {
     setForm({
       reference: product.reference || "",
       designation: product.designation || "",
+      photo: product.photo || "",
       description: product.description || "",
       uniteMesure: product.uniteMesure || "",
       prixAchatHt: Number(product.prixAchatHt || ""),
@@ -267,6 +272,7 @@ function ProductsPage() {
       const payload = {
         ...form,
         reference: form.reference?.trim() || undefined,
+        photo: form.photo?.trim() || undefined,
         description: form.description?.trim() || undefined,
         prixAchatHt: Number(form.prixAchatHt),
         prixVenteHt: Number(form.prixVenteHt),
@@ -319,6 +325,25 @@ function ProductsPage() {
       toast.error(apiError.message || "Suppression impossible");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handlePhotoUpload = async (file?: File | null) => {
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const response = await uploadProduitPhoto(file);
+      const uploadedPhoto = response?.data?.photo || "";
+      if (!uploadedPhoto) {
+        toast.error("Aucune URL image renvoyée");
+        return;
+      }
+      setField("photo", uploadedPhoto);
+      toast.success("Image importée");
+    } catch {
+      toast.error("Import image impossible");
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -408,7 +433,15 @@ function ProductsPage() {
       render: (product) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Package className="h-4 w-4" />
+            {product.photo ? (
+              <img
+                src={product.photo}
+                alt={product.designation}
+                className="h-full w-full rounded-lg object-cover"
+              />
+            ) : (
+              <Package className="h-4 w-4" />
+            )}
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium text-foreground">
@@ -613,6 +646,30 @@ function ProductsPage() {
               onChange={(e) => setField("designation", e.target.value)}
               placeholder="Nom du produit"
             />
+          </Field>
+          <Field label="Image produit" htmlFor="photo" error={errors.photo}>
+            <div className="space-y-2">
+              <Input
+                id="photo"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(e) => void handlePhotoUpload(e.target.files?.[0])}
+              />
+              {uploadingPhoto ? (
+                <p className="text-xs text-muted-foreground">
+                  Import en cours...
+                </p>
+              ) : null}
+              {form.photo ? (
+                <div className="rounded-md border border-border p-2">
+                  <img
+                    src={form.photo}
+                    alt="Aperçu produit"
+                    className="h-24 w-24 rounded object-cover"
+                  />
+                </div>
+              ) : null}
+            </div>
           </Field>
           <Field
             label="Catégorie"

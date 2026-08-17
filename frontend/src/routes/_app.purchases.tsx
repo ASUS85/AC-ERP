@@ -1768,6 +1768,12 @@ function PurchasesPage() {
                   </Button>
                   <Button
                     size="sm"
+                    disabled={detailsOrder.statut === "RECU_TOTAL"}
+                    title={
+                      detailsOrder.statut === "RECU_TOTAL"
+                        ? "Reception deja totale"
+                        : undefined
+                    }
                     onClick={() => void openReceptionModal(detailsOrder.id)}
                   >
                     <Plus className="mr-1 h-4 w-4" /> Nouvelle reception

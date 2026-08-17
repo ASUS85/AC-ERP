@@ -1,0 +1,1 @@
+import{p as t}from"./index-B-uIktyF.js";const l=e=>t.get("/clients",{params:e}),c=e=>t.post("/clients",e),i=(e,s)=>t.put(`/clients/${e}`,s),o=e=>t.delete(`/clients/${e}`),p=e=>t.get("/clients/export.pdf",{params:e,responseType:"blob"});export{p as a,c,o as d,l as g,i as u};

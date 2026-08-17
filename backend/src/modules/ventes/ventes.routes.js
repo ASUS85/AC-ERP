@@ -1,10 +1,20 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.middleware.js";
+import { validate } from "../../middlewares/validate.middleware.js";
 import { ventesController } from "./ventes.controller.js";
+import { createVenteDirecteSchema } from "./ventes.validation.js";
 
 const router = Router();
-router.get("/public/devis/telecharger", ventesController.telechargerDevisPublic);
+router.get(
+  "/public/devis/telecharger",
+  ventesController.telechargerDevisPublic,
+);
 router.use(authenticate);
+router.post(
+  "/directes",
+  validate(createVenteDirecteSchema),
+  ventesController.createVenteDirecte,
+);
 router.get("/devis", ventesController.getDevis);
 router.post("/devis", ventesController.createDevis);
 router.get("/devis/:id", ventesController.getDevisById);
