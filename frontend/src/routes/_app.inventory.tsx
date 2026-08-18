@@ -477,8 +477,8 @@ function InventoryPage() {
           )}
         >
           {m.typeMouvement.includes("POS") ||
-          m.typeMouvement.includes("ENTREE") ||
-          m.typeMouvement.includes("RETOUR_CLIENT")
+            m.typeMouvement.includes("ENTREE") ||
+            m.typeMouvement.includes("RETOUR_CLIENT")
             ? "+"
             : "−"}
           {fmtNumber(m.quantite)}
@@ -808,9 +808,9 @@ function InventoryPage() {
                 totalPages={
                   search
                     ? Math.max(
-                        1,
-                        Math.ceil(filteredMouvements.length / PAGE_SIZE),
-                      )
+                      1,
+                      Math.ceil(filteredMouvements.length / PAGE_SIZE),
+                    )
                     : mvMeta.totalPages
                 }
                 pageSize={PAGE_SIZE}
@@ -913,7 +913,7 @@ function InventoryPage() {
         description="Entrez une quantite positive ou negative."
         size="lg"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setAdjModalOpen(false)}
@@ -956,18 +956,14 @@ function InventoryPage() {
               id="adj-qte"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(adjForm.quantite || ""), {
-                allowNegative: true,
-              })}
+              value={formatGroupedInputNumber(String(adjForm.quantite || ""))}
               onChange={(e) =>
                 setAdjForm((p) => ({
                   ...p,
                   quantite:
                     Number(
-                      normalizeNumberInput(e.target.value, {
-                        allowNegative: true,
-                      }),
-                    ) || 0,
+                      normalizeNumberInput(e.target.value),
+                    ),
                 }))
               }
               placeholder="Positif = entree, negatif = sortie"

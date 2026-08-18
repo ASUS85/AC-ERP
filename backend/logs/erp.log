@@ -4324,3 +4324,19 @@ Unknown argument `contains`. Available options are marked with ?. {"stack":"Pris
 2026-08-17T21:00:21.072Z info: Base de donnees connectee
 2026-08-17T21:00:21.105Z info: Serveur demarre port 3000
 2026-08-17T21:00:22.026Z info: Socket connecte t7m0YsphaZbHg6MRAAAB
+2026-08-17T21:28:36.088Z info: Arret du serveur
+2026-08-17T22:18:42.369Z info: Base de donnees connectee
+2026-08-17T22:18:42.390Z info: Serveur demarre port 3000
+2026-08-17T22:18:42.658Z info: Socket connecte Rstg213pX3Iu9411AAAB
+2026-08-17T22:18:59.734Z info: Socket deconnecte Rstg213pX3Iu9411AAAB
+2026-08-17T22:19:08.315Z info: Socket connecte auVduEWdYO0VQZ2LAAAD
+2026-08-18T07:48:02.130Z info: Base de donnees connectee
+2026-08-18T07:48:02.153Z info: Serveur demarre port 3000
+2026-08-18T07:48:03.479Z info: Socket connecte jQxxu1se5affA7lmAAAB
+2026-08-18T07:48:09.052Z info: Socket deconnecte jQxxu1se5affA7lmAAAB
+2026-08-18T07:48:20.542Z info: Socket connecte FG3yotBD3tkKN1rjAAAD
+2026-08-18T08:16:49.492Z info: Base de donnees connectee
+2026-08-18T08:16:49.513Z info: Serveur demarre port 3000
+2026-08-18T08:16:49.572Z info: Socket connecte cf9AhJKiwShTjJ-gAAAB
+2026-08-18T08:33:21.077Z info: Socket deconnecte cf9AhJKiwShTjJ-gAAAB
+2026-08-18T08:33:35.563Z info: Socket connecte pW2p8ZqChpGxwRAXAAAD

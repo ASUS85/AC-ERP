@@ -354,8 +354,8 @@ export const ventesService = {
       dateEcheance: data.dateEcheance
         ? new Date(data.dateEcheance)
         : dayjs()
-            .add(idClient ? 30 : 0, "day")
-            .toDate(),
+          .add(idClient ? 30 : 0, "day")
+          .toDate(),
       statut: paiement && paidAmount >= total.totalTtc ? "SOLDEE" : "EMISE",
       ...total,
       montantPaye: paiement ? paidAmount : 0,

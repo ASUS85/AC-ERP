@@ -711,14 +711,14 @@ function CustomersPage() {
               id="plafond"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.plafondCredit || ""))}
+              value={formatGroupedInputNumber(String(form.plafondCredit || ""), { allowNegative: false })}
               onChange={(e) =>
                 setField(
                   "plafondCredit",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  normalizeNumberInput(e.target.value, { allowNegative: false }),
                 )
               }
-              placeholder="0"
+              placeholder="Plafond crédit"
             />
           </Field>
 
@@ -731,11 +731,11 @@ function CustomersPage() {
               id="delai"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.delaiPaiement || ""))}
+              value={formatGroupedInputNumber(String(form.delaiPaiement || ""), { allowNegative: false })}
               onChange={(e) =>
                 setField(
                   "delaiPaiement",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  Number(normalizeNumberInput(e.target.value, { allowNegative: false })),
                 )
               }
               placeholder="30"

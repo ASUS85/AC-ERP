@@ -453,7 +453,7 @@ function SalesPage() {
       toast.error("Sélectionnez un client enregistré");
       return false;
     }
-    const paid = toNumber(paidAmount);
+    const paid = toNumber(paidAmount.trim());
     if (paid < 0 || paid > totals.totalTtc) {
       toast.error("Le montant payé est invalide");
       return false;
@@ -885,10 +885,11 @@ function SalesPage() {
                     id="paidAmount"
                     type="text"
                     inputMode="decimal"
-                    value={formatGroupedInputNumber(paidAmount)}
+                    value={formatGroupedInputNumber(fmtCurrency(totals.totalTtc), { allowNegative: false })}
                     onChange={(event) =>
-                      setPaidAmount(normalizeNumberInput(event.target.value))
+                      setPaidAmount(normalizeNumberInput(event.target.value, { allowNegative: false }))
                     }
+                    placeholder="Montant payé"
                   />
                 </div>
                 {clientMode === "OCCASIONNEL" ? (

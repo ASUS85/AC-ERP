@@ -298,12 +298,12 @@ function ProductsPage() {
       const fieldErrors =
         details && typeof details === "object"
           ? Object.entries(details).reduce<Record<string, string>>(
-              (acc, [key, value]) => {
-                if (typeof value === "string") acc[key] = value;
-                return acc;
-              },
-              {},
-            )
+            (acc, [key, value]) => {
+              if (typeof value === "string") acc[key] = value;
+              return acc;
+            },
+            {},
+          )
           : {};
       setErrors(fieldErrors);
       toast.error(apiError.message || "Échec de l’enregistrement");
@@ -643,7 +643,7 @@ function ProductsPage() {
             htmlFor="designation"
             error={errors.designation}
           >
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="designation"
               value={form.designation}
@@ -683,7 +683,7 @@ function ProductsPage() {
             htmlFor="categorie"
             error={errors.idCategorie}
           >
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <SearchableSelect
               value={form.idCategorie}
               onValueChange={(value) => setField("idCategorie", value)}
@@ -697,7 +697,7 @@ function ProductsPage() {
             />
           </Field>
           <Field label="Unité" htmlFor="uniteMesure" error={errors.uniteMesure}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <SearchableSelect
               value={form.uniteMesure}
               onValueChange={(value) => setField("uniteMesure", value)}
@@ -719,11 +719,11 @@ function ProductsPage() {
               id="prixAchatHt"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.prixAchatHt || ""))}
+              value={formatGroupedInputNumber(String(form.prixAchatHt || ""), { allowNegative: false })}
               onChange={(e) =>
                 setField(
                   "prixAchatHt",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  normalizeNumberInput(e.target.value, { allowNegative: false }),
                 )
               }
               placeholder="Entrez un prix de d'achat"
@@ -734,35 +734,40 @@ function ProductsPage() {
             htmlFor="prixVenteHt"
             error={errors.prixVenteHt}
           >
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="prixVenteHt"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.prixVenteHt || ""))}
+              value={formatGroupedInputNumber(String(form.prixVenteHt || ""), { allowNegative: false })}
               onChange={(e) =>
                 setField(
                   "prixVenteHt",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  normalizeNumberInput(e.target.value, { allowNegative: false }),
                 )
               }
               placeholder="Entrez un prix de vente"
             />
           </Field>
           <Field label="Taux TVA (%)" htmlFor="tauxTva" error={errors.tauxTva}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="tauxTva"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.tauxTva || ""))}
+              value={formatGroupedInputNumber(
+                String(form.tauxTva ?? ""),
+                { allowNegative: false },
+              )}
               onChange={(e) =>
                 setField(
                   "tauxTva",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  normalizeNumberInput(e.target.value, {
+                    allowNegative: false,
+                  }),
                 )
               }
-              placeholder="Entrez la TVA(%)"
+              placeholder="Entrez la TVA (%)"
             />
           </Field>
           <Field
@@ -770,16 +775,16 @@ function ProductsPage() {
             htmlFor="stockMinimum"
             error={errors.stockMinimum}
           >
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="stockMinimum"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.stockMinimum || ""))}
+              value={formatGroupedInputNumber(String(form.stockMinimum || ""), { allowNegative: false })}
               onChange={(e) =>
                 setField(
                   "stockMinimum",
-                  Number(normalizeNumberInput(e.target.value)) || 0,
+                  normalizeNumberInput(e.target.value, { allowNegative: false }),
                 )
               }
               placeholder="Entrez le stock minimum"
@@ -796,12 +801,12 @@ function ProductsPage() {
                 type="text"
                 inputMode="decimal"
                 value={formatGroupedInputNumber(
-                  String(form.stockInitial || ""),
+                  String(form.stockInitial || ""), { allowNegative: false }
                 )}
                 onChange={(e) =>
                   setField(
                     "stockInitial",
-                    Number(normalizeNumberInput(e.target.value)) || 0,
+                    normalizeNumberInput(e.target.value, { allowNegative: false }),
                   )
                 }
                 placeholder="Entrez le stock initial"
@@ -809,7 +814,7 @@ function ProductsPage() {
             </Field>
           ) : null}
           <Field label="Statut" htmlFor="statut" error={errors.statut}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Select
               value={form.statut || ""}
               onValueChange={(value: ProduitPayload["statut"]) =>

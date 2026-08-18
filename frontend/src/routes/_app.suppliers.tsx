@@ -427,14 +427,15 @@ function SuppliersPage() {
               type="text"
               inputMode="decimal"
               value={formatGroupedInputNumber(
-                String(form.delaiLivraisonMoyen || ""),
+                String(form.delaiLivraisonMoyen || ""), { allowNegative: false }
               )}
               onChange={(e) =>
                 setField(
                   "delaiLivraisonMoyen",
-                  Number(normalizeNumberInput(e.target.value)) || 7,
+                  Number(normalizeNumberInput(e.target.value, { allowNegative: false })),
                 )
               }
+              placeholder="Delais en jours"
             />
           </Field>
           <Field label="Statut" htmlFor="statut">
