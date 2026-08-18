@@ -4340,3 +4340,6 @@ Unknown argument `contains`. Available options are marked with ?. {"stack":"Pris
 2026-08-18T08:16:49.572Z info: Socket connecte cf9AhJKiwShTjJ-gAAAB
 2026-08-18T08:33:21.077Z info: Socket deconnecte cf9AhJKiwShTjJ-gAAAB
 2026-08-18T08:33:35.563Z info: Socket connecte pW2p8ZqChpGxwRAXAAAD
+2026-08-18T10:23:23.191Z info: Base de donnees connectee
+2026-08-18T10:23:23.214Z info: Serveur demarre port 3000
+2026-08-18T10:23:48.979Z info: Socket connecte ivZD9rzv2JC_5XZRAAAB
