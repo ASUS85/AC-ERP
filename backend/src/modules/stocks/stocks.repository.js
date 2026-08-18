@@ -72,12 +72,23 @@ export const stocksRepository = {
     });
   },
   inventaires(args = {}) {
-    return prisma.inventaire.findMany({ ...args, include: { lignes: true } });
+    return prisma.inventaire.findMany({
+      ...args,
+      include: {
+        lignes: true,
+        createur: { select: { nom: true, prenom: true } },
+        validateur: { select: { nom: true, prenom: true } },
+      },
+    });
   },
   inventaireById(id) {
     return prisma.inventaire.findUnique({
       where: { id },
-      include: { lignes: { include: { produit: true } } },
+      include: {
+        lignes: { include: { produit: true } },
+        createur: { select: { nom: true, prenom: true } },
+        validateur: { select: { nom: true, prenom: true } },
+      },
     });
   },
   findInventaireEnCours() {
@@ -104,13 +115,99 @@ export const stocksRepository = {
     });
   },
   validerInventaire(id, userId) {
+    return prisma.$transaction(async (tx) => {
+      const inventaire = await tx.inventaire.findUnique({
+        where: { id },
+        include: { lignes: true },
+      });
+      if (!inventaire) return null;
+      if (inventaire.statut !== "EN_COURS") {
+        throw new ApiError(
+          409,
+          "BUSINESS_RULE_VIOLATION",
+          "Cet inventaire ne peut pas etre valide",
+        );
+      }
+
+      for (const ligne of inventaire.lignes) {
+        const ecart = ligne.stockReel - ligne.stockTheorique;
+        if (!ecart) continue;
+        const stock = await tx.stock.findUnique({
+          where: { idProduit: ligne.idProduit },
+        });
+        if (!stock) {
+          throw new ApiError(404, "STOCK_NOT_FOUND", "Stock introuvable");
+        }
+        const stockApres = stock.stockActuel + ecart;
+        await tx.stock.update({
+          where: { idProduit: ligne.idProduit },
+          data: { stockActuel: stockApres },
+        });
+        await tx.mouvementStock.create({
+          data: {
+            idProduit: ligne.idProduit,
+            idUtilisateur: userId,
+            typeMouvement: ecart > 0 ? "AJUSTEMENT_POS" : "AJUSTEMENT_NEG",
+            quantite: Math.abs(ecart),
+            stockAvant: stock.stockActuel,
+            stockApres,
+            referenceDoc: `INV-${id.slice(0, 8)}`,
+            motif: "Ajustement issu de la validation d'inventaire",
+          },
+        });
+      }
+
+      return tx.inventaire.update({
+        where: { id },
+        data: {
+          statut: "VALIDE",
+          dateFin: new Date(),
+          idUtilisateurValidateur: userId,
+        },
+        include: { lignes: { include: { produit: true } } },
+      });
+    });
+  },
+  async enregistrerComptageInventaire(id, lignes) {
+    return prisma.$transaction(async (tx) => {
+      for (const ligne of lignes) {
+        const updated = await tx.ligneInventaire.updateMany({
+          where: { id: ligne.id, idInventaire: id },
+          data: { stockReel: ligne.stockReel },
+        });
+        if (!updated.count) {
+          throw new ApiError(
+            404,
+            "INVENTORY_LINE_NOT_FOUND",
+            "Ligne d'inventaire introuvable",
+          );
+        }
+      }
+      return tx.inventaire.findUnique({
+        where: { id },
+        include: { lignes: { include: { produit: true } } },
+      });
+    });
+  },
+  async rafraichirInventaire(id) {
+    return prisma.$transaction(async (tx) => {
+      const stocks = await tx.stock.findMany();
+      for (const stock of stocks) {
+        await tx.ligneInventaire.updateMany({
+          where: { idInventaire: id, idProduit: stock.idProduit },
+          data: { stockTheorique: stock.stockActuel, stockReel: null },
+        });
+      }
+      return tx.inventaire.findUnique({
+        where: { id },
+        include: { lignes: { include: { produit: true } } },
+      });
+    });
+  },
+  annulerInventaire(id) {
     return prisma.inventaire.update({
       where: { id },
-      data: {
-        statut: "VALIDE",
-        dateFin: new Date(),
-        idUtilisateurValidateur: userId,
-      },
+      data: { statut: "ANNULE", dateFin: new Date() },
       include: { lignes: true },
     });
   },

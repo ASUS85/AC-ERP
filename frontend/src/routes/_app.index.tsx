@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { StatCard, SectionCard } from "@/components/erp/widgets";
+import { ChartFrame } from "@/components/erp/ChartFrame";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
@@ -245,7 +246,7 @@ function Dashboard() {
           description="Chiffre d'affaires mensuel sur 12 mois"
           className="lg:col-span-2"
         >
-          <div className="h-72">
+          <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={salesTrend}
@@ -316,13 +317,13 @@ function Dashboard() {
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
         <SectionCard
           title="Repartition des stocks"
           description="Par categorie de produits"
         >
-          <div className="h-72">
+          <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -348,7 +349,7 @@ function Dashboard() {
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
       </div>
 
@@ -358,7 +359,7 @@ function Dashboard() {
           description="Top 5 ce mois-ci"
           className="lg:col-span-2"
         >
-          <div className="h-64">
+          <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={topProducts}
@@ -403,7 +404,7 @@ function Dashboard() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
         <SectionCard
           title="Alertes & notifications"

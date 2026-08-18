@@ -35,7 +35,7 @@ export function SidebarNav({
   onToggleCollapsed?: () => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [user, setUser] = useState<AuthUserLike | null>(() => getStoredUser());
+  const [user, setUser] = useState<AuthUserLike | null>(null);
 
   useEffect(() => {
     const syncUser = () => setUser(getStoredUser());
@@ -124,7 +124,7 @@ export function SidebarNav({
                     width="20"
                     height="20"
                     fill="currentColor"
-                    class="bi bi-three-dots"
+                    className="bi bi-three-dots"
                     viewBox="0 0 16 16"
                   >
                     <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3" />

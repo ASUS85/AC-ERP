@@ -13,6 +13,7 @@ export const fournisseursService = createCrudService(fournisseursRepository, {
         }
       : {}),
     ...(query.statut ? { statut: query.statut } : {}),
+    ...(query.ville ? { ville: { contains: query.ville } } : {}),
   }),
   beforeCreate: async (data) => ({
     ...data,

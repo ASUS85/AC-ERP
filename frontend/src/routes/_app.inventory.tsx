@@ -11,6 +11,9 @@ import {
   XCircle,
   AlertCircle,
   Eye,
+  RefreshCw,
+  Save,
+  Ban,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, Pagination, StatCard } from "@/components/erp/widgets";
@@ -29,6 +32,10 @@ import {
   getAlertes,
   getMouvements,
   ajusterStock,
+  annulerInventaire,
+  enregistrerComptageInventaire,
+  rafraichirInventaire,
+  validerInventaire,
 } from "@/lib/api/stocks.service";
 import { fmtNumber, fmtCurrency } from "@/lib/erp-data";
 import { getCurrencyMeta } from "@/lib/currency";
@@ -88,6 +95,7 @@ type Inventaire = {
   dateDebut: string;
   dateFin?: string | null;
   createur?: { nom: string; prenom: string };
+  validateur?: { nom: string; prenom: string } | null;
   lignes?: Array<{
     id: string;
     stockTheorique: number;
@@ -174,6 +182,10 @@ function InventoryPage() {
   // Modale détail inventaire
   const [invDetailOpen, setInvDetailOpen] = useState(false);
   const [invDetail, setInvDetail] = useState<Inventaire | null>(null);
+  const [invSubmitting, setInvSubmitting] = useState(false);
+  const [invPendingAction, setInvPendingAction] = useState<
+    "rafraichir" | "annuler" | null
+  >(null);
 
   // ── Produits pour select ajustement ──
   const [adjProduits, setAdjProduits] = useState<
@@ -322,6 +334,110 @@ function InventoryPage() {
       setInvDetailOpen(true);
     } catch {
       toast.error("Impossible de charger l'inventaire");
+    }
+  };
+
+  const updatePhysicalCount = (lineId: string, value: string) => {
+    const stockReel = value.trim()
+      ? Math.max(0, Math.trunc(Number(normalizeNumberInput(value)) || 0))
+      : null;
+    setInvDetail((current) =>
+      current
+        ? {
+            ...current,
+            lignes: current.lignes?.map((line) =>
+              line.id === lineId ? { ...line, stockReel } : line,
+            ),
+          }
+        : current,
+    );
+  };
+
+  const updateInventoryDetail = (response: unknown) => {
+    const data = (response as { data?: Inventaire })?.data;
+    if (data) setInvDetail(data);
+    return data;
+  };
+
+  const savePhysicalCounts = async () => {
+    if (!invDetail) return;
+    const lignes = (invDetail.lignes || [])
+      .filter((line) => line.stockReel !== null && line.stockReel !== undefined)
+      .map((line) => ({ id: line.id, stockReel: Number(line.stockReel) }));
+    if (!lignes.length) {
+      toast.error("Saisissez au moins un stock physique avant d'enregistrer");
+      return;
+    }
+    setInvSubmitting(true);
+    try {
+      const response = await enregistrerComptageInventaire(
+        invDetail.id,
+        lignes,
+      );
+      updateInventoryDetail(response);
+      toast.success("Comptage physique enregistré");
+      await loadAll();
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Impossible d'enregistrer le comptage";
+      toast.error(message);
+    } finally {
+      setInvSubmitting(false);
+    }
+  };
+
+  const validateInventory = async () => {
+    if (!invDetail) return;
+    if ((invDetail.lignes || []).some((line) => line.stockReel == null)) {
+      toast.error(
+        "Renseignez le stock physique de chaque ligne avant validation",
+      );
+      return;
+    }
+    setInvSubmitting(true);
+    try {
+      await validerInventaire(invDetail.id);
+      toast.success("Inventaire validé et écarts appliqués au stock");
+      setInvDetailOpen(false);
+      await loadAll();
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Erreur lors de la validation";
+      toast.error(message);
+    } finally {
+      setInvSubmitting(false);
+    }
+  };
+
+  const confirmInventoryAction = async () => {
+    if (!invDetail || !invPendingAction) return;
+    setInvSubmitting(true);
+    try {
+      const response =
+        invPendingAction === "rafraichir"
+          ? await rafraichirInventaire(invDetail.id)
+          : await annulerInventaire(invDetail.id);
+      const updated = updateInventoryDetail(response);
+      setInvPendingAction(null);
+      if (updated?.statut === "ANNULE") setInvDetailOpen(false);
+      toast.success(
+        updated?.statut === "ANNULE"
+          ? "Inventaire annulé sans modification du stock"
+          : "Snapshot théorique actualisé",
+      );
+      await loadAll();
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Opération impossible";
+      toast.error(message);
+    } finally {
+      setInvSubmitting(false);
     }
   };
 
@@ -477,8 +593,8 @@ function InventoryPage() {
           )}
         >
           {m.typeMouvement.includes("POS") ||
-            m.typeMouvement.includes("ENTREE") ||
-            m.typeMouvement.includes("RETOUR_CLIENT")
+          m.typeMouvement.includes("ENTREE") ||
+          m.typeMouvement.includes("RETOUR_CLIENT")
             ? "+"
             : "−"}
           {fmtNumber(m.quantite)}
@@ -535,6 +651,20 @@ function InventoryPage() {
       header: "Date validation",
       render: (i) =>
         i.dateFin ? new Date(i.dateFin).toLocaleDateString("fr-FR") : "—",
+    },
+    {
+      key: "createur",
+      header: "Initialisé par",
+      render: (i) =>
+        i.createur ? `${i.createur.prenom} ${i.createur.nom}`.trim() : "--/--",
+    },
+    {
+      key: "validateur",
+      header: "Validé par",
+      render: (i) =>
+        i.validateur
+          ? `${i.validateur.prenom} ${i.validateur.nom}`.trim()
+          : "--/--",
     },
     {
       key: "lignes",
@@ -644,7 +774,7 @@ function InventoryPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* ── Onglets stocks / mouvements / inventaires ── */}
         <SectionCard
           title={
@@ -661,7 +791,7 @@ function InventoryPage() {
                 ? `${mvMeta.total} mouvement${mvMeta.total > 1 ? "s" : ""}`
                 : `${invMeta.total} inventaire${invMeta.total > 1 ? "s" : ""}`
           }
-          className="lg:col-span-2"
+          className="lg:col-span-3"
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex w-full max-w-xl  items-center gap-2">
@@ -808,9 +938,9 @@ function InventoryPage() {
                 totalPages={
                   search
                     ? Math.max(
-                      1,
-                      Math.ceil(filteredMouvements.length / PAGE_SIZE),
-                    )
+                        1,
+                        Math.ceil(filteredMouvements.length / PAGE_SIZE),
+                      )
                     : mvMeta.totalPages
                 }
                 pageSize={PAGE_SIZE}
@@ -960,10 +1090,7 @@ function InventoryPage() {
               onChange={(e) =>
                 setAdjForm((p) => ({
                   ...p,
-                  quantite:
-                    Number(
-                      normalizeNumberInput(e.target.value),
-                    ),
+                  quantite: Number(normalizeNumberInput(e.target.value)),
                 }))
               }
               placeholder="Positif = entree, negatif = sortie"
@@ -996,27 +1123,43 @@ function InventoryPage() {
         size="xl"
         footer={
           invDetail?.statut === "EN_COURS" ? (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-between gap-2">
               <Button variant="outline" onClick={() => setInvDetailOpen(false)}>
                 Fermer
               </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    const { default: api } = await import("@/lib/api/client");
-                    await api.post(
-                      `/stocks/inventaires/${invDetail.id}/valider`,
-                    );
-                    toast.success("Inventaire valide");
-                    setInvDetailOpen(false);
-                    await loadAll();
-                  } catch {
-                    toast.error("Erreur lors de la validation");
-                  }
-                }}
-              >
-                <CheckCircle2 className="mr-1.5 h-4 w-4" /> Valider
-              </Button>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setInvPendingAction("annuler")}
+                  disabled={invSubmitting}
+                >
+                  <Ban className="mr-1.5 h-4 w-4" /> Annuler
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setInvPendingAction("rafraichir")}
+                  disabled={invSubmitting}
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" /> Actualiser
+                </Button>
+                <Button
+                  onClick={() => void savePhysicalCounts()}
+                  disabled={invSubmitting}
+                >
+                  <Save className="mr-1.5 h-4 w-4" /> Enregistrer
+                </Button>
+                <Button
+                  onClick={() => void validateInventory()}
+                  disabled={invSubmitting}
+                >
+                  {invSubmitting ? (
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  )}
+                  Valider
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="flex justify-end">
@@ -1029,10 +1172,16 @@ function InventoryPage() {
       >
         {invDetail && (
           <div className="space-y-2">
+            <div className="grid grid-cols-[minmax(0,1fr)_110px_110px_80px] gap-3 px-3 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span>Produit</span>
+              <span className="text-right">Théorique</span>
+              <span className="text-right">Physique</span>
+              <span className="text-right">Écart</span>
+            </div>
             {invDetail.lignes?.map((l) => (
               <div
                 key={l.id}
-                className="flex items-center justify-between rounded-lg border border-border p-3"
+                className="grid grid-cols-[minmax(0,1fr)_110px_110px_80px] items-center gap-3 rounded-lg border border-border p-3"
               >
                 <div>
                   <p className="text-sm font-medium text-foreground">
@@ -1042,33 +1191,88 @@ function InventoryPage() {
                     {l.produit?.reference}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-foreground">
-                    Theorique:{" "}
-                    <span className="font-medium">{l.stockTheorique}</span>
+                <p className="text-right text-sm font-medium text-foreground">
+                  {fmtNumber(l.stockTheorique)}
+                </p>
+                {invDetail.statut === "EN_COURS" ? (
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={l.stockReel ?? ""}
+                    onChange={(event) =>
+                      updatePhysicalCount(l.id, event.target.value)
+                    }
+                    placeholder="0"
+                    className="text-right"
+                  />
+                ) : (
+                  <p className="text-right text-sm font-medium text-foreground">
+                    {l.stockReel ?? "--/--"}
                   </p>
-                  <p className="text-sm text-foreground">
-                    Reel:{" "}
-                    <span className="font-medium">{l.stockReel ?? "—"}</span>
-                  </p>
-                  {l.stockReel != null && (
-                    <p
-                      className={cn(
-                        "text-xs font-medium",
-                        l.stockReel - l.stockTheorique !== 0
-                          ? "text-destructive"
-                          : "text-success",
-                      )}
-                    >
-                      Ecart: {l.stockReel - l.stockTheorique > 0 ? "+" : ""}
-                      {l.stockReel - l.stockTheorique}
-                    </p>
+                )}
+                <p
+                  className={cn(
+                    "text-right text-sm font-medium",
+                    l.stockReel == null
+                      ? "text-muted-foreground"
+                      : l.stockReel - l.stockTheorique !== 0
+                        ? "text-destructive"
+                        : "text-success",
                   )}
-                </div>
+                >
+                  {l.stockReel == null
+                    ? "--/--"
+                    : `${l.stockReel - l.stockTheorique > 0 ? "+" : ""}${l.stockReel - l.stockTheorique}`}
+                </p>
               </div>
             ))}
           </div>
         )}
+      </AppModal>
+      <AppModal
+        open={Boolean(invPendingAction)}
+        onOpenChange={(open) => {
+          if (!open && !invSubmitting) setInvPendingAction(null);
+        }}
+        title={
+          invPendingAction === "annuler"
+            ? "Annuler l'inventaire"
+            : "Actualiser le snapshot théorique"
+        }
+        description={
+          invPendingAction === "annuler"
+            ? "L'inventaire sera clôturé sans modifier le stock réel."
+            : "Les quantités théoriques seront recalculées depuis le stock actuel et les comptages physiques saisis seront effacés."
+        }
+        size="sm"
+        closeOnOutsideClick
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setInvPendingAction(null)}
+              disabled={invSubmitting}
+            >
+              Retour
+            </Button>
+            <Button
+              variant={
+                invPendingAction === "annuler" ? "destructive" : "default"
+              }
+              onClick={() => void confirmInventoryAction()}
+              disabled={invSubmitting}
+            >
+              {invSubmitting ? <Loader2 className="animate-spin" /> : null}
+              Confirmer
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          {invPendingAction === "annuler"
+            ? "Vous pourrez toujours consulter cet inventaire, mais il ne sera plus modifiable."
+            : "Enregistrez les comptages nécessaires avant de poursuivre si vous souhaitez les conserver."}
+        </p>
       </AppModal>
     </>
   );

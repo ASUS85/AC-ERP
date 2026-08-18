@@ -18,7 +18,7 @@ export function StatCard({
   icon,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   delta?: string;
   up?: boolean;
   sub?: string;
@@ -35,9 +35,9 @@ export function StatCard({
         </span>
       </div>
       <div>
-        <p className="text-2xl font-bold tracking-tight text-foreground">
+        <div className="text-2xl font-bold tracking-tight text-foreground">
           {value}
-        </p>
+        </div>
         <div className="mt-1 flex items-center gap-1.5 text-xs">
           {delta && (
             <span

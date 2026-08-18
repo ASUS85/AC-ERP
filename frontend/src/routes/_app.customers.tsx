@@ -711,11 +711,16 @@ function CustomersPage() {
               id="plafond"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.plafondCredit || ""), { allowNegative: false })}
+              value={formatGroupedInputNumber(
+                String(form.plafondCredit || ""),
+                { allowNegative: false },
+              )}
               onChange={(e) =>
                 setField(
                   "plafondCredit",
-                  normalizeNumberInput(e.target.value, { allowNegative: false }),
+                  normalizeNumberInput(e.target.value, {
+                    allowNegative: false,
+                  }),
                 )
               }
               placeholder="Plafond crédit"
@@ -731,11 +736,18 @@ function CustomersPage() {
               id="delai"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.delaiPaiement || ""), { allowNegative: false })}
+              value={formatGroupedInputNumber(
+                String(form.delaiPaiement || ""),
+                { allowNegative: false },
+              )}
               onChange={(e) =>
                 setField(
                   "delaiPaiement",
-                  Number(normalizeNumberInput(e.target.value, { allowNegative: false })),
+                  Number(
+                    normalizeNumberInput(e.target.value, {
+                      allowNegative: false,
+                    }),
+                  ),
                 )
               }
               placeholder="30"
@@ -814,7 +826,7 @@ function CustomersPage() {
         description="Le client sera supprimé définitivement."
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}

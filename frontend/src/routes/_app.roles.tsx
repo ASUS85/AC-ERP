@@ -509,7 +509,7 @@ function RolesPage() {
         }
         size="md"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}
@@ -565,7 +565,7 @@ function RolesPage() {
         description="Cette action est irréversible."
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}

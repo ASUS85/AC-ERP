@@ -459,7 +459,9 @@ function SalesPage() {
       return false;
     }
     if (clientMode === "OCCASIONNEL" && paid < totals.totalTtc) {
-      toast.error("Un client occasionnel doit payer l'intégralité de la facture");
+      toast.error(
+        "Un client occasionnel doit payer l'intégralité de la facture",
+      );
       return false;
     }
     if (clientMode === "ENREGISTRE" && selectedClient) {
@@ -500,12 +502,12 @@ function SalesPage() {
         clientOccasionnelInfo:
           clientMode === "OCCASIONNEL" && hasOccasionalInfo
             ? {
-              nom: clientOccasionnelInfo.nom.trim() || undefined,
-              prenom: clientOccasionnelInfo.prenom.trim() || undefined,
-              sexe: clientOccasionnelInfo.sexe.trim() || undefined,
-              numeroCni: clientOccasionnelInfo.numeroCni.trim() || undefined,
-              telephone: clientOccasionnelInfo.telephone.trim() || undefined,
-            }
+                nom: clientOccasionnelInfo.nom.trim() || undefined,
+                prenom: clientOccasionnelInfo.prenom.trim() || undefined,
+                sexe: clientOccasionnelInfo.sexe.trim() || undefined,
+                numeroCni: clientOccasionnelInfo.numeroCni.trim() || undefined,
+                telephone: clientOccasionnelInfo.telephone.trim() || undefined,
+              }
             : undefined,
         lignes: cart.map((line) => ({
           idProduit: line.idProduit,
@@ -516,10 +518,10 @@ function SalesPage() {
         paiement:
           paid > 0
             ? {
-              montant: paid,
-              modePaiement: paymentMode,
-              notes: "Paiement vente directe",
-            }
+                montant: paid,
+                modePaiement: paymentMode,
+                notes: "Paiement vente directe",
+              }
             : undefined,
       };
       const response = (await createVenteDirecte(payload)) as {
@@ -711,7 +713,8 @@ function SalesPage() {
                               alt={product.designation}
                               className="h-full w-full rounded-md object-cover"
                               onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display = "none";
+                                (e.currentTarget as HTMLElement).style.display =
+                                  "none";
                               }}
                             />
                           ) : (
@@ -778,17 +781,40 @@ function SalesPage() {
                     {selectedClient && (
                       <div className="rounded border bg-muted/50 p-2 text-xs">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Plafond de crédit:</span>
-                          <span className="font-medium">{selectedClient.plafondCredit ? fmtCurrency(Number(selectedClient.plafondCredit)) : "Non défini"}</span>
+                          <span className="text-muted-foreground">
+                            Plafond de crédit:
+                          </span>
+                          <span className="font-medium">
+                            {selectedClient.plafondCredit
+                              ? fmtCurrency(
+                                  Number(selectedClient.plafondCredit),
+                                )
+                              : "Non défini"}
+                          </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Encours actuel:</span>
-                          <span className="font-medium">{fmtCurrency(selectedClient.encoursActuel || 0)}</span>
+                          <span className="text-muted-foreground">
+                            Encours actuel:
+                          </span>
+                          <span className="font-medium">
+                            {fmtCurrency(selectedClient.encoursActuel || 0)}
+                          </span>
                         </div>
                         <div className="flex justify-between border-t border-border mt-1 pt-1">
-                          <span className="text-muted-foreground">Crédit disponible:</span>
-                          <span className={cn("font-bold", (selectedClient.creditDisponible ?? 0) > 0 ? "text-green-600 dark:text-green-400" : "text-destructive")}>
-                            {selectedClient.creditDisponible !== undefined ? fmtCurrency(selectedClient.creditDisponible) : "N/A"}
+                          <span className="text-muted-foreground">
+                            Crédit disponible:
+                          </span>
+                          <span
+                            className={cn(
+                              "font-bold",
+                              (selectedClient.creditDisponible ?? 0) > 0
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-destructive",
+                            )}
+                          >
+                            {selectedClient.creditDisponible !== undefined
+                              ? fmtCurrency(selectedClient.creditDisponible)
+                              : "N/A"}
                           </span>
                         </div>
                       </div>
@@ -885,9 +911,16 @@ function SalesPage() {
                     id="paidAmount"
                     type="text"
                     inputMode="decimal"
-                    value={formatGroupedInputNumber(fmtCurrency(totals.totalTtc), { allowNegative: false })}
+                    value={formatGroupedInputNumber(
+                      fmtCurrency(totals.totalTtc),
+                      { allowNegative: false },
+                    )}
                     onChange={(event) =>
-                      setPaidAmount(normalizeNumberInput(event.target.value, { allowNegative: false }))
+                      setPaidAmount(
+                        normalizeNumberInput(event.target.value, {
+                          allowNegative: false,
+                        }),
+                      )
                     }
                     placeholder="Montant payé"
                   />
@@ -1030,7 +1063,7 @@ function SalesPage() {
         description="La facture et les mouvements de stock seront créés après validation."
         size="lg"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setConfirmOpen(false)}
@@ -1104,7 +1137,7 @@ function SalesPage() {
         description={createdInvoice?.numeroFacture || "Facture générée"}
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button variant="outline" onClick={() => setSuccessOpen(false)}>
               Fermer
             </Button>
@@ -1163,8 +1196,12 @@ function SalesPage() {
                   <FileText className="mr-2 h-4 w-4" />
                   Télécharger
                 </Button>
-                {(historyDetail.statut === "PARTIELLEMENT_PAYEE" || historyDetail.statut === "EMISE") && (
-                  <Button size="sm" onClick={() => setAddPaymentModalOpen(true)}>
+                {(historyDetail.statut === "PARTIELLEMENT_PAYEE" ||
+                  historyDetail.statut === "EMISE") && (
+                  <Button
+                    size="sm"
+                    onClick={() => setAddPaymentModalOpen(true)}
+                  >
                     <Wallet className="mr-2 h-4 w-4" />
                     Ajouter un paiement
                   </Button>
@@ -1176,19 +1213,33 @@ function SalesPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Total TTC</p>
-                    <p className="text-2xl font-bold">{fmtCurrency(toNumber(historyDetail.totalTtc))}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Total TTC
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {fmtCurrency(toNumber(historyDetail.totalTtc))}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Montant Payé</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Montant Payé
+                    </p>
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {fmtCurrency(toNumber(historyDetail.montantPaye))}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Reste à payer</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Reste à payer
+                    </p>
                     <p className="text-2xl font-bold text-destructive">
-                      {fmtCurrency(Math.max(0, toNumber(historyDetail.totalTtc) - toNumber(historyDetail.montantPaye)))}
+                      {fmtCurrency(
+                        Math.max(
+                          0,
+                          toNumber(historyDetail.totalTtc) -
+                            toNumber(historyDetail.montantPaye),
+                        ),
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1202,11 +1253,15 @@ function SalesPage() {
                     <div className="grid gap-2 text-sm">
                       <div className="flex justify-between items-center py-1">
                         <span className="text-muted-foreground">Nom :</span>
-                        <span className="font-medium">{historyDetail.client?.nom || "Client occasionnel"}</span>
+                        <span className="font-medium">
+                          {historyDetail.client?.nom || "Client occasionnel"}
+                        </span>
                       </div>
                       {historyDetail.client?.telephone && (
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-muted-foreground">Téléphone :</span>
+                          <span className="text-muted-foreground">
+                            Téléphone :
+                          </span>
                           <span>{historyDetail.client.telephone}</span>
                         </div>
                       )}
@@ -1222,20 +1277,29 @@ function SalesPage() {
                       <div className="flex justify-between items-center py-1">
                         <span className="text-muted-foreground">Statut :</span>
                         <span className="font-medium bg-muted px-2 py-0.5 rounded-md text-xs uppercase tracking-wider">
-                          {statusLabels[historyDetail.statut] || historyDetail.statut}
+                          {statusLabels[historyDetail.statut] ||
+                            historyDetail.statut}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-muted-foreground">Date d'émission :</span>
+                        <span className="text-muted-foreground">
+                          Date d'émission :
+                        </span>
                         <span>{formatDate(historyDetail.dateEmission)}</span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-muted-foreground">Échéance :</span>
+                        <span className="text-muted-foreground">
+                          Échéance :
+                        </span>
                         <span>{formatDate(historyDetail.dateEcheance)}</span>
                       </div>
                       <div className="flex justify-between items-center py-1">
-                        <span className="text-muted-foreground">Mode de paiement :</span>
-                        <span>{historyDetail.paiements?.[0]?.modePaiement || "-"}</span>
+                        <span className="text-muted-foreground">
+                          Mode de paiement :
+                        </span>
+                        <span>
+                          {historyDetail.paiements?.[0]?.modePaiement || "-"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1252,19 +1316,28 @@ function SalesPage() {
                         <th className="px-4 py-3 font-medium">Date</th>
                         <th className="px-4 py-3 font-medium">Mode</th>
                         <th className="px-4 py-3 font-medium">Référence</th>
-                        <th className="px-4 py-3 font-medium text-right">Montant</th>
+                        <th className="px-4 py-3 font-medium text-right">
+                          Montant
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {historyDetail.paiements.map((p) => (
-                        <tr key={p.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-4 py-3">{formatDate(p.datePaiement)}</td>
+                        <tr
+                          key={p.id}
+                          className="hover:bg-muted/50 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            {formatDate(p.datePaiement)}
+                          </td>
                           <td className="px-4 py-3">
                             <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                               {p.modePaiement}
                             </span>
                           </td>
-                          <td className="px-4 py-3">{p.referenceDocument || "-"}</td>
+                          <td className="px-4 py-3">
+                            {p.referenceDocument || "-"}
+                          </td>
                           <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
                             {fmtCurrency(toNumber(p.montant))}
                           </td>
@@ -1276,8 +1349,13 @@ function SalesPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg border-dashed">
                   <Wallet className="h-8 w-8 text-muted-foreground mb-3 opacity-50" />
-                  <p className="text-sm font-medium text-foreground">Aucun paiement</p>
-                  <p className="text-xs text-muted-foreground mt-1">Il n'y a pas encore de paiement enregistré pour cette facture.</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Aucun paiement
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Il n'y a pas encore de paiement enregistré pour cette
+                    facture.
+                  </p>
                 </div>
               )}
             </TabsContent>
@@ -1297,7 +1375,7 @@ function SalesPage() {
         description="Enregistrer un nouveau paiement pour cette facture"
         size="md"
         footer={
-          <div className="flex justify-end gap-2 w-full">
+          <div className="flex justify-between gap-2 w-full">
             <Button
               variant="outline"
               onClick={() => setAddPaymentModalOpen(false)}
@@ -1309,7 +1387,9 @@ function SalesPage() {
               onClick={() => void handleAddPayment()}
               disabled={addPaymentSubmitting}
             >
-              {addPaymentSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {addPaymentSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Confirmer le paiement
             </Button>
           </div>

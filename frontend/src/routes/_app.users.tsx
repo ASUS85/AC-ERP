@@ -371,7 +371,7 @@ function UsersPage() {
         }
         size="lg"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setModalOpen(false)}
@@ -506,7 +506,7 @@ function UsersPage() {
         description="Cette action est irréversible."
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}

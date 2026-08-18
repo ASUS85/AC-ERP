@@ -2117,7 +2117,7 @@ function PurchasesPage() {
                     <th className="px-2 py-2">
                       Quantite<span className="ml-1 text-destructive">*</span>
                     </th>
-                    <th className="px-2 py-2">Unite</th>
+                    <th className="min-w-[170px] px-2 py-2">Unite</th>
                     <th className="px-2 py-2">Prix unitaire HT</th>
                     <th className="px-2 py-2">Remise %</th>
                     <th className="px-2 py-2">TVA %</th>
@@ -2193,7 +2193,7 @@ function PurchasesPage() {
                           </p>
                         ) : null}
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="min-w-[170px] px-2 py-2">
                         <SearchableSelect
                           portalMode="body"
                           value={line.unite}
@@ -2204,6 +2204,7 @@ function PurchasesPage() {
                           placeholder="Selectionner une unite"
                           searchPlaceholder="Rechercher une unite"
                           emptyMessage="Aucune unite"
+                          className="min-w-[170px]"
                         />
                       </td>
                       <td className="px-2 py-2">
@@ -2509,20 +2510,24 @@ function PurchasesPage() {
         {receptionOrder ? (
           <div className="h-[65vh] overflow-y-auto pr-2 space-y-6">
             <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-              
               <div className="space-y-6">
                 <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
                   <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">1</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      1
+                    </span>
                     Informations Générales
                   </h4>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-muted-foreground">Fournisseur</Label>
+                      <Label className="text-muted-foreground">
+                        Fournisseur
+                      </Label>
                       <Input
                         value={
                           detailsOrder?.fournisseur?.raisonSociale ||
-                          rows.find((item) => item.id === receptionOrder.id)?.fournisseur ||
+                          rows.find((item) => item.id === receptionOrder.id)
+                            ?.fournisseur ||
                           "-"
                         }
                         disabled
@@ -2530,15 +2535,25 @@ function PurchasesPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-muted-foreground">Bon de commande</Label>
-                      <Input value={receptionOrder.ref} disabled className="bg-muted/40 font-medium" />
+                      <Label className="text-muted-foreground">
+                        Bon de commande
+                      </Label>
+                      <Input
+                        value={receptionOrder.ref}
+                        disabled
+                        className="bg-muted/40 font-medium"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="reception-date">Date de réception</Label>
                       <Input
                         id="reception-date"
                         type="date"
-                        className={cn(receptionGeneralErrors.date ? "border-destructive focus-visible:ring-destructive" : "")}
+                        className={cn(
+                          receptionGeneralErrors.date
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : "",
+                        )}
                         value={receptionGeneralForm.date}
                         onChange={(e) =>
                           setReceptionGeneralForm((prev) => ({
@@ -2548,11 +2563,15 @@ function PurchasesPage() {
                         }
                       />
                       {receptionGeneralErrors.date && (
-                        <p className="text-xs text-destructive">{receptionGeneralErrors.date}</p>
+                        <p className="text-xs text-destructive">
+                          {receptionGeneralErrors.date}
+                        </p>
                       )}
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="reception-observations">Observations</Label>
+                      <Label htmlFor="reception-observations">
+                        Observations
+                      </Label>
                       <Textarea
                         id="reception-observations"
                         value={receptionGeneralForm.observations}
@@ -2571,7 +2590,9 @@ function PurchasesPage() {
 
                 <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
                   <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">2</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      2
+                    </span>
                     Articles à réceptionner
                   </h4>
                   <div className="space-y-3">
@@ -2586,32 +2607,58 @@ function PurchasesPage() {
                         className="group flex flex-col gap-4 rounded-lg border border-border/60 bg-muted/20 p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">{line.produit}</p>
+                          <p className="text-sm font-semibold text-foreground">
+                            {line.produit}
+                          </p>
                           <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Cmd: <strong className="text-foreground">{line.quantiteCommandee}</strong></span>
+                            <span>
+                              Cmd:{" "}
+                              <strong className="text-foreground">
+                                {line.quantiteCommandee}
+                              </strong>
+                            </span>
                             <span>•</span>
-                            <span>Reçu: <strong className="text-foreground">{line.quantiteDejaRecue}</strong></span>
+                            <span>
+                              Reçu:{" "}
+                              <strong className="text-foreground">
+                                {line.quantiteDejaRecue}
+                              </strong>
+                            </span>
                             <span>•</span>
-                            <span className="text-amber-600 font-medium">Reste: {line.restant}</span>
+                            <span className="text-amber-600 font-medium">
+                              Reste: {line.restant}
+                            </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 sm:w-48">
-                          <Label htmlFor={`recv-${line.idLigneBcf}`} className="sr-only">Recu maintenant</Label>
+                          <Label
+                            htmlFor={`recv-${line.idLigneBcf}`}
+                            className="sr-only"
+                          >
+                            Recu maintenant
+                          </Label>
                           <div className="relative w-full">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">Qté:</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                              Qté:
+                            </span>
                             <Input
                               id={`recv-${line.idLigneBcf}`}
                               type="text"
                               inputMode="decimal"
                               placeholder="0"
                               className="pl-9 font-medium"
-                              value={formatGroupedInputNumber(String(line.quantiteARecevoir))}
+                              value={formatGroupedInputNumber(
+                                String(line.quantiteARecevoir),
+                              )}
                               onChange={(e) => {
                                 const value = Math.max(
                                   0,
                                   Math.min(
                                     line.restant,
-                                    toNumber(normalizeNumberInput(e.target.value), 0),
+                                    toNumber(
+                                      normalizeNumberInput(e.target.value),
+                                      0,
+                                    ),
                                   ),
                                 );
                                 setReceptionOrder((prev) =>
@@ -2637,20 +2684,27 @@ function PurchasesPage() {
                 </div>
               </div>
 
-              
               <div className="space-y-6">
                 <div className="sticky top-0 rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
                   <h4 className="mb-4 text-sm font-semibold text-primary flex items-center gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">3</span>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
+                      3
+                    </span>
                     Résumé de la réception
                   </h4>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b border-primary/10 pb-3">
-                      <span className="text-sm text-muted-foreground">Produits concernés</span>
-                      <span className="font-semibold">{receptionOrder.lines.length}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Produits concernés
+                      </span>
+                      <span className="font-semibold">
+                        {receptionOrder.lines.length}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center border-b border-primary/10 pb-3">
-                      <span className="text-sm text-muted-foreground">Quantité totale</span>
+                      <span className="text-sm text-muted-foreground">
+                        Quantité totale
+                      </span>
                       <span className="font-semibold text-primary">
                         {receptionOrder.lines.reduce(
                           (acc, line) => acc + line.quantiteARecevoir,
@@ -2659,7 +2713,9 @@ function PurchasesPage() {
                       </span>
                     </div>
                     <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm text-muted-foreground">Valeur estimée</span>
+                      <span className="text-sm text-muted-foreground">
+                        Valeur estimée
+                      </span>
                       <span className="text-lg font-bold text-foreground">
                         {fmtCurrency(
                           receptionOrder.lines.reduce((acc, line) => {
@@ -2678,7 +2734,6 @@ function PurchasesPage() {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         ) : null}
@@ -2749,11 +2804,12 @@ function PurchasesPage() {
       >
         <div className="h-[75vh] overflow-y-auto pr-2">
           <div className="grid gap-6 xl:grid-cols-[450px_1fr]">
-            
             <div className="space-y-6">
               <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
                 <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">1</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    1
+                  </span>
                   Informations de la facture
                 </h4>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -2762,7 +2818,11 @@ function PurchasesPage() {
                     <Input
                       id="invoice-number"
                       placeholder="Ex: FAC-2026-0001"
-                      className={cn(invoiceFormErrors.numeroFacture ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.numeroFacture
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={invoiceForm.numeroFacture}
                       onChange={(e) =>
                         setInvoiceForm((prev) => ({
@@ -2771,14 +2831,22 @@ function PurchasesPage() {
                         }))
                       }
                     />
-                    {invoiceFormErrors.numeroFacture && <p className="text-xs text-destructive">{invoiceFormErrors.numeroFacture}</p>}
+                    {invoiceFormErrors.numeroFacture && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.numeroFacture}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-date">Date facture</Label>
                     <Input
                       id="invoice-date"
                       type="date"
-                      className={cn(invoiceFormErrors.dateFacture ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.dateFacture
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={invoiceForm.dateFacture}
                       onChange={(e) =>
                         setInvoiceForm((prev) => ({
@@ -2787,14 +2855,22 @@ function PurchasesPage() {
                         }))
                       }
                     />
-                    {invoiceFormErrors.dateFacture && <p className="text-xs text-destructive">{invoiceFormErrors.dateFacture}</p>}
+                    {invoiceFormErrors.dateFacture && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.dateFacture}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-due">Échéance</Label>
                     <Input
                       id="invoice-due"
                       type="date"
-                      className={cn(invoiceFormErrors.dateEcheance ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.dateEcheance
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={invoiceForm.dateEcheance}
                       onChange={(e) =>
                         setInvoiceForm((prev) => ({
@@ -2803,7 +2879,11 @@ function PurchasesPage() {
                         }))
                       }
                     />
-                    {invoiceFormErrors.dateEcheance && <p className="text-xs text-destructive">{invoiceFormErrors.dateEcheance}</p>}
+                    {invoiceFormErrors.dateEcheance && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.dateEcheance}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-ht">Montant HT</Label>
@@ -2812,7 +2892,11 @@ function PurchasesPage() {
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
-                      className={cn(invoiceFormErrors.montantHt ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.montantHt
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={formatGroupedInputNumber(invoiceForm.montantHt)}
                       onChange={(e) => {
                         const montantHt = normalizeNumberInput(e.target.value);
@@ -2823,7 +2907,11 @@ function PurchasesPage() {
                         }));
                       }}
                     />
-                    {invoiceFormErrors.montantHt && <p className="text-xs text-destructive">{invoiceFormErrors.montantHt}</p>}
+                    {invoiceFormErrors.montantHt && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.montantHt}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-tva">TVA</Label>
@@ -2832,7 +2920,11 @@ function PurchasesPage() {
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
-                      className={cn(invoiceFormErrors.tva ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.tva
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={formatGroupedInputNumber(invoiceForm.tva)}
                       onChange={(e) => {
                         const tva = normalizeNumberInput(e.target.value);
@@ -2843,7 +2935,11 @@ function PurchasesPage() {
                         }));
                       }}
                     />
-                    {invoiceFormErrors.tva && <p className="text-xs text-destructive">{invoiceFormErrors.tva}</p>}
+                    {invoiceFormErrors.tva && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.tva}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-remise">Remise</Label>
@@ -2852,7 +2948,11 @@ function PurchasesPage() {
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
-                      className={cn(invoiceFormErrors.remise ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.remise
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={formatGroupedInputNumber(invoiceForm.remise)}
                       onChange={(e) =>
                         setInvoiceForm((prev) => ({
@@ -2869,7 +2969,11 @@ function PurchasesPage() {
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
-                      className={cn(invoiceFormErrors.transport ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        invoiceFormErrors.transport
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={formatGroupedInputNumber(invoiceForm.transport)}
                       onChange={(e) =>
                         setInvoiceForm((prev) => ({
@@ -2887,10 +2991,19 @@ function PurchasesPage() {
                       inputMode="decimal"
                       placeholder="0"
                       readOnly
-                      className={cn("bg-muted/40 font-bold text-primary", invoiceFormErrors.ttc ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        "bg-muted/40 font-bold text-primary",
+                        invoiceFormErrors.ttc
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       value={formatGroupedInputNumber(invoiceForm.ttc)}
                     />
-                    {invoiceFormErrors.ttc && <p className="text-xs text-destructive">{invoiceFormErrors.ttc}</p>}
+                    {invoiceFormErrors.ttc && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.ttc}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="invoice-observations">Observations</Label>
@@ -2911,21 +3024,29 @@ function PurchasesPage() {
               </div>
             </div>
 
-            
             <div className="space-y-6 flex flex-col h-full">
               <div className="rounded-xl border border-border bg-card p-5 shadow-sm flex-1 flex flex-col">
                 <h4 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">2</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    2
+                  </span>
                   Document PDF
                 </h4>
                 <div className="space-y-4 flex-1 flex flex-col">
                   <div>
-                    <Label htmlFor="supplier-invoice-file" className="sr-only">Fichier PDF</Label>
+                    <Label htmlFor="supplier-invoice-file" className="sr-only">
+                      Fichier PDF
+                    </Label>
                     <Input
                       id="supplier-invoice-file"
                       type="file"
                       accept="application/pdf,.pdf"
-                      className={cn("file:bg-primary/10 file:text-primary file:border-0 hover:file:bg-primary/20", invoiceFormErrors.file ? "border-destructive focus-visible:ring-destructive" : "")}
+                      className={cn(
+                        "file:bg-primary/10 file:text-primary file:border-0 hover:file:bg-primary/20",
+                        invoiceFormErrors.file
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : "",
+                      )}
                       onChange={(e) => {
                         onImportFileChange(e.target.files?.[0] || null);
                         setInvoiceFormErrors((prev) => ({
@@ -2935,16 +3056,21 @@ function PurchasesPage() {
                       }}
                     />
                     {invoiceFormErrors.file ? (
-                      <p className="mt-1 text-xs text-destructive">{invoiceFormErrors.file}</p>
+                      <p className="mt-1 text-xs text-destructive">
+                        {invoiceFormErrors.file}
+                      </p>
                     ) : importFile ? (
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {importFile.name} · {(importFile.size / 1024 / 1024).toFixed(2)} Mo
+                        {importFile.name} ·{" "}
+                        {(importFile.size / 1024 / 1024).toFixed(2)} Mo
                       </p>
                     ) : null}
                   </div>
-                  
+
                   <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/20 min-h-[400px]">
-                    {importFile && importFile.type === "application/pdf" && importPreviewUrl ? (
+                    {importFile &&
+                    importFile.type === "application/pdf" &&
+                    importPreviewUrl ? (
                       <iframe
                         src={importPreviewUrl}
                         title="Apercu facture fournisseur"
@@ -2962,7 +3088,6 @@ function PurchasesPage() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </AppModal>

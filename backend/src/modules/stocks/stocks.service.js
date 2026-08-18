@@ -84,6 +84,72 @@ export const stocksService = {
         "Cet inventaire ne peut pas etre valide",
       );
     }
+    if (inventaire.lignes.some((ligne) => ligne.stockReel === null)) {
+      throw new ApiError(
+        400,
+        "INVENTORY_COUNT_INCOMPLETE",
+        "Saisissez le stock physique pour chaque ligne avant validation",
+      );
+    }
     return stocksRepository.validerInventaire(id, context.user.userId);
+  },
+  async enregistrerComptageInventaire(id, lignes) {
+    const inventaire = await stocksRepository.inventaireById(id);
+    if (!inventaire) {
+      throw new ApiError(404, "NOT_FOUND", "Inventaire introuvable");
+    }
+    if (inventaire.statut !== "EN_COURS") {
+      throw new ApiError(
+        409,
+        "BUSINESS_RULE_VIOLATION",
+        "Cet inventaire ne peut plus etre modifie",
+      );
+    }
+    if (!Array.isArray(lignes) || !lignes.length) {
+      throw new ApiError(400, "INVALID_COUNTS", "Aucun comptage fourni");
+    }
+    const ids = new Set();
+    const normalizedLines = lignes.map((ligne) => {
+      const stockReel = Number(ligne.stockReel);
+      if (
+        !ligne.id ||
+        ids.has(ligne.id) ||
+        !Number.isInteger(stockReel) ||
+        stockReel < 0
+      ) {
+        throw new ApiError(400, "INVALID_COUNTS", "Comptage physique invalide");
+      }
+      ids.add(ligne.id);
+      return { id: ligne.id, stockReel };
+    });
+    return stocksRepository.enregistrerComptageInventaire(id, normalizedLines);
+  },
+  async rafraichirInventaire(id) {
+    const inventaire = await stocksRepository.inventaireById(id);
+    if (!inventaire) {
+      throw new ApiError(404, "NOT_FOUND", "Inventaire introuvable");
+    }
+    if (inventaire.statut !== "EN_COURS") {
+      throw new ApiError(
+        409,
+        "BUSINESS_RULE_VIOLATION",
+        "Seul un inventaire en cours peut etre actualise",
+      );
+    }
+    return stocksRepository.rafraichirInventaire(id);
+  },
+  async annulerInventaire(id) {
+    const inventaire = await stocksRepository.inventaireById(id);
+    if (!inventaire) {
+      throw new ApiError(404, "NOT_FOUND", "Inventaire introuvable");
+    }
+    if (inventaire.statut !== "EN_COURS") {
+      throw new ApiError(
+        409,
+        "BUSINESS_RULE_VIOLATION",
+        "Cet inventaire ne peut pas etre annule",
+      );
+    }
+    return stocksRepository.annulerInventaire(id);
   },
 };

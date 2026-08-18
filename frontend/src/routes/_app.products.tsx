@@ -298,12 +298,12 @@ function ProductsPage() {
       const fieldErrors =
         details && typeof details === "object"
           ? Object.entries(details).reduce<Record<string, string>>(
-            (acc, [key, value]) => {
-              if (typeof value === "string") acc[key] = value;
-              return acc;
-            },
-            {},
-          )
+              (acc, [key, value]) => {
+                if (typeof value === "string") acc[key] = value;
+                return acc;
+              },
+              {},
+            )
           : {};
       setErrors(fieldErrors);
       toast.error(apiError.message || "Échec de l’enregistrement");
@@ -719,11 +719,15 @@ function ProductsPage() {
               id="prixAchatHt"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.prixAchatHt || ""), { allowNegative: false })}
+              value={formatGroupedInputNumber(String(form.prixAchatHt || ""), {
+                allowNegative: false,
+              })}
               onChange={(e) =>
                 setField(
                   "prixAchatHt",
-                  normalizeNumberInput(e.target.value, { allowNegative: false }),
+                  normalizeNumberInput(e.target.value, {
+                    allowNegative: false,
+                  }),
                 )
               }
               placeholder="Entrez un prix de d'achat"
@@ -739,11 +743,15 @@ function ProductsPage() {
               id="prixVenteHt"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.prixVenteHt || ""), { allowNegative: false })}
+              value={formatGroupedInputNumber(String(form.prixVenteHt || ""), {
+                allowNegative: false,
+              })}
               onChange={(e) =>
                 setField(
                   "prixVenteHt",
-                  normalizeNumberInput(e.target.value, { allowNegative: false }),
+                  normalizeNumberInput(e.target.value, {
+                    allowNegative: false,
+                  }),
                 )
               }
               placeholder="Entrez un prix de vente"
@@ -755,10 +763,9 @@ function ProductsPage() {
               id="tauxTva"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(
-                String(form.tauxTva ?? ""),
-                { allowNegative: false },
-              )}
+              value={formatGroupedInputNumber(String(form.tauxTva ?? ""), {
+                allowNegative: false,
+              })}
               onChange={(e) =>
                 setField(
                   "tauxTva",
@@ -780,11 +787,15 @@ function ProductsPage() {
               id="stockMinimum"
               type="text"
               inputMode="decimal"
-              value={formatGroupedInputNumber(String(form.stockMinimum || ""), { allowNegative: false })}
+              value={formatGroupedInputNumber(String(form.stockMinimum || ""), {
+                allowNegative: false,
+              })}
               onChange={(e) =>
                 setField(
                   "stockMinimum",
-                  normalizeNumberInput(e.target.value, { allowNegative: false }),
+                  normalizeNumberInput(e.target.value, {
+                    allowNegative: false,
+                  }),
                 )
               }
               placeholder="Entrez le stock minimum"
@@ -801,12 +812,15 @@ function ProductsPage() {
                 type="text"
                 inputMode="decimal"
                 value={formatGroupedInputNumber(
-                  String(form.stockInitial || ""), { allowNegative: false }
+                  String(form.stockInitial || ""),
+                  { allowNegative: false },
                 )}
                 onChange={(e) =>
                   setField(
                     "stockInitial",
-                    normalizeNumberInput(e.target.value, { allowNegative: false }),
+                    normalizeNumberInput(e.target.value, {
+                      allowNegative: false,
+                    }),
                   )
                 }
                 placeholder="Entrez le stock initial"
@@ -908,7 +922,7 @@ function ProductsPage() {
         description="Le produit sera archivé s’il peut être retiré du catalogue."
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}

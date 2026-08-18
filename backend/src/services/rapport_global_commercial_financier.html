@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport Commercial, Logistique & Financier Global</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 10mm 15mm 10mm;
+            @bottom-right {
+                content: "Page " counter(page) " / " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #888888;
+            }
+            @bottom-left {
+                content: "TECH SOLUTIONS SARL — Rapport d'Activité et Directoire Financier";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #888888;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1a202c;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            font-size: 9.5pt;
+            line-height: 1.45;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* --- Header Styling --- */
+        .header-container {
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 18pt;
+            font-weight: 800;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .report-main-title {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 4px 0 0 0;
+            text-transform: uppercase;
+        }
+
+        .report-subtitle {
+            font-size: 9pt;
+            color: #475569;
+            margin-top: 2px;
+        }
+
+        .meta-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .meta-grid td {
+            padding: 8px 12px;
+            font-size: 9pt;
+            border-right: 1px solid #edf2f7;
+        }
+
+        .meta-grid td:last-child {
+            border-right: none;
+        }
+
+        .meta-label {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        /* --- Metric Cards Section --- */
+        .kpi-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px 0;
+            margin-bottom: 22px;
+            margin-left: -8px;
+            margin-right: -8px;
+        }
+
+        .kpi-card {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-top: 4px solid #1e3a8a;
+            padding: 10px 12px;
+            text-align: left;
+            width: 25%;
+        }
+
+        .kpi-card.green { border-top-color: #059669; }
+        .kpi-card.amber { border-top-color: #d97706; }
+        .kpi-card.purple { border-top-color: #7c3aed; }
+
+        .kpi-title {
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 13pt;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .kpi-trend {
+            font-size: 7.5pt;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        .trend-up { color: #16a34a; }
+        .trend-down { color: #dc2626; }
+
+        /* --- Section Titles --- */
+        .section-header {
+            border-left: 4px solid #1e3a8a;
+            padding-left: 8px;
+            margin: 20px 0 10px 0;
+        }
+
+        .section-title {
+            font-size: 11pt;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 0.3px;
+        }
+
+        /* --- Data Tables --- */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+        }
+
+        .data-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: left;
+            padding: 7px 10px;
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            border: 1px solid #0f172a;
+        }
+
+        .data-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6.5px 10px;
+            font-size: 8.5pt;
+            color: #334155;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .data-table .total-row td {
+            font-weight: 800;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            border-top: 2px solid #0f172a;
+        }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        /* --- Badges & Status --- */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background-color: #dcfce7; color: #15803d; }
+        .badge-warning { background-color: #fef3c7; color: #b45309; }
+        .badge-danger { background-color: #fee2e2; color: #b91c1c; }
+        .badge-info { background-color: #e0f2fe; color: #0369a1; }
+
+        /* --- Executive Summary / Insights Box --- */
+        .executive-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 4px solid #2563eb;
+            padding: 10px 14px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+        }
+
+        .executive-title {
+            font-weight: 800;
+            color: #1e40af;
+            font-size: 9pt;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .executive-text {
+            font-size: 8.5pt;
+            color: #1e3a8a;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* --- Period Badge Header --- */
+        .period-pill {
+            display: inline-block;
+            background-color: #1e3a8a;
+            color: #ffffff;
+            padding: 3px 10px;
+            font-size: 8pt;
+            font-weight: 700;
+            border-radius: 12px;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         PAGE 1: RAPPORT MENSUEL & TRIMESTRIEL DES VENTES
+         ========================================== -->
+    <div class="header-container">
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <div class="company-name">TECH SOLUTIONS SARL</div>
+                    <div class="report-main-title">1. Rapport Performance Ventes & Commercial</div>
+                    <div class="report-subtitle">Analyse multi-périodique (Mois d'Août, T3 & Cumul Annuel 2026)</div>
+                </td>
+                <td class="text-right" style="vertical-align: top;">
+                    <span class="period-pill">Édition Officielle</span>
+                    <div style="font-size: 8pt; color: #64748b; margin-top: 6px;">Généré le : 18/08/2026</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Metadonnées -->
+    <table class="meta-grid">
+        <tr>
+            <td style="width: 25%;">
+                <span class="meta-label">Mois sous revue</span>
+                <span class="meta-value">Août 2026</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="meta-label">Trimestre en cours</span>
+                <span class="meta-value">T3 2026 (Juillet-Sept)</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="meta-label">Responsable Ventes</span>
+                <span class="meta-value">Direction Commerciale</span>
+            </td>
+            <td style="width: 25%;">
+                <span class="meta-label">Périmètre</span>
+                <span class="meta-value">Cameroun & Zone CEMAC</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Indicteurs Clés (KPIs) Ventes -->
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-card">
+                <div class="kpi-title">CA Mensuel (Août)</div>
+                <div class="kpi-value">48 500 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ +12.4% vs Juillet</div>
+            </td>
+            <td class="kpi-card green">
+                <div class="kpi-title">CA Trimestriel (T3 Atd)</div>
+                <div class="kpi-value">91 700 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ 68% de l'objectif T3</div>
+            </td>
+            <td class="kpi-card amber">
+                <div class="kpi-title">Panier Moyen</div>
+                <div class="kpi-value">2 425 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ +4.1% vs Q2</div>
+            </td>
+            <td class="kpi-card purple">
+                <div class="kpi-title">CA Annuel Cumulé (YTD)</div>
+                <div class="kpi-value">284 200 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ +18.5% vs 2025</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="executive-box">
+        <div class="executive-title">Synthèse Commerciale Executive</div>
+        <p class="executive-text">
+            Le mois d'Août 2026 enregistre une accélération marquée des ventes d'infrastructures serveurs et réseaux (+14% sur la gamme Dell & Cisco). Le trimestre T3 est en excellente voie avec 68% des objectifs réalisés à mi-parcours. La stratégie de vente grands comptes en Zone CEMAC confirme sa trajectoire de croissance soutenue.
+        </p>
+    </div>
+
+    <!-- Tableau Ventes par Ligne de Produits & Périodes -->
+    <div class="section-header">
+        <div class="section-title">Analyse des Ventes par Gamme de Produits & Périodes (FCFA)</div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Gamme / Catégorie Produits</th>
+                <th class="text-right">Mois d'Août</th>
+                <th class="text-right">Cumul T3 (Juill-Août)</th>
+                <th class="text-right">Cumul Semestriel (S1)</th>
+                <th class="text-right">Cumul Annuel (YTD 2026)</th>
+                <th class="text-center">Statut / Obj.</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Infrastructures Serveurs & Data Center</strong></td>
+                <td class="text-right">22 400 000</td>
+                <td class="text-right">41 200 000</td>
+                <td class="text-right">88 500 000</td>
+                <td class="text-right">129 700 000</td>
+                <td class="text-center"><span class="badge badge-success">Dépassé</span></td>
+            </tr>
+            <tr>
+                <td><strong>Équipements Réseaux & Interconnexion</strong></td>
+                <td class="text-right">14 100 000</td>
+                <td class="text-right">27 500 000</td>
+                <td class="text-right">54 000 000</td>
+                <td class="text-right">81 500 000</td>
+                <td class="text-center"><span class="badge badge-success">Conforme</span></td>
+            </tr>
+            <tr>
+                <td><strong>Énergie & Onduleurs Industriels</strong></td>
+                <td class="text-right">7 200 000</td>
+                <td class="text-right">13 800 000</td>
+                <td class="text-right">31 000 000</td>
+                <td class="text-right">44 800 000</td>
+                <td class="text-center"><span class="badge badge-warning">En Attente</span></td>
+            </tr>
+            <tr>
+                <td><strong>Accessoires & Câblage Structuré</strong></td>
+                <td class="text-right">4 800 000</td>
+                <td class="text-right">9 200 000</td>
+                <td class="text-right">19 000 000</td>
+                <td class="text-right">28 200 000</td>
+                <td class="text-center"><span class="badge badge-success">Conforme</span></td>
+            </tr>
+            <tr class="total-row">
+                <td>TOTAL CHIFFRE D'AFFAIRES (HT)</td>
+                <td class="text-right">48 500 000</td>
+                <td class="text-right">91 700 000</td>
+                <td class="text-right">192 500 000</td>
+                <td class="text-right">284 200 000</td>
+                <td class="text-center"><span class="badge badge-success">+18.5% YTD</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ==========================================
+         PAGE 2: RAPPORT D'ACHAT ET APPROVISIONNEMENT
+         ========================================== -->
+    <div class="page-break"></div>
+
+    <div class="header-container">
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <div class="company-name">TECH SOLUTIONS SARL</div>
+                    <div class="report-main-title">2. Rapport des Achats & Approvisionnements</div>
+                    <div class="report-subtitle">Suivi des acquisitions fournisseurs, coûts logistiques et conditions commerciales</div>
+                </td>
+                <td class="text-right" style="vertical-align: top;">
+                    <span class="period-pill">Direction Achats</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-card">
+                <div class="kpi-title">Achats Mensuels (Août)</div>
+                <div class="kpi-value">31 200 000 FCFA</div>
+                <div class="kpi-trend trend-down">▼ -4.1% Coût unitaire</div>
+            </td>
+            <td class="kpi-card green">
+                <div class="kpi-title">Achats T3 (Cumul)</div>
+                <div class="kpi-value">58 900 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ Couverture 45 jours</div>
+            </td>
+            <td class="kpi-card amber">
+                <div class="kpi-title">Remises Fournisseurs</div>
+                <div class="kpi-value">4.2 % Moyen</div>
+                <div class="kpi-trend trend-up">▲ +0.8% négociation</div>
+            </td>
+            <td class="kpi-card purple">
+                <div class="kpi-title">Achats Annuels (YTD)</div>
+                <div class="kpi-value">178 400 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ Budget sous contrôle</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-header">
+        <div class="section-title">Synthèse des Achats par Fournisseur Clé (Août & Cumul 2026)</div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Partenaire Fournisseur</th>
+                <th>Catégorie Marchandise</th>
+                <th class="text-right">Volume Août (FCFA)</th>
+                <th class="text-right">Volume YTD (FCFA)</th>
+                <th class="text-center">Délai Mtr. (Jours)</th>
+                <th class="text-center">Conformité BL</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>CAMEROUN MATÉRIEL INFORMATIQUE</strong></td>
+                <td>Serveurs & Baies de Stockage</td>
+                <td class="text-right">15 400 000</td>
+                <td class="text-right">86 000 000</td>
+                <td class="text-center">5 jours</td>
+                <td class="text-center"><span class="badge badge-success">98.5 %</span></td>
+            </tr>
+            <tr>
+                <td><strong>CISCO SYSTEMS DIRECT / DISTRI.</strong></td>
+                <td>Switches & Rouleurs Réseaux</td>
+                <td class="text-right">9 800 000</td>
+                <td class="text-right">52 100 000</td>
+                <td class="text-center">12 jours</td>
+                <td class="text-center"><span class="badge badge-success">100 %</span></td>
+            </tr>
+            <tr>
+                <td><strong>WESTCON / Schneider Electric</strong></td>
+                <td>Onduleurs & Protection Électrique</td>
+                <td class="text-right">4 200 000</td>
+                <td class="text-right">26 800 000</td>
+                <td class="text-center">8 jours</td>
+                <td class="text-center"><span class="badge badge-warning">92.0 %</span></td>
+            </tr>
+            <tr>
+                <td><strong>DIVERS FOURNISSEURS LOCAUX</strong></td>
+                <td>Consommables & Câblage</td>
+                <td class="text-right">1 800 000</td>
+                <td class="text-right">13 500 000</td>
+                <td class="text-center">2 jours</td>
+                <td class="text-center"><span class="badge badge-success">96.0 %</span></td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="2">TOTAL VOLUMES D'ACHATS (HT)</td>
+                <td class="text-right">31 200 000</td>
+                <td class="text-right">178 400 000</td>
+                <td class="text-center">6.7 jours (Moy)</td>
+                <td class="text-center"><span class="badge badge-success">97.8 %</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ==========================================
+         PAGE 3: RAPPORT DE STOCK ET INVENTAIRE
+         ========================================== -->
+    <div class="page-break"></div>
+
+    <div class="header-container">
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <div class="company-name">TECH SOLUTIONS SARL</div>
+                    <div class="report-main-title">3. Rapport de Gestion des Stocks & Inventaire</div>
+                    <div class="report-subtitle">État des valeurs en magasin, rotation des stocks et alerte de réapprovisionnement</div>
+                </td>
+                <td class="text-right" style="vertical-align: top;">
+                    <span class="period-pill">Gestion de Stock</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-card">
+                <div class="kpi-title">Valeur Stock Actuel</div>
+                <div class="kpi-value">64 800 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ Immobilisation optimale</div>
+            </td>
+            <td class="kpi-card green">
+                <div class="kpi-title">Taux de Rotation</div>
+                <div class="kpi-value">5.8x / An</div>
+                <div class="kpi-trend trend-up">▲ Objectif cible: 6.0x</div>
+            </td>
+            <td class="kpi-card amber">
+                <div class="kpi-title">Articles en Alerte</div>
+                <div class="kpi-value">3 Références</div>
+                <div class="kpi-trend trend-down">▼ Seuil critique atteint</div>
+            </td>
+            <td class="kpi-card purple">
+                <div class="kpi-title">Taux de Service Client</div>
+                <div class="kpi-value">96.4 %</div>
+                <div class="kpi-trend trend-up">▲ Rétention élevée</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-header">
+        <div class="section-title">État d'Inventaire et Couverture de Stock (Au 18 Août 2026)</div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Réf. Article</th>
+                <th>Désignation Produit / Matériel</th>
+                <th class="text-center">Qté en Stock</th>
+                <th class="text-center">Seuil Sécurité</th>
+                <th class="text-right">Valeur Unitaire (FCFA)</th>
+                <th class="text-right">Valeur Totale Stock</th>
+                <th class="text-center">Statut Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SRV-DELL-R750</td>
+                <td>Serveur Dell PowerEdge R750 Rack 2U</td>
+                <td class="text-center">8</td>
+                <td class="text-center">3</td>
+                <td class="text-right">1 850 000</td>
+                <td class="text-right">14 800 000</td>
+                <td class="text-center"><span class="badge badge-success">Optimal</span></td>
+            </tr>
+            <tr>
+                <td>SW-CISCO-C2960</td>
+                <td>Switch Cisco Catalyst 2960X 48 Ports</td>
+                <td class="text-center">15</td>
+                <td class="text-center">5</td>
+                <td class="text-right">420 000</td>
+                <td class="text-right">6 300 000</td>
+                <td class="text-center"><span class="badge badge-success">Optimal</span></td>
+            </tr>
+            <tr>
+                <td>OND-APC-1500</td>
+                <td>Onduleur APC Smart-UPS 1500VA</td>
+                <td class="text-center">2</td>
+                <td class="text-center">6</td>
+                <td class="text-right">180 000</td>
+                <td class="text-right">360 000</td>
+                <td class="text-center"><span class="badge badge-danger">Alerte Stock</span></td>
+            </tr>
+            <tr>
+                <td>CAB-CAT6-300M</td>
+                <td>Rouleau Câble Réseau Catégorie 6 SFTP</td>
+                <td class="text-center">42</td>
+                <td class="text-center">15</td>
+                <td class="text-right">65 000</td>
+                <td class="text-right">2 730 000</td>
+                <td class="text-center"><span class="badge badge-success">Surstock Utile</span></td>
+            </tr>
+            <tr>
+                <td>SFP-10G-SR</td>
+                <td>Transceiver Cisco 10GBASE-SR SFP+</td>
+                <td class="text-center">4</td>
+                <td class="text-center">10</td>
+                <td class="text-right">95 000</td>
+                <td class="text-right">380 000</td>
+                <td class="text-center"><span class="badge badge-warning">Commande Req.</span></td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="2">TOTAL VALEUR DU STOCK EN MAGASIN</td>
+                <td class="text-center">71 Unités</td>
+                <td class="text-center">-</td>
+                <td class="text-right">-</td>
+                <td class="text-right">24 570 000</td>
+                <td class="text-center"><span class="badge badge-info">Audité</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ==========================================
+         PAGE 4: RAPPORT FINANCIER & COMPTABILITE
+         ========================================== -->
+    <div class="page-break"></div>
+
+    <div class="header-container">
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <div class="company-name">TECH SOLUTIONS SARL</div>
+                    <div class="report-main-title">4. Rapport Financier & Compte de Résultat</div>
+                    <div class="report-subtitle">Bilan de performance financière, marge brute et résultat net mensuel/annuel</div>
+                </td>
+                <td class="text-right" style="vertical-align: top;">
+                    <span class="period-pill">Direction Financière</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-card">
+                <div class="kpi-title">Marge Brute (Août)</div>
+                <div class="kpi-value">17 300 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ 35.6% du CA</div>
+            </td>
+            <td class="kpi-card green">
+                <div class="kpi-title">EBITDA Mensuel</div>
+                <div class="kpi-value">11 200 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ 23.0% Marge Opé.</div>
+            </td>
+            <td class="kpi-card amber">
+                <div class="kpi-title">Trésorerie Net</div>
+                <div class="kpi-value">42 100 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ Ratio liquidité 1.85</div>
+            </td>
+            <td class="kpi-card purple">
+                <div class="kpi-title">Résultat Net YTD</div>
+                <div class="kpi-value">52 800 000 FCFA</div>
+                <div class="kpi-trend trend-up">▲ +21.2% vs 2025</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-header">
+        <div class="section-title">Compte de Résultat Simplifié par Période (FCFA)</div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Postes Financiers / Indice de Gestion</th>
+                <th class="text-right">Août 2026</th>
+                <th class="text-right">Cumul T3 (Août)</th>
+                <th class="text-right">Semestre S1</th>
+                <th class="text-right">Cumul Annuel (YTD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Chiffre d'Affaires Brut (Ventes)</strong></td>
+                <td class="text-right">48 500 000</td>
+                <td class="text-right">91 700 000</td>
+                <td class="text-right">192 500 000</td>
+                <td class="text-right">284 200 000</td>
+            </tr>
+            <tr>
+                <td>Coût des Marchandises Vendues (CAMV)</td>
+                <td class="text-right">- 31 200 000</td>
+                <td class="text-right">- 58 900 000</td>
+                <td class="text-right">- 123 500 000</td>
+                <td class="text-right">- 178 400 000</td>
+            </tr>
+            <tr style="background-color: #f1f5f9;">
+                <td><strong>MARGE BRUTE COMMERCIALES</strong></td>
+                <td class="text-right"><strong>17 300 000</strong></td>
+                <td class="text-right"><strong>32 800 000</strong></td>
+                <td class="text-right"><strong>69 000 000</strong></td>
+                <td class="text-right"><strong>105 800 000</strong></td>
+            </tr>
+            <tr>
+                <td>Charges Opérationnelles & Logistique (OPEX)</td>
+                <td class="text-right">- 6 100 000</td>
+                <td class="text-right">- 11 400 000</td>
+                <td class="text-right">- 24 200 000</td>
+                <td class="text-right">- 35 600 000</td>
+            </tr>
+            <tr style="background-color: #f1f5f9;">
+                <td><strong>RÉSULTAT D'EXPLOITATION (EBITDA)</strong></td>
+                <td class="text-right"><strong>11 200 000</strong></td>
+                <td class="text-right"><strong>21 400 000</strong></td>
+                <td class="text-right"><strong>44 800 000</strong></td>
+                <td class="text-right"><strong>70 200 000</strong></td>
+            </tr>
+            <tr>
+                <td>Impôts sur les Sociétés & Taxes (IS 30% + CAC)</td>
+                <td class="text-right">- 2 800 000</td>
+                <td class="text-right">- 5 300 000</td>
+                <td class="text-right">- 11 100 000</td>
+                <td class="text-right">- 17 400 000</td>
+            </tr>
+            <tr class="total-row">
+                <td>RÉSULTAT NET COMPTABLE</td>
+                <td class="text-right">8 400 000</td>
+                <td class="text-right">16 100 000</td>
+                <td class="text-right">33 700 000</td>
+                <td class="text-right">52 800 000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 35px; border-top: 1px solid #cbd5e1; padding-top: 15px;">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 33%; text-align: center;">
+                    <span style="font-size: 8pt; font-weight: 700; color: #475569;">Le Responsable Commercial</span><br><br><br>
+                    <span style="font-size: 8.5pt; font-weight: 600;">Direction Commerciale</span>
+                </td>
+                <td style="width: 33%; text-align: center;">
+                    <span style="font-size: 8pt; font-weight: 700; color: #475569;">Le Responsable Logistique</span><br><br><br>
+                    <span style="font-size: 8.5pt; font-weight: 600;">Direction des Stocks</span>
+                </td>
+                <td style="width: 33%; text-align: center;">
+                    <span style="font-size: 8pt; font-weight: 700; color: #475569;">Le Directeur Financier</span><br><br><br>
+                    <span style="font-size: 8.5pt; font-weight: 600;">Direction Générale</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

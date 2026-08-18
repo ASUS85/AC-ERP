@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   Line,
   LineChart,
@@ -17,22 +18,61 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, StatCard } from "@/components/erp/widgets";
+import { ChartFrame } from "@/components/erp/ChartFrame";
 import { StatusBadge } from "@/components/erp/StatusBadge";
-import { salesForecast, stockRisks, fmtCurrency } from "@/lib/erp-data";
+import { fmtCurrency } from "@/lib/erp-data";
+import { getPrevisions, type IaPrevisionsResponse } from "@/lib/api/ia.service";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/ai")({
   head: () => ({ meta: [{ title: "Prévisions IA — AC ERP" }] }),
   component: AiPage,
 });
 
-const recommendations = [
-  'Réapprovisionner « Écran 27" 4K » sous 8 jours pour éviter une rupture.',
-  "Augmenter le stock de « Casque sans fil ANC » de 20 % avant le pic de demande.",
-  "Proposer une remise ciblée sur « Souris ergonomique » (rotation élevée).",
-  "Négocier un délai plus court avec NordTech (livraisons les plus lentes).",
-];
+function riskLevel(days: number | null) {
+  if (days === null || days <= 7) return "Critique";
+  if (days <= 14) return "Élevé";
+  if (days <= 30) return "Moyen";
+  return "Faible";
+}
 
 function AiPage() {
+  const [previsions, setPrevisions] = useState<IaPrevisionsResponse>();
+  const [loading, setLoading] = useState(true);
+  const hasLoadedPrevisions = useRef(false);
+
+  useEffect(() => {
+    if (hasLoadedPrevisions.current) return;
+    hasLoadedPrevisions.current = true;
+
+    async function loadPrevisions() {
+      try {
+        const response = await getPrevisions();
+        setPrevisions(response.data);
+      } catch {
+        toast.error("Impossible de charger les prévisions IA");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadPrevisions();
+  }, []);
+
+  const salesForecast = (previsions?.previsionsMensuelles ?? []).map(
+    (forecast) => ({
+      mois: new Intl.DateTimeFormat("fr-FR", {
+        month: "short",
+        year: "numeric",
+      }).format(new Date(`${forecast.mois}-01T00:00:00`)),
+      reel: null,
+      prevu: forecast.montantPrevu,
+    }),
+  );
+  const produitsRisque = previsions?.produitsRisque ?? [];
+  const recommandations = previsions?.recommandations ?? [];
+
   return (
     <>
       <PageHeader
@@ -42,28 +82,52 @@ function AiPage() {
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          label="CA prévu (juil.)"
-          value={fmtCurrency(98200)}
-          delta="+6,2 %"
+          label="CA prévu (prochain mois)"
+          value={
+            loading ? (
+              <Skeleton className="h-8 w-32" />
+            ) : (
+              fmtCurrency(previsions?.caPrevu ?? 0)
+            )
+          }
+          delta="Projection IA"
           up
-          sub="vs juin"
+          sub="sur les 6 prochains mois"
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <StatCard
           label="Fiabilité du modèle"
-          value="92 %"
+          value={
+            loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              `${previsions?.fiabilite ?? 0} %`
+            )
+          }
           sub="précision"
           icon={<BrainCircuit className="h-5 w-5" />}
         />
         <StatCard
           label="Produits à risque"
-          value="4"
+          value={
+            loading ? (
+              <Skeleton className="h-8 w-10" />
+            ) : (
+              String(produitsRisque.length)
+            )
+          }
           sub="rupture probable"
           icon={<AlertTriangle className="h-5 w-5" />}
         />
         <StatCard
           label="Recommandations"
-          value="12"
+          value={
+            loading ? (
+              <Skeleton className="h-8 w-10" />
+            ) : (
+              String(recommandations.length)
+            )
+          }
           sub="actions suggérées"
           icon={<Lightbulb className="h-5 w-5" />}
         />
@@ -75,7 +139,7 @@ function AiPage() {
           description="Projection sur 6 mois (modèle prédictif)"
           className="lg:col-span-2"
         >
-          <div className="h-72">
+          <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={salesForecast}
@@ -128,7 +192,7 @@ function AiPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
 
         <SectionCard
@@ -136,7 +200,7 @@ function AiPage() {
           description="Actions prioritaires"
         >
           <div className="space-y-3">
-            {recommendations.map((r) => (
+            {recommandations.map((r) => (
               <div
                 key={r}
                 className="flex items-start gap-3 rounded-lg border border-border p-3"
@@ -147,6 +211,11 @@ function AiPage() {
                 <p className="text-sm text-foreground">{r}</p>
               </div>
             ))}
+            {!loading && recommandations.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Aucune recommandation disponible pour le moment.
+              </p>
+            )}
           </div>
         </SectionCard>
       </div>
@@ -175,25 +244,39 @@ function AiPage() {
                 </tr>
               </thead>
               <tbody>
-                {stockRisks.map((s) => (
+                {produitsRisque.map((s) => (
                   <tr
-                    key={s.produit}
+                    key={s.idProduit}
                     className="border-b border-border/60 last:border-0 hover:bg-secondary/40"
                   >
                     <td className="px-3 py-3.5 font-medium text-foreground first:pl-1">
                       {s.produit}
                     </td>
                     <td className="px-3 py-3.5 text-right text-foreground">
-                      {s.stock} unités
+                      {s.stockActuel} unités
                     </td>
                     <td className="px-3 py-3.5 text-right text-muted-foreground">
-                      {s.jours === 0 ? "Immédiate" : `~ ${s.jours} jours`}
+                      {s.joursAvantRupture === null
+                        ? "À surveiller"
+                        : s.joursAvantRupture <= 0
+                          ? "Immédiate"
+                          : `~ ${s.joursAvantRupture} jours`}
                     </td>
                     <td className="px-3 py-3.5 text-right">
-                      <StatusBadge status={s.risque} />
+                      <StatusBadge status={riskLevel(s.joursAvantRupture)} />
                     </td>
                   </tr>
                 ))}
+                {!loading && produitsRisque.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-3 py-8 text-center text-muted-foreground"
+                    >
+                      Aucun risque de rupture détecté.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

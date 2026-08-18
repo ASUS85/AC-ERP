@@ -15,13 +15,22 @@ import {
 } from "recharts";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, StatCard } from "@/components/erp/widgets";
+import { ChartFrame } from "@/components/erp/ChartFrame";
+import { fmtCurrency } from "@/lib/erp-data";
 import {
-  salesTrend,
-  stockSplit,
-  topProducts,
-  fmtCurrency,
-} from "@/lib/erp-data";
-import { TrendingUp, ShoppingCart, Warehouse, Banknote } from "lucide-react";
+  getDashboardOverview,
+  type DashboardOverview,
+} from "@/lib/api/dashboard.service";
+import { getStoredCurrency } from "@/lib/currency";
+import {
+  Loader2,
+  TrendingUp,
+  ShoppingCart,
+  Warehouse,
+  Banknote,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/statistics")({
   head: () => ({ meta: [{ title: "Statistiques — AC ERP" }] }),
@@ -39,6 +48,48 @@ const grid = "var(--border)";
 const axis = "var(--muted-foreground)";
 
 function StatsPage() {
+  const [currencyCode, setCurrencyCode] = useState(() => getStoredCurrency());
+  const [dashboardData, setDashboardData] = useState<DashboardOverview>({
+    kpis: [],
+    salesTrend: [],
+    topProducts: [],
+    stockSplit: [],
+    recentSales: [],
+    alerts: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleCurrencyChange = () => setCurrencyCode(getStoredCurrency());
+
+    window.addEventListener("erp:currency-changed", handleCurrencyChange);
+    window.addEventListener("storage", handleCurrencyChange);
+
+    async function loadStatistics() {
+      try {
+        setLoading(true);
+        const response = await getDashboardOverview();
+        if (response?.data) setDashboardData(response.data);
+      } catch {
+        toast.error("Impossible de charger les statistiques");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadStatistics();
+
+    return () => {
+      window.removeEventListener("erp:currency-changed", handleCurrencyChange);
+      window.removeEventListener("storage", handleCurrencyChange);
+    };
+  }, [currencyCode]);
+
+  const { salesTrend, topProducts, stockSplit, globalStats } = dashboardData;
+  const stats = globalStats;
+  const stockRotation =
+    stats && stats.valeurStock > 0 ? stats.totalAchats / stats.valeurStock : 0;
+
   return (
     <>
       <PageHeader
@@ -47,41 +98,48 @@ function StatsPage() {
         breadcrumb={["Intelligence", "Statistiques"]}
       />
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Ventes (an)"
-          value={fmtCurrency(780300)}
-          delta="+14 %"
-          up
-          sub="cumulé 2026"
-          icon={<TrendingUp className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Achats (an)"
-          value={fmtCurrency(439400)}
-          delta="+9 %"
-          up
-          sub="cumulé 2026"
-          icon={<ShoppingCart className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Marge brute"
-          value="43,7 %"
-          delta="+2,1 pts"
-          up
-          sub="moyenne"
-          icon={<Banknote className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Rotation stock"
-          value="6,2x"
-          sub="par an"
-          icon={<Warehouse className="h-5 w-5" />}
-        />
+        {loading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex h-32 items-center justify-center rounded-lg border border-border bg-muted/40"
+            >
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard
+              label="Ventes (an)"
+              value={fmtCurrency(stats?.totalVentes ?? 0, currencyCode)}
+              sub={`cumulé ${stats?.annee ?? new Date().getFullYear()}`}
+              icon={<TrendingUp className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Achats (an)"
+              value={fmtCurrency(stats?.totalAchats ?? 0, currencyCode)}
+              sub={`cumulé ${stats?.annee ?? new Date().getFullYear()}`}
+              icon={<ShoppingCart className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Marge brute"
+              value={`${(stats?.margeBrutePourcentage ?? 0).toFixed(1).replace(".", ",")} %`}
+              sub={fmtCurrency(stats?.margeBrute ?? 0, currencyCode)}
+              icon={<Banknote className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Rotation stock"
+              value={`${stockRotation.toFixed(1).replace(".", ",")}x`}
+              sub="par an"
+              icon={<Warehouse className="h-5 w-5" />}
+            />
+          </>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard title="Ventes vs achats" description="Comparatif mensuel">
-          <div className="h-64">
+          <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesTrend} margin={{ left: -10, right: 8 }}>
                 <CartesianGrid
@@ -125,14 +183,14 @@ function StatsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
 
         <SectionCard
           title="Évolution du chiffre d'affaires"
           description="Tendance annuelle"
         >
-          <div className="h-64">
+          <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesTrend} margin={{ left: -10, right: 8 }}>
                 <defs>
@@ -186,11 +244,11 @@ function StatsPage() {
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
 
         <SectionCard title="Répartition des stocks" description="Par catégorie">
-          <div className="h-64">
+          <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -213,11 +271,11 @@ function StatsPage() {
                 />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
 
         <SectionCard title="Top produits" description="Meilleures ventes">
-          <div className="h-64">
+          <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={topProducts}
@@ -262,7 +320,7 @@ function StatsPage() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </ChartFrame>
         </SectionCard>
       </div>
     </>

@@ -17,6 +17,7 @@ import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { toast } from "sonner";
 import {
   getFournisseurs,
@@ -99,6 +100,10 @@ function SuppliersPage() {
     totalPages: 1,
   });
   const [search, setSearch] = useState("");
+  const [villeFilter, setVilleFilter] = useState("");
+  const [cityOptions, setCityOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Fournisseur | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -114,6 +119,7 @@ function SuppliersPage() {
         page,
         limit: pageSize,
         search: search || undefined,
+        ville: villeFilter || undefined,
       });
       setFournisseurs(((response as any)?.data || []) as Fournisseur[]);
       setMeta(
@@ -129,14 +135,36 @@ function SuppliersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, villeFilter]);
 
   useEffect(() => {
     void loadFournisseurs();
   }, [loadFournisseurs]);
   useEffect(() => {
     setPage(1);
-  }, [search]);
+  }, [search, villeFilter]);
+
+  useEffect(() => {
+    async function loadCities() {
+      try {
+        const response = await getFournisseurs({ limit: 1000 });
+        const cities = Array.from(
+          new Set(
+            (((response as any)?.data || []) as Fournisseur[])
+              .map((supplier) => supplier.ville?.trim() || "")
+              .filter(Boolean),
+          ),
+        ).sort((left, right) => left.localeCompare(right, "fr"));
+        setCityOptions([
+          { value: "", label: "Toutes les villes" },
+          ...cities.map((city) => ({ value: city, label: city })),
+        ]);
+      } catch {
+        setCityOptions([{ value: "", label: "Toutes les villes" }]);
+      }
+    }
+    void loadCities();
+  }, []);
 
   const setField = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -294,13 +322,24 @@ function SuppliersPage() {
         description={`${meta.total} fournisseur${meta.total > 1 ? "s" : ""}`}
       >
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher un fournisseur..."
-              className="h-9 pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+          <div className="flex w-full flex-col gap-2 sm:max-w-md sm:flex-row">
+            <div className="relative w-full sm:max-w-xs">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un fournisseur..."
+                className="h-9 pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <SearchableSelect
+              value={villeFilter}
+              onValueChange={setVilleFilter}
+              options={cityOptions}
+              placeholder="Trier par ville"
+              searchPlaceholder="Rechercher une ville"
+              emptyMessage="Aucune ville"
+              className="sm:w-48"
             />
           </div>
           <Button
@@ -427,12 +466,17 @@ function SuppliersPage() {
               type="text"
               inputMode="decimal"
               value={formatGroupedInputNumber(
-                String(form.delaiLivraisonMoyen || ""), { allowNegative: false }
+                String(form.delaiLivraisonMoyen || ""),
+                { allowNegative: false },
               )}
               onChange={(e) =>
                 setField(
                   "delaiLivraisonMoyen",
-                  Number(normalizeNumberInput(e.target.value, { allowNegative: false })),
+                  Number(
+                    normalizeNumberInput(e.target.value, {
+                      allowNegative: false,
+                    }),
+                  ),
                 )
               }
               placeholder="Delais en jours"

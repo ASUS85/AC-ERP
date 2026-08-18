@@ -515,7 +515,7 @@ function CategoriesPage() {
         description="La categorie sera supprimee definitivement."
         size="sm"
         footer={
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-between gap-2">
             <Button
               variant="outline"
               onClick={() => setDeleteModalOpen(false)}

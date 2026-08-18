@@ -31,7 +31,6 @@ type GlobalLoaderContextValue = {
   runWithLoader: <T>(task: Promise<T>, options?: LoaderOptions) => Promise<T>;
 };
 
-const DEFAULT_MAX_DURATION_MS = 1000;
 const DEFAULT_LABEL = "Chargement...";
 
 const GlobalLoaderContext = createContext<GlobalLoaderContextValue | null>(
@@ -66,8 +65,7 @@ export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
 
       const requestId = activeIdRef.current + 1;
       activeIdRef.current = requestId;
-      /* const maxDurationMs = options.maxDurationMs ?? DEFAULT_MAX_DURATION_MS; */
-      const maxDurationMs = DEFAULT_MAX_DURATION_MS;
+      const maxDurationMs = options.maxDurationMs;
 
       setLoader({
         visible: true,
@@ -75,12 +73,14 @@ export function GlobalLoaderProvider({ children }: { children: ReactNode }) {
         label: options.label ?? DEFAULT_LABEL,
       });
 
-      timeoutRef.current = window.setTimeout(() => {
-        if (activeIdRef.current === requestId) {
-          setLoader((current) => ({ ...current, visible: false }));
-          timeoutRef.current = null;
-        }
-      }, maxDurationMs);
+      if (typeof maxDurationMs === "number" && maxDurationMs > 0) {
+        timeoutRef.current = window.setTimeout(() => {
+          if (activeIdRef.current === requestId) {
+            setLoader((current) => ({ ...current, visible: false }));
+            timeoutRef.current = null;
+          }
+        }, maxDurationMs);
+      }
 
       return () => {
         if (activeIdRef.current === requestId) hideLoader();

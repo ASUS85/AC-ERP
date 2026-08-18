@@ -9,6 +9,7 @@ import {
   ShoppingCart,
   Warehouse,
   Banknote,
+  LoaderCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard } from "@/components/erp/widgets";
@@ -23,6 +24,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  genererRapport,
+  telechargerRapportPdf,
+  type IaRapport,
+} from "@/lib/api/ia.service";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/reports")({
   head: () => ({ meta: [{ title: "Rapports — AC ERP" }] }),
@@ -31,35 +38,87 @@ export const Route = createFileRoute("/_app/reports")({
 
 const types = [
   {
-    id: "sales",
+    id: "ventes",
     label: "Rapport des ventes",
     icon: Receipt,
     desc: "CA, marges et top produits",
   },
   {
-    id: "purchases",
+    id: "achats",
     label: "Rapport des achats",
     icon: ShoppingCart,
     desc: "Commandes et fournisseurs",
   },
   {
-    id: "stock",
+    id: "stocks",
     label: "Rapport des stocks",
     icon: Warehouse,
     desc: "Valeur, mouvements et ruptures",
   },
   {
-    id: "finance",
+    id: "financier",
     label: "Rapport financier",
     icon: Banknote,
     desc: "Trésorerie et résultats",
   },
-];
+] as const;
+
+const periodLabels = {
+  semaine: "Cette semaine",
+  mois: "Ce mois-ci",
+  trimestre: "Ce trimestre",
+  annee: "Cette année",
+};
 
 function ReportsPage() {
-  const [selected, setSelected] = useState("sales");
-  const [generated, setGenerated] = useState(false);
+  const [selected, setSelected] = useState<IaRapport["typeRapport"]>("ventes");
+  const [periode, setPeriode] = useState<IaRapport["periode"]>("mois");
+  const [report, setReport] = useState<IaRapport>();
+  const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const active = types.find((t) => t.id === selected)!;
+
+  const generate = async () => {
+    setGenerating(true);
+    try {
+      const response = await genererRapport(selected, periode);
+      setReport(response.data);
+      toast.success("Rapport généré à partir des données ERP");
+    } catch (error) {
+      const message =
+        typeof error === "object" && error && "message" in error
+          ? String(error.message)
+          : "Impossible de générer le rapport";
+      toast.error(message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const downloadReport = async () => {
+    if (!report || downloading) return;
+    setDownloading(true);
+    try {
+      const blob = await telechargerRapportPdf(report.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `rapport-${report.typeRapport}-${report.periode}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      toast.success("Rapport PDF téléchargé");
+    } catch (error) {
+      const message =
+        typeof error === "object" && error && "message" in error
+          ? String(error.message)
+          : "Impossible de télécharger le rapport PDF";
+      toast.error(message);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <>
@@ -79,7 +138,7 @@ function ReportsPage() {
                 key={t.id}
                 onClick={() => {
                   setSelected(t.id);
-                  setGenerated(false);
+                  setReport(undefined);
                 }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all",
@@ -109,25 +168,35 @@ function ReportsPage() {
           </div>
           <div className="mt-4 space-y-1.5">
             <Label>Période</Label>
-            <Select defaultValue="month">
+            <Select
+              value={periode}
+              onValueChange={(value: IaRapport["periode"]) => {
+                setPeriode(value);
+                setReport(undefined);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="month">Ce mois-ci</SelectItem>
-                <SelectItem value="quarter">Ce trimestre</SelectItem>
-                <SelectItem value="year">Cette année</SelectItem>
+                <SelectItem value="semaine">Cette semaine</SelectItem>
+                <SelectItem value="mois">Ce mois-ci</SelectItem>
+                <SelectItem value="trimestre">Ce trimestre</SelectItem>
+                <SelectItem value="annee">Cette année</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Button
             className="mt-4 w-full gap-1.5"
-            onClick={() => {
-              setGenerated(true);
-              toast.success("Rapport généré");
-            }}
+            onClick={() => void generate()}
+            disabled={generating}
           >
-            <Sparkles className="h-4 w-4" /> Générer le rapport
+            {generating ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            {generating ? "Génération en cours..." : "Générer le rapport"}
           </Button>
         </SectionCard>
 
@@ -136,19 +205,41 @@ function ReportsPage() {
           description={active.label}
           className="lg:col-span-2"
           action={
-            generated && (
+            report && (
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
-                onClick={() => toast.success("PDF exporté")}
+                onClick={() => void downloadReport()}
+                disabled={downloading}
               >
-                <Download className="h-4 w-4" /> Exporter PDF
+                {downloading ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                Télécharger le PDF
               </Button>
             )
           }
         >
-          {!generated ? (
+          {generating ? (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+              </div>
+              <Skeleton className="h-72 w-full" />
+            </div>
+          ) : !report ? (
             <div className="flex h-80 flex-col items-center justify-center gap-3 text-center">
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                 <FileBarChart className="h-7 w-7" />
@@ -160,36 +251,29 @@ function ReportsPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-border p-6">
-              <div className="flex items-center justify-between border-b border-border pb-4">
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <div>
                   <h3 className="font-display text-lg font-bold text-foreground">
                     {active.label}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Période : Juin 2026 · Généré le 10 juin 2026
+                    Période : {periodLabels[report.periode]}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-primary" />
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                {[
-                  { k: "Total", v: "284 750 f" },
-                  { k: "Croissance", v: "+12,4 %" },
-                  { k: "Transactions", v: "1 248" },
-                ].map((s) => (
-                  <div key={s.k} className="rounded-lg bg-secondary/50 p-3">
-                    <p className="text-xs text-muted-foreground">{s.k}</p>
-                    <p className="text-lg font-bold text-foreground">{s.v}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Synthèse automatique : la période analysée affiche une
-                performance solide avec une croissance de 12,4 %. Les
-                indicateurs clés sont en progression, portés par le segment
-                Informatique. Aucun risque financier majeur détecté.
-              </p>
+              {report.html ? (
+                <iframe
+                  title={`Prévisualisation ${active.label}`}
+                  srcDoc={report.html}
+                  className="h-[620px] w-full bg-white"
+                />
+              ) : (
+                <p className="p-5 text-sm leading-relaxed text-muted-foreground">
+                  {report.contenu}
+                </p>
+              )}
             </div>
           )}
         </SectionCard>
