@@ -91,7 +91,19 @@ export const stocksService = {
         "Saisissez le stock physique pour chaque ligne avant validation",
       );
     }
-    return stocksRepository.validerInventaire(id, context.user.userId);
+    const validated = await stocksRepository.validerInventaire(
+      id,
+      context.user.userId,
+    );
+    const ecarts = validated.lignes.filter(
+      (ligne) => ligne.stockReel !== ligne.stockTheorique,
+    ).length;
+    emitter.emit("stock.inventaireValide", {
+      idInventaire: validated.id,
+      reference: `#${validated.id.slice(0, 8)}`,
+      ecarts,
+    });
+    return validated;
   },
   async enregistrerComptageInventaire(id, lignes) {
     const inventaire = await stocksRepository.inventaireById(id);

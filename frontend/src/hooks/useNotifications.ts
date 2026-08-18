@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import { AUTH_STORAGE_KEYS } from "@/lib/auth-session";
-import { getNotifications, marquerLue } from "../lib/api/notifications.service";
+import {
+  getNotifications,
+  marquerLue,
+  marquerToutesLues,
+} from "../lib/api/notifications.service";
 
 export type Notification = {
   id: string;
@@ -238,6 +242,13 @@ export function useNotifications() {
     );
   }, []);
 
+  const markAllAsRead = useCallback(async () => {
+    await marquerToutesLues();
+    setNotifications((items) =>
+      items.map((item) => ({ ...item, isLue: true })),
+    );
+  }, []);
+
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.isLue).length,
     [notifications],
@@ -247,6 +258,7 @@ export function useNotifications() {
     notifications,
     unreadCount,
     markAsRead,
+    markAllAsRead,
     desktopSoundEnabled,
     setDesktopSoundEnabled,
   };

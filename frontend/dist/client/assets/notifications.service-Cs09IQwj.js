@@ -1,0 +1,1 @@
+import{c}from"./input-Cz1ZJeIs.js";import{o}from"./index-DFNfZDn6.js";const e=[["path",{d:"M18 6 7 17l-5-5",key:"116fxf"}],["path",{d:"m22 10-7.5 7.5L13 16",key:"ke71qq"}]],s=c("check-check",e),n=t=>o.get("/notifications",{params:t}),r=t=>o.patch(`/notifications/${t}/lire`),f=()=>o.patch("/notifications/tout-lire");export{s as C,f as a,n as g,r as m};

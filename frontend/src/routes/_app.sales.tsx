@@ -664,11 +664,12 @@ function SalesPage() {
         </TabsList>
 
         <TabsContent value="new">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:h-[calc(100dvh-12rem)] lg:grid-cols-3">
             <SectionCard
               title="Catalogue"
               description="Cliquez pour ajouter au panier"
-              className="lg:col-span-2"
+              className="min-h-0 lg:col-span-2 lg:h-full"
+              contentClassName="flex min-h-0 flex-1 flex-col"
             >
               <div className="mb-4 flex items-center gap-2">
                 <div className="relative w-full">
@@ -696,7 +697,7 @@ function SalesPage() {
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
                   {filteredProducts.slice(0, 18).map((product) => {
                     const stock = toNumber(product.stock?.stockActuel);
                     return (
@@ -740,6 +741,8 @@ function SalesPage() {
             <SectionCard
               title="Panier"
               description={`${cart.length} article(s)`}
+              className="min-h-0 lg:h-full"
+              contentClassName="min-h-0 overflow-y-auto"
             >
               <div className="mb-4 space-y-3 rounded-lg border border-border p-3">
                 <Label>Client</Label>

@@ -21,3 +21,12 @@ emitter.on("stock.rupture", (data) => {
   });
 });
 
+emitter.on("stock.inventaireValide", (data) => {
+  notifyUsers(byPermission("stocks", "lire"), {
+    typeNotif: "ALERTE_STOCK",
+    titre: "Inventaire validé",
+    message: `L'inventaire ${data.reference} a été validé${data.ecarts ? ` avec ${data.ecarts} écart(s) de stock ajusté(s)` : " sans écart"}.`,
+    entityType: "inventaire",
+    entityId: data.idInventaire,
+  });
+});

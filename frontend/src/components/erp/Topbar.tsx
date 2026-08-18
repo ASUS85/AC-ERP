@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
+  CheckCheck,
   Menu,
   Search,
   Settings,
@@ -76,7 +77,8 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
-  const { notifications, unreadCount } = useNotifications();
+  const { notifications, unreadCount, markAllAsRead } = useNotifications();
+  const [markingNotifications, setMarkingNotifications] = useState(false);
 
   useEffect(() => {
     setUser(readStoredUser());
@@ -141,6 +143,16 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const handleLogout = async () => {
     await logout();
     navigate({ to: "/login" });
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    if (!unreadCount || markingNotifications) return;
+    setMarkingNotifications(true);
+    try {
+      await markAllAsRead();
+    } finally {
+      setMarkingNotifications(false);
+    }
   };
 
   return (
@@ -220,23 +232,37 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative"
+                className="relative h-10 w-10"
                 aria-label="Notifications"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-6 w-6 fill-[lab(93_-8.4_112.62_/_0.71)] text-[lab(38_-5.09_112.62_/_0.71)]" />
                 {unreadCount > 0 && (
-                  <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                  <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 animate-pulse items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground shadow-sm">
                     {unreadCount}
                   </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                Notifications
-                <span className="text-xs font-normal text-muted-foreground">
-                  {unreadCount} non lues
+              <DropdownMenuLabel className="flex items-center justify-between gap-3">
+                <span className="flex">
+                  <span className="ml-2 text-xs font-normal">
+                    Notifications
+                  </span>
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    {unreadCount} non lues
+                  </span>
                 </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 px-2 text-xs text-primary hover:text-primary"
+                  disabled={!unreadCount || markingNotifications}
+                  onClick={() => void handleMarkAllNotificationsRead()}
+                >
+                  <CheckCheck className="h-3.5 w-3.5" />
+                  Marquer comme lu
+                </Button>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {visibleNotifications.length > 0 ? (

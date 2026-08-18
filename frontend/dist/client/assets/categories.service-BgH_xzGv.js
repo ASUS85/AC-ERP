@@ -1,1 +1,0 @@
-import{o as t}from"./index-CYsNs-Gv.js";const s=e=>t.get("/categories",{params:e}),r=e=>t.post("/categories",e),g=(e,a)=>t.put(`/categories/${e}`,a),c=e=>t.delete(`/categories/${e}`),i=()=>t.get("/categories/arbre");export{i as a,r as c,c as d,s as g,g as u};

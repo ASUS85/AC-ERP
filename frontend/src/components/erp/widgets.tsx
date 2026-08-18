@@ -70,15 +70,19 @@ export function SectionCard({
   action,
   children,
   className,
+  contentClassName,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
   children: ReactNode;
   className?: string;
+  contentClassName?: string;
 }) {
   return (
-    <Card className={cn("overflow-hidden p-0 shadow-card", className)}>
+    <Card
+      className={cn("flex flex-col overflow-hidden p-0 shadow-card", className)}
+    >
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -90,7 +94,7 @@ export function SectionCard({
         </div>
         {action}
       </div>
-      <div className="p-5">{children}</div>
+      <div className={cn("p-5", contentClassName)}>{children}</div>
     </Card>
   );
 }

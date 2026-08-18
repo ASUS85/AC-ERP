@@ -1,1 +1,0 @@
-import{o as t}from"./index-CYsNs-Gv.js";const l=e=>t.get("/clients",{params:e}),o=e=>t.post("/clients",e),c=(e,s)=>t.put(`/clients/${e}`,s),i=e=>t.delete(`/clients/${e}`),a=e=>t.get("/clients/export.pdf",{params:e,responseType:"blob"});export{a,o as c,i as d,l as g,c as u};
