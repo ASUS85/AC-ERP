@@ -37,14 +37,14 @@ import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import {
-  getDashboardPdf,
-  getDashboardOverview,
-  type DashboardOverview,
-} from "@/lib/api/dashboard.service";
+import { getDashboardPdf } from "@/lib/api/dashboard.service";
 import { getStoredCurrency } from "@/lib/currency";
 import { fmtCurrency } from "@/lib/erp-data";
 import { toast } from "sonner";
+import {
+  EMPTY_DASHBOARD_OVERVIEW,
+  useDashboardStore,
+} from "@/stores/dashboard.store";
 
 export const Route = createFileRoute("/_app/")({
   head: () => ({ meta: [{ title: "Tableau de bord — AC ERP" }] }),
@@ -108,15 +108,9 @@ function ChartTooltip({ active, payload, label }: any) {
 
 function Dashboard() {
   const [currencyCode, setCurrencyCode] = useState(() => getStoredCurrency());
-  const [dashboardData, setDashboardData] = useState<DashboardOverview>({
-    kpis: [],
-    salesTrend: [],
-    topProducts: [],
-    stockSplit: [],
-    recentSales: [],
-    alerts: [],
-  });
-  const [loading, setLoading] = useState(true);
+  const dashboardData = useDashboardStore((state) => state.data);
+  const loading = useDashboardStore((state) => state.loading);
+  const fetchOverview = useDashboardStore((state) => state.fetchOverview);
   const [exporting, setExporting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -128,28 +122,18 @@ function Dashboard() {
     window.addEventListener("erp:currency-changed", handleCurrencyChange);
     window.addEventListener("storage", handleCurrencyChange);
 
-    async function loadDashboard() {
-      try {
-        setLoading(true);
-        const response = await getDashboardOverview();
-        if (response?.data) setDashboardData(response.data);
-      } catch {
-        toast.error("Impossible de charger le tableau de bord");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadDashboard();
+    void fetchOverview().catch(() =>
+      toast.error("Impossible de charger le tableau de bord"),
+    );
 
     return () => {
       window.removeEventListener("erp:currency-changed", handleCurrencyChange);
       window.removeEventListener("storage", handleCurrencyChange);
     };
-  }, [currencyCode]);
+  }, [currencyCode, fetchOverview]);
 
   const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
-    dashboardData;
+    dashboardData || EMPTY_DASHBOARD_OVERVIEW;
 
   const exportDashboard = async () => {
     try {

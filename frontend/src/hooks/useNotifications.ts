@@ -23,7 +23,7 @@ const NATIVE_NOTIFICATION_SHOWN_IDS_KEY = "erp_native_notification_shown_ids";
 const NATIVE_NOTIFICATION_SOUND_KEY = "erp_native_notification_sound_enabled";
 const MAX_STORED_NATIVE_NOTIFICATION_IDS = 300;
 const SHOW_DESKTOP_WHEN_APP_IS_ACTIVE = true;
-const NOTIFICATIONS_SYNC_INTERVAL_MS = 15000;
+const NOTIFICATIONS_FALLBACK_SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
 const isNativeNotificationSupported = () =>
   typeof window !== "undefined" && "Notification" in window;
@@ -159,9 +159,13 @@ export function useNotifications() {
   useEffect(() => {
     let socket: Socket | null = null;
     let mounted = true;
+    let fallbackIntervalId: number | null = null;
+    let syncing = false;
     let permissionRetryUnsubscribe: (() => void) | null = null;
 
     const syncNotifications = async () => {
+      if (syncing) return;
+      syncing = true;
       try {
         const response = await getNotifications();
         if (!mounted) return;
@@ -177,7 +181,22 @@ export function useNotifications() {
           });
       } catch {
         // keep silent: desktop notifications must never break UI flow
+      } finally {
+        syncing = false;
       }
+    };
+
+    const startFallbackSync = () => {
+      if (fallbackIntervalId !== null) return;
+      fallbackIntervalId = window.setInterval(() => {
+        void syncNotifications();
+      }, NOTIFICATIONS_FALLBACK_SYNC_INTERVAL_MS);
+    };
+
+    const stopFallbackSync = () => {
+      if (fallbackIntervalId === null) return;
+      window.clearInterval(fallbackIntervalId);
+      fallbackIntervalId = null;
     };
 
     void syncNotifications();
@@ -223,14 +242,17 @@ export function useNotifications() {
       showDesktopNotification(notification);
     });
 
-    const intervalId = window.setInterval(() => {
+    socket.on("connect", stopFallbackSync);
+    socket.on("disconnect", () => {
+      startFallbackSync();
       void syncNotifications();
-    }, NOTIFICATIONS_SYNC_INTERVAL_MS);
+    });
+    socket.on("connect_error", startFallbackSync);
 
     return () => {
       mounted = false;
       if (permissionRetryUnsubscribe) permissionRetryUnsubscribe();
-      window.clearInterval(intervalId);
+      stopFallbackSync();
       socket?.disconnect();
     };
   }, [mergeNotifications, showDesktopNotification]);

@@ -9,11 +9,11 @@ import { SidebarNav } from "@/components/erp/Sidebar";
 import { Topbar } from "@/components/erp/Topbar";
 import { GlobalLoaderSlot } from "@/components/erp/GlobalLoader";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { getEntreprise } from "@/lib/api/parametres.service";
-import { getMe } from "@/lib/api/auth.service";
 import { AUTH_STORAGE_KEYS, clearAuthSession } from "@/lib/auth-session";
 import { setStoredCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth.store";
+import { useSettingsStore } from "@/stores/settings.store";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context, location }) => {
@@ -32,16 +32,13 @@ export const Route = createFileRoute("/_app")({
       });
     }
 
-    if (!context.auth) {
-      try {
-        const userResponse = await getMe();
-        return { auth: { user: userResponse.data } };
-      } catch (error) {
-        clearAuthSession();
-        throw redirect({ to: "/login" });
-      }
+    try {
+      const user = await useAuthStore.getState().fetchProfile();
+      return { auth: { user } };
+    } catch (error) {
+      clearAuthSession();
+      throw redirect({ to: "/login" });
     }
-    return {};
   },
   component: AppLayout,
 });
@@ -49,12 +46,28 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isClientAuthenticated, setIsClientAuthenticated] = useState(false);
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+
   useEffect(() => {
-    getEntreprise()
-      .then((response) => setStoredCurrency(response?.data?.devise))
+    const token = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
+    if (!token) {
+      const destination = `${window.location.pathname}${window.location.search}`;
+      window.location.replace(
+        `/login?redirect=${encodeURIComponent(destination)}`,
+      );
+      return;
+    }
+    setIsClientAuthenticated(true);
+  }, []);
+
+  useEffect(() => {
+    useSettingsStore
+      .getState()
+      .fetchEntreprise()
+      .then((entreprise) => setStoredCurrency(String(entreprise.devise || "")))
       .catch(() => undefined);
   }, []);
 
@@ -74,13 +87,17 @@ function AppLayout() {
     });
   };
 
+  // SSR cannot inspect localStorage. Keep private UI unrendered until the
+  // client has verified the local access token.
+  if (!isClientAuthenticated) return null;
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Desktop fixed sidebar */}
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 hidden transition-[width] duration-200 lg:block",
-          sidebarCollapsed ? "w-20" : "w-64",
+          sidebarCollapsed ? "w-20" : "w-50",
         )}
       >
         <SidebarNav
@@ -99,7 +116,7 @@ function AppLayout() {
       <div
         className={cn(
           "flex min-h-screen flex-col transition-[padding-left] duration-200",
-          sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
+          sidebarCollapsed ? "lg:pl-20" : "lg:pl-50",
         )}
       >
         <Topbar onMenu={() => setOpen(true)} />

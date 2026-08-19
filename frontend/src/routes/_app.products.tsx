@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { fmtCurrency, fmtNumber } from "@/lib/erp-data";
-import { getCategories } from "@/lib/api/categories.service";
 import {
   archiveProduit,
   createProduit,
@@ -48,6 +47,8 @@ import {
   normalizeNumberInput,
 } from "@/lib/number-input";
 import { resolveMediaUrl } from "@/lib/avatar";
+import { useCategoriesStore } from "@/stores/categories.store";
+import { useProductsStore } from "@/stores/products.store";
 
 export const Route = createFileRoute("/_app/products")({
   head: () => ({ meta: [{ title: "Produits — AC ERP" }] }),
@@ -139,16 +140,19 @@ function ProductsPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const pageSize = 40;
+  const fetchCategories = useCategoriesStore((state) => state.fetchList);
+  const fetchProducts = useProductsStore((state) => state.fetchList);
+  const invalidateProducts = useProductsStore((state) => state.invalidate);
 
   const loadCategories = async () => {
-    const response = await getCategories({ limit: 500, statut: "ACTIF" });
+    const response = await fetchCategories({ limit: 500, statut: "ACTIF" });
     setCategories(responseData<Category>(response));
   };
 
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const response = await getProduits({
+      const response = await fetchProducts({
         page,
         limit: pageSize,
         search: search.trim() || undefined,
@@ -169,11 +173,11 @@ function ProductsPage() {
     void loadCategories().catch(() =>
       toast.error("Impossible de charger les catégories"),
     );
-  }, []);
+  }, [fetchCategories]);
 
   useEffect(() => {
     void loadProducts();
-  }, [page, search, categoryFilter]);
+  }, [fetchProducts, page, search, categoryFilter]);
 
   useEffect(() => {
     setPage(1);
@@ -290,6 +294,7 @@ function ProductsPage() {
         await createProduit(payload);
         toast.success("Produit ajouté");
       }
+      invalidateProducts();
       setModalOpen(false);
       await loadProducts();
     } catch (error: unknown) {
@@ -317,6 +322,7 @@ function ProductsPage() {
     setDeleting(true);
     try {
       await archiveProduit(pendingDeleteProduct.id);
+      invalidateProducts();
       toast.success("Produit archivé");
       setDeleteModalOpen(false);
       setPendingDeleteProduct(null);

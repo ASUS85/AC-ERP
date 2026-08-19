@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight, Plus, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,6 +71,7 @@ export function SectionCard({
   children,
   className,
   contentClassName,
+  style,
 }: {
   title: string;
   description?: string;
@@ -78,10 +79,12 @@ export function SectionCard({
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  style?: CSSProperties;
 }) {
   return (
     <Card
       className={cn("flex flex-col overflow-hidden p-0 shadow-card", className)}
+      style={style}
     >
       <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">

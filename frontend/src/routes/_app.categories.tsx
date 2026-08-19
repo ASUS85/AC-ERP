@@ -45,13 +45,12 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
-  getCategories,
-  getArbreCategories,
   createCategorie,
   updateCategorie,
   deleteCategorie,
   type CategoryPayload,
 } from "@/lib/api/categories.service";
+import { useCategoriesStore } from "@/stores/categories.store";
 export const Route = createFileRoute("/_app/categories")({
   head: () => ({ meta: [{ title: "Categories — AC ERP" }] }),
   component: CategoriesPage,
@@ -109,14 +108,17 @@ function CategoriesPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const pageSize = 10;
+  const fetchCategories = useCategoriesStore((state) => state.fetchList);
+  const fetchCategoryTree = useCategoriesStore((state) => state.fetchTree);
+  const invalidateCategories = useCategoriesStore((state) => state.invalidate);
 
   const loadCategories = useCallback(async () => {
     setLoading(true);
     try {
       const [catRes, arbreRes, allCatRes] = await Promise.all([
-        getCategories({ page, limit: pageSize, search: search || undefined }),
-        getArbreCategories(),
-        getCategories({ limit: 10000 }),
+        fetchCategories({ page, limit: pageSize, search: search || undefined }),
+        fetchCategoryTree(),
+        fetchCategories({ limit: 10000 }),
       ]);
       setCategories(((catRes as any)?.data || []) as Categorie[]);
       setMeta(
@@ -134,7 +136,7 @@ function CategoriesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [fetchCategories, fetchCategoryTree, page, search]);
 
   useEffect(() => {
     void loadCategories();
@@ -212,6 +214,7 @@ function CategoriesPage() {
         await createCategorie(form);
         toast.success("Categorie ajoutee");
       }
+      invalidateCategories();
       setModalOpen(false);
       await loadCategories();
     } catch (error: unknown) {
@@ -230,6 +233,7 @@ function CategoriesPage() {
     setDeleting(true);
     try {
       await deleteCategorie(pendingDelete.id);
+      invalidateCategories();
       toast.success("Categorie supprimee");
       setDeleteModalOpen(false);
       setPendingDelete(null);
@@ -448,7 +452,7 @@ function CategoriesPage() {
       >
         <div className="grid gap-4 md:grid-cols-2">
           <Field label="Nom" htmlFor="nom" error={errors.nom}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="nom"
               value={form.nom}

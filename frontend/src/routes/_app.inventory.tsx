@@ -43,6 +43,7 @@ import {
   formatGroupedInputNumber,
   normalizeNumberInput,
 } from "@/lib/number-input";
+import { useProductsStore } from "@/stores/products.store";
 
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "Stocks — AC ERP" }] }),
@@ -191,6 +192,7 @@ function InventoryPage() {
   const [adjProduits, setAdjProduits] = useState<
     Array<{ id: string; label: string }>
   >([]);
+  const fetchProducts = useProductsStore((state) => state.fetchList);
 
   // ── Chargement ──
   const loadAll = useCallback(async () => {
@@ -209,13 +211,7 @@ function InventoryPage() {
           const { default: api } = await import("@/lib/api/client");
           return api.get("/stocks/inventaires");
         })(),
-        // Chargement de tous les produits pour le select de l'ajustement
-        (async () => {
-          const { default: api } = await import("@/lib/api/client");
-          return api.get("/produits", {
-            params: { limit: 10000, statut: "ACTIF" },
-          });
-        })(),
+        fetchProducts({ limit: 1000, statut: "ACTIF" }),
       ]);
       const stockData =
         skRes.status === "fulfilled" ? (skRes.value as any) : null;
@@ -270,7 +266,7 @@ function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [skPage, mvPage, search, mouvementDate]);
+  }, [fetchProducts, skPage, mvPage, search, mouvementDate]);
 
   useEffect(() => {
     void loadAll();

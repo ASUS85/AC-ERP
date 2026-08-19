@@ -41,16 +41,12 @@ import { useAuth } from "@/hooks/useAuth";
 import type { ComponentType } from "react";
 import {
   changePassword,
-  getMe,
-  getSessions,
   revokeOtherSessions,
   updateProfile,
   uploadAvatar,
 } from "@/lib/api/auth.service";
 import {
-  getEntreprise,
   getJournal,
-  getSysteme,
   updateEntreprise,
   updateMaintenance,
   updateSysteme,
@@ -62,6 +58,8 @@ import {
 } from "@/lib/currency";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth.store";
+import { useSettingsStore } from "@/stores/settings.store";
 
 export const Route = createFileRoute("/_app/settings")({
   head: () => ({ meta: [{ title: "Paramètres — AC ERP" }] }),
@@ -980,6 +978,14 @@ function SettingsPage() {
   const [loading, setLoading] = useState(true);
 
   const canManageSettings = hasPermission("users", "modifier");
+  const fetchProfile = useAuthStore((state) => state.fetchProfile);
+  const fetchSessions = useAuthStore((state) => state.fetchSessions);
+  const setCachedUser = useAuthStore((state) => state.setUser);
+  const setCachedSessions = useAuthStore((state) => state.setSessions);
+  const fetchEntreprise = useSettingsStore((state) => state.fetchEntreprise);
+  const fetchSysteme = useSettingsStore((state) => state.fetchSysteme);
+  const setCachedEntreprise = useSettingsStore((state) => state.setEntreprise);
+  const setCachedSysteme = useSettingsStore((state) => state.setSysteme);
   const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
 
   // Chargement initial
@@ -989,31 +995,27 @@ function SettingsPage() {
     async function loadInitialData() {
       const [meResult, sessionsResult, entrepriseResult, systemeResult] =
         await Promise.allSettled([
-          getMe(),
-          getSessions(),
-          canManageSettings ? getEntreprise() : Promise.resolve(null),
-          canManageSettings ? getSysteme() : Promise.resolve(null),
+          fetchProfile(),
+          fetchSessions(),
+          canManageSettings ? fetchEntreprise() : Promise.resolve(null),
+          canManageSettings ? fetchSysteme() : Promise.resolve(null),
         ]);
 
       if (!alive) return;
 
       if (meResult.status === "fulfilled") {
-        setProfile(unwrap(meResult.value as ApiResponse<Profile>));
+        setProfile(meResult.value as Profile);
       }
       if (sessionsResult.status === "fulfilled") {
-        setSessions(
-          unwrap(sessionsResult.value as ApiResponse<Session[]>) || [],
-        );
+        setSessions(sessionsResult.value as Session[]);
       }
       if (canManageSettings && entrepriseResult.status === "fulfilled") {
-        const loadedCompany = unwrap(
-          entrepriseResult.value as ApiResponse<Company>,
-        );
+        const loadedCompany = entrepriseResult.value as Company;
         setCompany(loadedCompany);
         setStoredCurrency(loadedCompany?.devise);
       }
       if (canManageSettings && systemeResult.status === "fulfilled") {
-        setSystem(unwrap(systemeResult.value as ApiResponse<SystemSettings>));
+        setSystem(systemeResult.value as SystemSettings);
       }
       if (
         meResult.status === "rejected" ||
@@ -1031,7 +1033,13 @@ function SettingsPage() {
     return () => {
       alive = false;
     };
-  }, [canManageSettings]);
+  }, [
+    canManageSettings,
+    fetchEntreprise,
+    fetchProfile,
+    fetchSessions,
+    fetchSysteme,
+  ]);
 
   // Chargement journal
   useEffect(() => {
@@ -1079,6 +1087,7 @@ function SettingsPage() {
       });
       const updated = unwrap(response as ApiResponse<Profile>);
       setProfile(updated);
+      setCachedUser(updated);
       setProfileErrors({});
       setAvatarFile(null);
       if (avatarPreview) {
@@ -1110,6 +1119,7 @@ function SettingsPage() {
       const response = await updateEntreprise(company);
       const updatedCompany = unwrap(response as ApiResponse<Company>);
       setCompany(updatedCompany);
+      setCachedEntreprise(updatedCompany);
       setStoredCurrency(updatedCompany?.devise);
       setCompanyErrors({});
       toast.success("Paramètres entreprise enregistrés");
@@ -1148,7 +1158,9 @@ function SettingsPage() {
         field === "modeMaintenance"
           ? await updateMaintenance(value)
           : await updateSysteme({ [field]: value });
-      setSystem(unwrap(response as ApiResponse<SystemSettings>));
+      const updatedSystem = unwrap(response as ApiResponse<SystemSettings>);
+      setSystem(updatedSystem);
+      setCachedSysteme(updatedSystem);
       toast.success("Paramètre mis à jour");
     } catch (error: unknown) {
       toast.error(errorMessage(error, "Modification refusée"));
@@ -1186,8 +1198,9 @@ function SettingsPage() {
   const revokeSessions = async () => {
     try {
       await revokeOtherSessions();
-      const response = await getSessions();
-      setSessions(unwrap(response as ApiResponse<Session[]>) || []);
+      const updatedSessions = await fetchSessions(true);
+      setSessions(updatedSessions as Session[]);
+      setCachedSessions(updatedSessions);
       toast.success("Les autres sessions ont été déconnectées");
     } catch {
       toast.error("Impossible de révoquer les sessions");

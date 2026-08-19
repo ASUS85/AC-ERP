@@ -77,7 +77,6 @@ export const navGroups: NavGroup[] = [
         title: "Stocks",
         url: "/inventory",
         icon: Warehouse,
-        badge: "3",
         permission: "stocks:lire",
       },
     ],
@@ -101,7 +100,6 @@ export const navGroups: NavGroup[] = [
         title: "Factures",
         url: "/invoices",
         icon: FileText,
-        badge: "5",
         permission: "factures:lire",
       },
       {
@@ -156,7 +154,7 @@ export const navGroups: NavGroup[] = [
         icon: ShieldCheck,
         permission: "roles:lire",
       },
-      { title: "Notifications", url: "/notifications", icon: Bell, badge: "8" },
+      { title: "Notifications", url: "/notifications", icon: Bell },
       {
         title: "Paramètres",
         url: "/settings",

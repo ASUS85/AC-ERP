@@ -29,13 +29,13 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { fmtCurrency } from "@/lib/erp-data";
 import {
-  getClients,
   createClient,
   updateClient,
   deleteClient,
   getClientsPdf,
   type ClientPayload,
 } from "@/lib/api/clients.service";
+import { useClientsStore } from "@/stores/clients.store";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   Select,
@@ -162,12 +162,14 @@ function CustomersPage() {
   const [deleting, setDeleting] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fetchClients = useClientsStore((state) => state.fetchList);
+  const invalidateClients = useClientsStore((state) => state.invalidate);
 
   const loadClients = useCallback(async () => {
     setLoading(true);
 
     try {
-      const response = await getClients({
+      const response = await fetchClients({
         page,
         limit: 10,
         search: search || undefined,
@@ -178,19 +180,21 @@ function CustomersPage() {
       setClients((response?.data || []) as Client[]);
 
       setMeta(
-        response?.meta || {
-          page,
-          limit: 10,
-          total: 0,
-          totalPages: 1,
-        },
+        response?.meta
+          ? {
+              page: response.meta.page ?? page,
+              limit: response.meta.limit ?? 10,
+              total: response.meta.total ?? 0,
+              totalPages: response.meta.totalPages ?? 1,
+            }
+          : { page, limit: 10, total: 0, totalPages: 1 },
       );
     } catch {
       toast.error("Impossible de charger les clients");
     } finally {
       setLoading(false);
     }
-  }, [page, search, statusFilter, cityFilter]);
+  }, [fetchClients, page, search, statusFilter, cityFilter]);
 
   useEffect(() => {
     void loadClients();
@@ -262,6 +266,7 @@ function CustomersPage() {
         toast.success("Client ajouté");
       }
 
+      invalidateClients();
       setModalOpen(false);
 
       await loadClients();
@@ -282,6 +287,7 @@ function CustomersPage() {
     setDeleting(true);
     try {
       await deleteClient(pendingDeleteClient.id);
+      invalidateClients();
       toast.success("Client supprimé");
       setDeleteModalOpen(false);
       setPendingDeleteClient(null);
@@ -593,7 +599,7 @@ function CustomersPage() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Nom" htmlFor="nom" error={errors.nom}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="nom"
               value={form.nom}
@@ -603,7 +609,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Email" htmlFor="email" error={errors.email}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="email"
               type="email"
@@ -614,7 +620,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Téléphone" htmlFor="telephone" error={errors.telephone}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="telephone"
               value={form.telephone}
@@ -624,7 +630,7 @@ function CustomersPage() {
           </Field>
 
           <Field label="Ville" htmlFor="ville" error={errors.ville}>
-            <span class="ml-1 text-destructive">*</span>
+            <span className="ml-1 text-destructive">*</span>
             <Input
               id="ville"
               value={form.ville}

@@ -47,8 +47,8 @@ import {
   transitionBonCommandeFournisseur,
 } from "@/lib/api/achats.service";
 import { getFournisseurs } from "@/lib/api/fournisseurs.service";
-import { getProduits } from "@/lib/api/produits.service";
 import { toast } from "sonner";
+import { useProductsStore } from "@/stores/products.store";
 
 export const Route = createFileRoute("/_app/purchases")({
   head: () => ({ meta: [{ title: "Achats — AC ERP" }] }),
@@ -368,6 +368,7 @@ function PurchasesPage() {
   const [invoiceFormErrors, setInvoiceFormErrors] = useState<InvoiceFormErrors>(
     {},
   );
+  const fetchProducts = useProductsStore((state) => state.fetchList);
 
   const validateReceptionStep1 = () => {
     const nextErrors: ReceptionGeneralErrors = {};
@@ -502,7 +503,7 @@ function PurchasesPage() {
       try {
         const [suppliersRes, productsRes] = await Promise.all([
           getFournisseurs({ limit: 1000 }),
-          getProduits({ limit: 1000, statut: "ACTIF" }),
+          fetchProducts({ limit: 1000, statut: "ACTIF" }),
         ]);
         setSuppliers(
           Array.isArray(suppliersRes?.data) ? suppliersRes.data : [],
@@ -513,7 +514,7 @@ function PurchasesPage() {
       }
     };
     void loadCatalog();
-  }, [createOpen]);
+  }, [createOpen, fetchProducts]);
 
   useEffect(() => {
     setPage(1);

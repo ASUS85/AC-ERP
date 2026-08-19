@@ -22,7 +22,13 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors(corsConfig));
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan("dev"));
-app.use("/uploads", express.static(path.resolve(uploadDir)));
+app.use(
+  "/uploads",
+  express.static(path.resolve(uploadDir), {
+    maxAge: "1y",
+    immutable: true,
+  }),
+);
 app.use(rateLimiter);
 app.use(maintenanceGuard);
 app.use(auditActivity);

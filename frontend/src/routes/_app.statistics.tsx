@@ -17,10 +17,6 @@ import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, StatCard } from "@/components/erp/widgets";
 import { ChartFrame } from "@/components/erp/ChartFrame";
 import { fmtCurrency } from "@/lib/erp-data";
-import {
-  getDashboardOverview,
-  type DashboardOverview,
-} from "@/lib/api/dashboard.service";
 import { getStoredCurrency } from "@/lib/currency";
 import {
   Loader2,
@@ -31,6 +27,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  EMPTY_DASHBOARD_OVERVIEW,
+  useDashboardStore,
+} from "@/stores/dashboard.store";
 
 export const Route = createFileRoute("/_app/statistics")({
   head: () => ({ meta: [{ title: "Statistiques — AC ERP" }] }),
@@ -49,15 +49,9 @@ const axis = "var(--muted-foreground)";
 
 function StatsPage() {
   const [currencyCode, setCurrencyCode] = useState(() => getStoredCurrency());
-  const [dashboardData, setDashboardData] = useState<DashboardOverview>({
-    kpis: [],
-    salesTrend: [],
-    topProducts: [],
-    stockSplit: [],
-    recentSales: [],
-    alerts: [],
-  });
-  const [loading, setLoading] = useState(true);
+  const dashboardData = useDashboardStore((state) => state.data);
+  const loading = useDashboardStore((state) => state.loading);
+  const fetchOverview = useDashboardStore((state) => state.fetchOverview);
 
   useEffect(() => {
     const handleCurrencyChange = () => setCurrencyCode(getStoredCurrency());
@@ -65,27 +59,18 @@ function StatsPage() {
     window.addEventListener("erp:currency-changed", handleCurrencyChange);
     window.addEventListener("storage", handleCurrencyChange);
 
-    async function loadStatistics() {
-      try {
-        setLoading(true);
-        const response = await getDashboardOverview();
-        if (response?.data) setDashboardData(response.data);
-      } catch {
-        toast.error("Impossible de charger les statistiques");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    void loadStatistics();
+    void fetchOverview().catch(() =>
+      toast.error("Impossible de charger les statistiques"),
+    );
 
     return () => {
       window.removeEventListener("erp:currency-changed", handleCurrencyChange);
       window.removeEventListener("storage", handleCurrencyChange);
     };
-  }, [currencyCode]);
+  }, [currencyCode, fetchOverview]);
 
-  const { salesTrend, topProducts, stockSplit, globalStats } = dashboardData;
+  const { salesTrend, topProducts, stockSplit, globalStats } =
+    dashboardData || EMPTY_DASHBOARD_OVERVIEW;
   const stats = globalStats;
   const stockRotation =
     stats && stats.valeurStock > 0 ? stats.totalAchats / stats.valeurStock : 0;

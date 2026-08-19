@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -30,13 +30,11 @@ import {
   formatGroupedInputNumber,
   normalizeNumberInput,
 } from "@/lib/number-input";
-import { getClients } from "@/lib/api/clients.service";
 import {
   getFactureById,
   getFacturePdf,
   getFactures,
 } from "@/lib/api/factures.service";
-import { getProduits } from "@/lib/api/produits.service";
 import {
   createVenteDirecte,
   type VenteDirectePayload,
@@ -45,6 +43,8 @@ import { createPaiement } from "@/lib/api/paiements.service";
 import { toast } from "sonner";
 import { resolveMediaUrl } from "@/lib/avatar";
 import { cn } from "@/lib/utils";
+import { useProductsStore } from "@/stores/products.store";
+import { useClientsStore } from "@/stores/clients.store";
 
 export const Route = createFileRoute("/_app/sales")({
   head: () => ({ meta: [{ title: "Ventes — AC ERP" }] }),
@@ -117,12 +117,13 @@ type FactureDetailsApi = {
   totalTva?: number | string;
   totalTtc?: number | string;
   montantPaye?: number | string;
-  client?: { nom?: string | null } | null;
+  client?: { nom?: string | null; telephone?: string | null } | null;
   paiements?: Array<{
     id: string;
     montant?: number | string;
     modePaiement?: string;
     datePaiement?: string;
+    reference?: string | null;
   }>;
 };
 
@@ -222,6 +223,8 @@ function SalesPage() {
   const [historyDetail, setHistoryDetail] = useState<FactureDetailsApi | null>(
     null,
   );
+  const [catalogHeight, setCatalogHeight] = useState<number>();
+  const cartCardRef = useRef<HTMLDivElement>(null);
 
   const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
   const [newPaymentAmount, setNewPaymentAmount] = useState("");
@@ -230,6 +233,9 @@ function SalesPage() {
   const [newPaymentRef, setNewPaymentRef] = useState("");
   const [newPaymentNotes, setNewPaymentNotes] = useState("");
   const [addPaymentSubmitting, setAddPaymentSubmitting] = useState(false);
+  const fetchProducts = useProductsStore((state) => state.fetchList);
+  const invalidateProducts = useProductsStore((state) => state.invalidate);
+  const fetchClients = useClientsStore((state) => state.fetchList);
 
   const cols: Column<SaleRow>[] = [
     {
@@ -259,13 +265,16 @@ function SalesPage() {
     },
   ];
 
-  const loadProducts = async () => {
-    const response = await getProduits({ limit: 500, statut: "ACTIF" });
+  const loadProducts = async (force = false) => {
+    const response = await fetchProducts(
+      { limit: 1000, statut: "ACTIF" },
+      force,
+    );
     setProducts(responseData<ProductApi>(response));
   };
 
   const loadClients = async () => {
-    const response = await getClients({ limit: 500, statut: "ACTIF" });
+    const response = await fetchClients({ limit: 500, statut: "ACTIF" });
     setClients(responseData<ClientApi>(response));
   };
 
@@ -298,11 +307,18 @@ function SalesPage() {
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadProducts(), loadClients()])
+    Promise.all([
+      fetchProducts({ limit: 1000, statut: "ACTIF" }).then((response) =>
+        setProducts(responseData<ProductApi>(response)),
+      ),
+      fetchClients({ limit: 500, statut: "ACTIF" }).then((response) =>
+        setClients(responseData<ClientApi>(response)),
+      ),
+    ])
       .catch(() => toast.error("Impossible de charger les données de vente"))
       .finally(() => setLoading(false));
     void loadHistory();
-  }, []);
+  }, [fetchClients, fetchProducts]);
 
   useEffect(() => {
     setHistoryPage(1);
@@ -325,6 +341,17 @@ function SalesPage() {
     }
   }, [clientMode]);
 
+  useEffect(() => {
+    const card = cartCardRef.current;
+    if (!card || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setCatalogHeight(Math.ceil(entry.contentRect.height));
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
+
   const totals = useMemo(() => {
     const totalHt = cart.reduce((sum, line) => sum + lineHt(line), 0);
     const totalTtc = cart.reduce((sum, line) => sum + lineTtc(line), 0);
@@ -332,10 +359,14 @@ function SalesPage() {
   }, [cart]);
 
   useEffect(() => {
-    if (!paidAmount || toNumber(paidAmount) === 0) {
+    if (
+      clientMode === "OCCASIONNEL" ||
+      !paidAmount ||
+      toNumber(paidAmount) === 0
+    ) {
       setPaidAmount(totals.totalTtc ? String(Math.round(totals.totalTtc)) : "");
     }
-  }, [totals.totalTtc, paidAmount]);
+  }, [clientMode, totals.totalTtc, paidAmount]);
 
   const categoryOptions = useMemo(
     () => [
@@ -458,7 +489,10 @@ function SalesPage() {
       toast.error("Le montant payé est invalide");
       return false;
     }
-    if (clientMode === "OCCASIONNEL" && paid < totals.totalTtc) {
+    if (
+      clientMode === "OCCASIONNEL" &&
+      Math.abs(paid - totals.totalTtc) > 0.01
+    ) {
       toast.error(
         "Un client occasionnel doit payer l'intégralité de la facture",
       );
@@ -540,7 +574,8 @@ function SalesPage() {
       });
       setConfirmOpen(false);
       setSuccessOpen(true);
-      await Promise.all([loadProducts(), loadHistory()]);
+      invalidateProducts();
+      await Promise.all([loadProducts(true), loadHistory()]);
       toast.success("Vente validée", {
         description: "La facture de vente a été générée.",
       });
@@ -608,7 +643,10 @@ function SalesPage() {
       toast.error("Veuillez saisir un montant valide");
       return;
     }
-    const soldeDu = historyDetail.montantTtc - historyDetail.montantPaye;
+    const soldeDu = Math.max(
+      0,
+      toNumber(historyDetail.totalTtc) - toNumber(historyDetail.montantPaye),
+    );
     if (amount > soldeDu) {
       toast.error("Le montant dépasse le reste à payer");
       return;
@@ -621,7 +659,7 @@ function SalesPage() {
         montant: amount,
         modePaiement: newPaymentMode,
         datePaiement: newPaymentDate || new Date().toISOString(),
-        referenceDocument: newPaymentRef || undefined,
+        reference: newPaymentRef || undefined,
         notes: newPaymentNotes || undefined,
       });
 
@@ -635,8 +673,12 @@ function SalesPage() {
       // Refresh details and history
       void openHistoryDetail({ id: historyDetail.id } as SaleRow);
       void loadHistory();
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'ajout du paiement");
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Erreur lors de l'ajout du paiement";
+      toast.error(message);
     } finally {
       setAddPaymentSubmitting(false);
     }
@@ -664,12 +706,15 @@ function SalesPage() {
         </TabsList>
 
         <TabsContent value="new">
-          <div className="grid grid-cols-1 gap-4 lg:h-[calc(100dvh-12rem)] lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
             <SectionCard
               title="Catalogue"
               description="Cliquez pour ajouter au panier"
-              className="min-h-0 lg:col-span-2 lg:h-full"
+              className="min-h-0 lg:col-span-2"
               contentClassName="flex min-h-0 flex-1 flex-col"
+              style={
+                catalogHeight ? { height: `${catalogHeight}px` } : undefined
+              }
             >
               <div className="mb-4 flex items-center gap-2">
                 <div className="relative w-full">
@@ -738,276 +783,279 @@ function SalesPage() {
               )}
             </SectionCard>
 
-            <SectionCard
-              title="Panier"
-              description={`${cart.length} article(s)`}
-              className="min-h-0 lg:h-full"
-              contentClassName="min-h-0 overflow-y-auto"
-            >
-              <div className="mb-4 space-y-3 rounded-lg border border-border p-3">
-                <Label>Client</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant={
-                      clientMode === "OCCASIONNEL" ? "default" : "outline"
-                    }
-                    className="gap-1.5"
-                    onClick={() => setClientMode("OCCASIONNEL")}
-                  >
-                    <User className="h-4 w-4" /> Occasionnel
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      clientMode === "ENREGISTRE" ? "default" : "outline"
-                    }
-                    className="gap-1.5"
-                    onClick={() => setClientMode("ENREGISTRE")}
-                  >
-                    <UserRound className="h-4 w-4" /> Enregistré
-                  </Button>
-                </div>
-                {clientMode === "ENREGISTRE" ? (
-                  <div className="space-y-2">
-                    <SearchableSelect
-                      value={selectedClientId}
-                      onValueChange={setSelectedClientId}
-                      placeholder="Sélectionner un client"
-                      searchPlaceholder="Rechercher un client..."
-                      emptyMessage="Aucun client trouvé"
-                      options={clients.map((client) => ({
-                        value: client.id,
-                        label: client.nom,
-                      }))}
-                    />
-                    {selectedClient && (
-                      <div className="rounded border bg-muted/50 p-2 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Plafond de crédit:
-                          </span>
-                          <span className="font-medium">
-                            {selectedClient.plafondCredit
-                              ? fmtCurrency(
-                                  Number(selectedClient.plafondCredit),
-                                )
-                              : "Non défini"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">
-                            Encours actuel:
-                          </span>
-                          <span className="font-medium">
-                            {fmtCurrency(selectedClient.encoursActuel || 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between border-t border-border mt-1 pt-1">
-                          <span className="text-muted-foreground">
-                            Crédit disponible:
-                          </span>
-                          <span
-                            className={cn(
-                              "font-bold",
-                              (selectedClient.creditDisponible ?? 0) > 0
-                                ? "text-green-600 dark:text-green-400"
-                                : "text-destructive",
-                            )}
-                          >
-                            {selectedClient.creditDisponible !== undefined
-                              ? fmtCurrency(selectedClient.creditDisponible)
-                              : "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="space-y-3">
-                {cart.map((line) => (
-                  <div
-                    key={line.idProduit}
-                    className="rounded-lg border border-border p-2.5"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {line.designation}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {fmtCurrency(line.prixVenteHt)} · TVA {line.tauxTva}%
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => setQuantity(line.idProduit, -1)}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-7 text-center text-sm font-medium">
-                          {line.quantite}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => setQuantity(line.idProduit, 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeLine(line.idProduit)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {cart.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
-                    Aucun article dans le panier.
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Total HT</span>
-                  <span>{fmtCurrency(totals.totalHt)}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>TVA</span>
-                  <span>{fmtCurrency(totals.totalTva)}</span>
-                </div>
-                <div className="flex justify-between text-base font-bold text-foreground">
-                  <span>Total TTC</span>
-                  <span>{fmtCurrency(totals.totalTtc)}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 space-y-3">
-                <div className="space-y-2">
-                  <Label>Mode de paiement</Label>
-                  <SearchableSelect
-                    value={paymentMode}
-                    onValueChange={(value) =>
-                      setPaymentMode(value as PaymentMode)
-                    }
-                    options={paymentModes}
-                    placeholder="Mode de paiement"
-                    searchPlaceholder="Rechercher un mode..."
-                    emptyMessage="Aucun mode trouvé"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paidAmount">Montant payé</Label>
-                  <Input
-                    id="paidAmount"
-                    type="text"
-                    inputMode="decimal"
-                    value={formatGroupedInputNumber(
-                      fmtCurrency(totals.totalTtc),
-                      { allowNegative: false },
-                    )}
-                    onChange={(event) =>
-                      setPaidAmount(
-                        normalizeNumberInput(event.target.value, {
-                          allowNegative: false,
-                        }),
-                      )
-                    }
-                    placeholder="Montant payé"
-                  />
-                </div>
-                {clientMode === "OCCASIONNEL" ? (
-                  <div className="space-y-2">
+            <div ref={cartCardRef}>
+              <SectionCard
+                title="Panier"
+                description={`${cart.length} article(s)`}
+                className="min-h-0"
+                contentClassName="min-h-0"
+              >
+                <div className="mb-4 space-y-3 rounded-lg border border-border p-3">
+                  <Label>Client</Label>
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setShowOccasionalInfo((prev) => !prev)}
+                      variant={
+                        clientMode === "OCCASIONNEL" ? "default" : "outline"
+                      }
+                      className="gap-1.5"
+                      onClick={() => setClientMode("OCCASIONNEL")}
                     >
-                      {showOccasionalInfo
-                        ? "Masquer les infos personnelles"
-                        : "Ajouter des infos personnelles"}
+                      <User className="h-4 w-4" /> Occasionnel
                     </Button>
-                    {showOccasionalInfo ? (
-                      <div className="space-y-2 rounded-lg border border-border p-3">
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <Input
-                            placeholder="Nom"
-                            value={clientOccasionnelInfo.nom}
-                            onChange={(event) =>
-                              setClientOccasionnelInfo((prev) => ({
-                                ...prev,
-                                nom: event.target.value,
-                              }))
-                            }
-                          />
-                          <Input
-                            placeholder="Prénom"
-                            value={clientOccasionnelInfo.prenom}
-                            onChange={(event) =>
-                              setClientOccasionnelInfo((prev) => ({
-                                ...prev,
-                                prenom: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-1">
-                          <Input
-                            placeholder="Numéro de CNI"
-                            value={clientOccasionnelInfo.numeroCni}
-                            onChange={(event) =>
-                              setClientOccasionnelInfo((prev) => ({
-                                ...prev,
-                                numeroCni: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                          <Input
-                            placeholder="Sexe"
-                            value={clientOccasionnelInfo.sexe}
-                            onChange={(event) =>
-                              setClientOccasionnelInfo((prev) => ({
-                                ...prev,
-                                sexe: event.target.value,
-                              }))
-                            }
-                          />
-                          <Input
-                            placeholder="Numéro de téléphone"
-                            value={clientOccasionnelInfo.telephone}
-                            onChange={(event) =>
-                              setClientOccasionnelInfo((prev) => ({
-                                ...prev,
-                                telephone: event.target.value,
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    ) : null}
+                    <Button
+                      type="button"
+                      variant={
+                        clientMode === "ENREGISTRE" ? "default" : "outline"
+                      }
+                      className="gap-1.5"
+                      onClick={() => setClientMode("ENREGISTRE")}
+                    >
+                      <UserRound className="h-4 w-4" /> Enregistré
+                    </Button>
                   </div>
-                ) : null}
-              </div>
+                  {clientMode === "ENREGISTRE" ? (
+                    <div className="space-y-2">
+                      <SearchableSelect
+                        value={selectedClientId}
+                        onValueChange={setSelectedClientId}
+                        placeholder="Sélectionner un client"
+                        searchPlaceholder="Rechercher un client..."
+                        emptyMessage="Aucun client trouvé"
+                        options={clients.map((client) => ({
+                          value: client.id,
+                          label: client.nom,
+                        }))}
+                      />
+                      {selectedClient && (
+                        <div className="rounded border bg-muted/50 p-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Plafond de crédit:
+                            </span>
+                            <span className="font-medium">
+                              {selectedClient.plafondCredit
+                                ? fmtCurrency(
+                                    Number(selectedClient.plafondCredit),
+                                  )
+                                : "Non défini"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">
+                              Encours actuel:
+                            </span>
+                            <span className="font-medium">
+                              {fmtCurrency(selectedClient.encoursActuel || 0)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-t border-border mt-1 pt-1">
+                            <span className="text-muted-foreground">
+                              Crédit disponible:
+                            </span>
+                            <span
+                              className={cn(
+                                "font-bold",
+                                (selectedClient.creditDisponible ?? 0) > 0
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-destructive",
+                              )}
+                            >
+                              {selectedClient.creditDisponible !== undefined
+                                ? fmtCurrency(selectedClient.creditDisponible)
+                                : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
 
-              <Button className="mt-4 w-full" onClick={openConfirm}>
-                Valider & facturer
-              </Button>
-            </SectionCard>
+                <div className="space-y-3">
+                  {cart.map((line) => (
+                    <div
+                      key={line.idProduit}
+                      className="rounded-lg border border-border p-2.5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {line.designation}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {fmtCurrency(line.prixVenteHt)} · TVA {line.tauxTva}
+                            %
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setQuantity(line.idProduit, -1)}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-7 text-center text-sm font-medium">
+                            {line.quantite}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setQuantity(line.idProduit, 1)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeLine(line.idProduit)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {cart.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
+                      Aucun article dans le panier.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Total HT</span>
+                    <span>{fmtCurrency(totals.totalHt)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>TVA</span>
+                    <span>{fmtCurrency(totals.totalTva)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-foreground">
+                    <span>Total TTC</span>
+                    <span>{fmtCurrency(totals.totalTtc)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  <div className="space-y-2">
+                    <Label>Mode de paiement</Label>
+                    <SearchableSelect
+                      value={paymentMode}
+                      onValueChange={(value) =>
+                        setPaymentMode(value as PaymentMode)
+                      }
+                      options={paymentModes}
+                      placeholder="Mode de paiement"
+                      searchPlaceholder="Rechercher un mode..."
+                      emptyMessage="Aucun mode trouvé"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="paidAmount">Montant payé</Label>
+                    <Input
+                      id="paidAmount"
+                      type="text"
+                      inputMode="decimal"
+                      value={formatGroupedInputNumber(paidAmount, {
+                        allowNegative: false,
+                      })}
+                      onChange={(event) =>
+                        setPaidAmount(
+                          normalizeNumberInput(event.target.value, {
+                            allowNegative: false,
+                          }),
+                        )
+                      }
+                      placeholder="Montant payé"
+                      readOnly={clientMode === "OCCASIONNEL"}
+                    />
+                  </div>
+                  {clientMode === "OCCASIONNEL" ? (
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setShowOccasionalInfo((prev) => !prev)}
+                      >
+                        {showOccasionalInfo
+                          ? "Masquer les infos personnelles"
+                          : "Ajouter des infos personnelles"}
+                      </Button>
+                      {showOccasionalInfo ? (
+                        <div className="space-y-2 rounded-lg border border-border p-3">
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <Input
+                              placeholder="Nom"
+                              value={clientOccasionnelInfo.nom}
+                              onChange={(event) =>
+                                setClientOccasionnelInfo((prev) => ({
+                                  ...prev,
+                                  nom: event.target.value,
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Prénom"
+                              value={clientOccasionnelInfo.prenom}
+                              onChange={(event) =>
+                                setClientOccasionnelInfo((prev) => ({
+                                  ...prev,
+                                  prenom: event.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-1">
+                            <Input
+                              placeholder="Numéro de CNI"
+                              value={clientOccasionnelInfo.numeroCni}
+                              onChange={(event) =>
+                                setClientOccasionnelInfo((prev) => ({
+                                  ...prev,
+                                  numeroCni: event.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <Input
+                              placeholder="Sexe"
+                              value={clientOccasionnelInfo.sexe}
+                              onChange={(event) =>
+                                setClientOccasionnelInfo((prev) => ({
+                                  ...prev,
+                                  sexe: event.target.value,
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Numéro de téléphone"
+                              value={clientOccasionnelInfo.telephone}
+                              onChange={(event) =>
+                                setClientOccasionnelInfo((prev) => ({
+                                  ...prev,
+                                  telephone: event.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+
+                <Button className="mt-4 w-full" onClick={openConfirm}>
+                  Valider & facturer
+                </Button>
+              </SectionCard>
+            </div>
           </div>
         </TabsContent>
 
@@ -1338,9 +1386,7 @@ function SalesPage() {
                               {p.modePaiement}
                             </span>
                           </td>
-                          <td className="px-4 py-3">
-                            {p.referenceDocument || "-"}
-                          </td>
+                          <td className="px-4 py-3">{p.reference || "-"}</td>
                           <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
                             {fmtCurrency(toNumber(p.montant))}
                           </td>

@@ -231,6 +231,97 @@ function reportRows(data, type) {
     .join("");
 }
 
+function svgBarChart(title, items, color = "#2563eb") {
+  const values = items.map((item) => Math.max(0, number(item.value)));
+  const maxValue = Math.max(...values, 1);
+  const width = 520;
+  const height = 190;
+  const baseline = 150;
+  const barWidth = Math.max(
+    24,
+    Math.floor(410 / Math.max(items.length, 1)) - 12,
+  );
+  const bars = items
+    .slice(0, 6)
+    .map((item, index) => {
+      const barHeight = Math.round(
+        (Math.max(0, number(item.value)) / maxValue) * 105,
+      );
+      const x = 58 + index * (barWidth + 12);
+      const y = baseline - barHeight;
+      const label = escapeHtml(String(item.label).slice(0, 13));
+      return `<g><rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="4" fill="${color}"/><text x="${x + barWidth / 2}" y="${baseline + 16}" text-anchor="middle" font-size="8" fill="#64748b">${label}</text><text x="${x + barWidth / 2}" y="${y - 5}" text-anchor="middle" font-size="8" fill="#0f172a">${Math.round(number(item.value)).toLocaleString("fr-FR")}</text></g>`;
+    })
+    .join("");
+  return `<div class="chart-block"><div class="chart-title">${escapeHtml(title)}</div><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(title)}"><line x1="45" y1="${baseline}" x2="500" y2="${baseline}" stroke="#cbd5e1"/>${bars}</svg></div>`;
+}
+
+function svgDonutChart(title, items) {
+  const palette = ["#2563eb", "#059669", "#d97706", "#7c3aed", "#dc2626"];
+  const total =
+    items.reduce((sum, item) => sum + Math.max(0, number(item.value)), 0) || 1;
+  let offset = 0;
+  const segments = items
+    .filter((item) => number(item.value) > 0)
+    .slice(0, 5)
+    .map((item, index) => {
+      const portion = (number(item.value) / total) * 100;
+      const segment = `<circle cx="86" cy="86" r="55" fill="none" stroke="${palette[index]}" stroke-width="22" stroke-dasharray="${portion} ${100 - portion}" stroke-dashoffset="${-offset}" pathLength="100" transform="rotate(-90 86 86)"/>`;
+      offset += portion;
+      return segment;
+    })
+    .join("");
+  const legend = items
+    .slice(0, 5)
+    .map(
+      (item, index) =>
+        `<div class="chart-legend"><span style="background:${palette[index]}"></span>${escapeHtml(item.label)} <strong>${Math.round(number(item.value)).toLocaleString("fr-FR")}</strong></div>`,
+    )
+    .join("");
+  return `<div class="chart-block"><div class="chart-title">${escapeHtml(title)}</div><div class="donut-layout"><svg viewBox="0 0 172 172" role="img" aria-label="${escapeHtml(title)}"><circle cx="86" cy="86" r="55" fill="none" stroke="#e2e8f0" stroke-width="22"/>${segments}<text x="86" y="82" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">${Math.round(total).toLocaleString("fr-FR")}</text><text x="86" y="100" text-anchor="middle" font-size="9" fill="#64748b">total</text></svg><div class="chart-legends">${legend}</div></div></div>`;
+}
+
+function buildReportCharts(data, type) {
+  if (type === "stocks") {
+    const stockItems = (data.stocks || []).slice(0, 6).map((stock) => ({
+      label: stock.produit?.reference || "Produit",
+      value: number(stock.stockActuel),
+    }));
+    const normal = (data.stocks || []).filter(
+      (stock) =>
+        number(stock.stockActuel) > number(stock.produit?.stockMinimum),
+    ).length;
+    const critical = (data.stocks || []).length - normal;
+    return `${svgBarChart("Niveaux de stock par référence", stockItems, "#2563eb")}${svgDonutChart(
+      "Répartition des seuils",
+      [
+        { label: "Conformes", value: normal },
+        { label: "Sous seuil", value: critical },
+      ],
+    )}`;
+  }
+  const records = type === "achats" ? data.achats || [] : data.factures || [];
+  const statusItems = Object.entries(
+    records.reduce((acc, item) => {
+      acc[item.statut] = (acc[item.statut] || 0) + 1;
+      return acc;
+    }, {}),
+  ).map(([label, value]) => ({ label, value }));
+  const amountItems = records.slice(0, 6).map((item) => ({
+    label: type === "achats" ? item.numeroBcf : item.numeroFacture,
+    value: number(item.totalTtc),
+  }));
+  const charts = `${svgBarChart("Volumes par document", amountItems, type === "achats" ? "#059669" : "#2563eb")}${svgDonutChart("Répartition par statut", statusItems)}`;
+  if (type === "financier") {
+    const paymentItems = (data.paiements || []).slice(0, 6).map((payment) => ({
+      label: payment.modePaiement,
+      value: number(payment.montant),
+    }));
+    return `${charts}${svgBarChart("Encaissements récents", paymentItems, "#d97706")}`;
+  }
+  return charts;
+}
+
 function buildReportNarrative(type, periode, data) {
   const elements =
     data.factures?.length || data.achats?.length || data.stocks?.length || 0;
@@ -269,7 +360,9 @@ async function buildReportHtml(type, periode, data, narrative) {
     type === "stocks"
       ? "<th>Référence</th><th>Produit</th><th>Stock</th><th>Seuil</th><th>Valeur</th><th>Statut</th>"
       : "<th>Référence</th><th>Partenaire</th><th>Statut</th><th>Montant TTC</th><th>Date</th>";
-  const body = `<div class="header-container"><table style="width:100%"><tr><td><div class="company-name">AC ERP</div><div class="report-main-title">${title}</div><div class="report-subtitle">Rapport réel généré pour la période : ${periode}</div></td><td class="text-right"><span class="period-pill">IA ERP</span><div style="font-size:8pt;color:#64748b;margin-top:6px">Généré le : ${new Date().toLocaleDateString("fr-FR")}</div></td></tr></table></div><table class="kpi-table"><tr><td class="kpi-card"><div class="kpi-title">Éléments analysés</div><div class="kpi-value">${data.factures?.length || data.achats?.length || data.stocks?.length || 0}</div><div class="kpi-trend trend-up">Données ERP réelles</div></td><td class="kpi-card green"><div class="kpi-title">Montant total</div><div class="kpi-value">${money(data.total)}</div><div class="kpi-trend trend-up">Période ${periode}</div></td><td class="kpi-card amber"><div class="kpi-title">Marge brute</div><div class="kpi-value">${money(data.marge)}</div><div class="kpi-trend trend-up">Calculée sur les données</div></td><td class="kpi-card purple"><div class="kpi-title">Indicateur</div><div class="kpi-value">${data.risque || "Suivi"}</div><div class="kpi-trend trend-up">Analyse automatisée</div></td></tr></table><div class="executive-box"><div class="executive-title">Synthèse exécutive</div><p class="executive-text">${escapeHtml(narrative)}</p></div><div class="section-header"><div class="section-title">Détail des données ERP</div></div><table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${reportRows(data, type) || `<tr><td colspan="6" class="text-center">Aucune donnée sur cette période</td></tr>`}</tbody></table>`;
+  const charts = buildReportCharts(data, type);
+  const chartStyles = `<style>.report-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 20px}.chart-block{border:1px solid #cbd5e1;background:#fff;padding:10px;break-inside:avoid}.chart-title{font-size:8.5pt;font-weight:700;color:#0f172a;margin-bottom:4px}.chart-block svg{display:block;width:100%;height:180px}.donut-layout{display:flex;align-items:center;gap:8px}.donut-layout svg{width:48%;height:150px}.chart-legends{flex:1}.chart-legend{font-size:7.5pt;color:#475569;margin:5px 0}.chart-legend span{display:inline-block;width:8px;height:8px;margin-right:5px;border-radius:50%}.chart-legend strong{color:#0f172a;float:right}@media print{.report-charts{grid-template-columns:1fr 1fr}.chart-block{break-inside:avoid}}</style>`;
+  const body = `${chartStyles}<div class="header-container"><table style="width:100%"><tr><td><div class="company-name">AC ERP</div><div class="report-main-title">${title}</div><div class="report-subtitle">Rapport réel généré pour la période : ${periode}</div></td><td class="text-right"><span class="period-pill">IA ERP</span><div style="font-size:8pt;color:#64748b;margin-top:6px">Généré le : ${new Date().toLocaleDateString("fr-FR")}</div></td></tr></table></div><table class="kpi-table"><tr><td class="kpi-card"><div class="kpi-title">Éléments analysés</div><div class="kpi-value">${data.factures?.length || data.achats?.length || data.stocks?.length || 0}</div><div class="kpi-trend trend-up">Données ERP réelles</div></td><td class="kpi-card green"><div class="kpi-title">Montant total</div><div class="kpi-value">${money(data.total)}</div><div class="kpi-trend trend-up">Période ${periode}</div></td><td class="kpi-card amber"><div class="kpi-title">Marge brute</div><div class="kpi-value">${money(data.marge)}</div><div class="kpi-trend trend-up">Calculée sur les données</div></td><td class="kpi-card purple"><div class="kpi-title">Indicateur</div><div class="kpi-value">${data.risque || "Suivi"}</div><div class="kpi-trend trend-up">Analyse automatisée</div></td></tr></table><div class="executive-box"><div class="executive-title">Synthèse exécutive</div><p class="executive-text">${escapeHtml(narrative)}</p></div><div class="section-header"><div class="section-title">Indicateurs graphiques</div></div><div class="report-charts">${charts}</div><div class="section-header"><div class="section-title">Détail des données ERP</div></div><table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${reportRows(data, type) || `<tr><td colspan="6" class="text-center">Aucune donnée sur cette période</td></tr>`}</tbody></table>`;
   return template.replace(/<body>[\s\S]*<\/body>/i, `<body>${body}</body>`);
 }
 

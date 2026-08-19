@@ -163,18 +163,6 @@ export function SidebarNav({
                       {!collapsed ? (
                         <span className="flex-1 truncate">{item.title}</span>
                       ) : null}
-                      {item.badge && !collapsed ? (
-                        <span
-                          className={cn(
-                            "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
-                            active
-                              ? "bg-white/25 text-white"
-                              : "bg-sidebar-accent text-sidebar-accent-foreground",
-                          )}
-                        >
-                          {item.badge}
-                        </span>
-                      ) : null}
                     </Link>
                   );
 
@@ -195,11 +183,6 @@ export function SidebarNav({
                               <p className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">
                                 {group.label}
                               </p>
-                              {item.badge ? (
-                                <p className="text-[11px] text-sidebar-foreground/50">
-                                  Badge: {item.badge}
-                                </p>
-                              ) : null}
                             </div>
                           </TooltipContent>
                         </Tooltip>
