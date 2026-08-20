@@ -336,6 +336,18 @@ function CategoriesPage() {
           icon={<FolderTree className="h-5 w-5" />}
         />
         <StatCard
+  label="Sous-catégories"
+  value={String(
+    arbre.reduce(
+      (total, categorie) =>
+        total + (categorie.enfants?.length || 0),
+      0,
+    ),
+  )}
+  sub="au total"
+  icon={<FolderTree className="h-5 w-5" />}
+/>
+        <StatCard
           label="Avec produits"
           value={String(stats.totalProduits)}
           sub="produits rattaches"

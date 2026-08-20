@@ -72,16 +72,7 @@ export function PageHeader({
   ];
 
   return (
-    <div className="relative mb-6 overflow-hidden">
-      <div className="pointer-events-none absolute right-[clamp(11rem,23vw,24rem)] top-4 z-0 hidden items-center gap-9 lg:flex">
-        {decorativeIcons.map((Icon, index) => (
-          <Icon
-            key={Icon.displayName || index}
-            className={`${index === 1 ? "h-[4.5rem] w-[4.5rem]" : "h-14 w-14"} ${decorativeClasses[index]}`}
-            strokeWidth={1.5}
-          />
-        ))}
-      </div>
+    <div className="relative mb-1 overflow-hidden">
       <nav className="relative z-10 mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link
           to="/"
@@ -102,9 +93,6 @@ export function PageHeader({
           <h1 className="truncate text-2xl font-bold text-foreground">
             {title}
           </h1>
-          {description && (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          )}
         </div>
         {actions && (
           <div className="flex shrink-0 flex-wrap items-center gap-2">

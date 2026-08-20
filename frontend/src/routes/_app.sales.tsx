@@ -8,6 +8,7 @@ import {
   Minus,
   Plus,
   Receipt,
+  RefreshCw,
   Search,
   ShoppingCart,
   Trash2,
@@ -58,6 +59,7 @@ type ProductApi = {
   id: string;
   reference: string;
   designation: string;
+  description?: string | null;
   photo?: string | null;
   prixVenteHt: number | string;
   tauxTva?: number | string;
@@ -200,6 +202,7 @@ function SalesPage() {
   const [historyDate, setHistoryDate] = useState("");
   const [historyPage, setHistoryPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -218,6 +221,8 @@ function SalesPage() {
       telephone: "",
     });
   const [createdInvoice, setCreatedInvoice] = useState<FactureApi | null>(null);
+  const [selectedProductDetail, setSelectedProductDetail] =
+    useState<ProductApi | null>(null);
   const [historyDetailOpen, setHistoryDetailOpen] = useState(false);
   const [historyDetailLoading, setHistoryDetailLoading] = useState(false);
   const [historyDetail, setHistoryDetail] = useState<FactureDetailsApi | null>(
@@ -241,6 +246,7 @@ function SalesPage() {
     {
       key: "ref",
       header: "Facture",
+      align: "left",
       render: (row) => (
         <span className="font-medium text-foreground">{row.ref}</span>
       ),
@@ -273,8 +279,19 @@ function SalesPage() {
     setProducts(responseData<ProductApi>(response));
   };
 
-  const loadClients = async () => {
-    const response = await fetchClients({ limit: 500, statut: "ACTIF" });
+  const refreshCatalog = async () => {
+    setRefreshing(true);
+    try {
+      await loadProducts(true);
+      await loadClients(true);
+      toast.success("Catalogue actualisé");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const loadClients = async (force = false) => {
+    const response = await fetchClients({ limit: 500, statut: "ACTIF" }, force);
     setClients(responseData<ClientApi>(response));
   };
 
@@ -696,7 +713,7 @@ function SalesPage() {
         breadcrumb={["Transactions", "Ventes"]}
       />
       <Tabs defaultValue="new">
-        <TabsList className="mb-4">
+        <TabsList className="mb-2">
           <TabsTrigger value="new" className="gap-1.5">
             <ShoppingCart className="h-4 w-4" /> Nouvelle vente
           </TabsTrigger>
@@ -714,6 +731,20 @@ function SalesPage() {
               contentClassName="flex min-h-0 flex-1 flex-col"
               style={
                 catalogHeight ? { height: `${catalogHeight}px` } : undefined
+              }
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => void refreshCatalog()}
+                  disabled={refreshing || loading}
+                >
+                  <RefreshCw
+                    className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+                  />
+                  Actualiser
+                </Button>
               }
             >
               <div className="mb-4 flex items-center gap-2">
@@ -746,10 +777,17 @@ function SalesPage() {
                   {filteredProducts.slice(0, 18).map((product) => {
                     const stock = toNumber(product.stock?.stockActuel);
                     return (
-                      <button
+                      <div
                         key={product.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
                         onClick={() => addProduct(product)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            addProduct(product);
+                          }
+                        }}
                         className="group rounded-lg border border-border p-3 text-left transition-all hover:border-primary/40 hover:shadow-card"
                       >
                         <div className="mb-2 flex h-16 items-center justify-center overflow-hidden rounded-md bg-secondary/60 text-primary">
@@ -773,10 +811,22 @@ function SalesPage() {
                         <p className="text-xs text-muted-foreground">
                           {product.reference} · Stock {stock}
                         </p>
-                        <p className="text-sm font-semibold text-primary">
-                          {fmtCurrency(toNumber(product.prixVenteHt))}
-                        </p>
-                      </button>
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-primary">
+                            {fmtCurrency(toNumber(product.prixVenteHt))}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedProductDetail(product);
+                            }}
+                            className="text-xs font-medium text-muted-foreground transition-colors hover:text-primary bg-secondary/50 p-1"
+                          >
+                            Détail
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -1106,6 +1156,108 @@ function SalesPage() {
           </SectionCard>
         </TabsContent>
       </Tabs>
+
+      <AppModal
+        open={Boolean(selectedProductDetail)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedProductDetail(null);
+        }}
+        title={selectedProductDetail?.designation || "Détail du produit"}
+        description={selectedProductDetail?.reference || "Produit"}
+        size="lg"
+        footer={
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedProductDetail(null)}
+            >
+              Fermer
+            </Button>
+          </div>
+        }
+      >
+        {selectedProductDetail ? (
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+            <div className="flex min-h-64 items-center justify-center overflow-hidden rounded-lg bg-secondary/60 text-primary">
+              {selectedProductDetail.photo ? (
+                <img
+                  src={resolveMediaUrl(selectedProductDetail.photo)}
+                  alt={selectedProductDetail.designation}
+                  className="h-full max-h-[420px] w-full object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = "none";
+                  }}
+                />
+              ) : (
+                <ShoppingCart className="h-14 w-14 opacity-70" />
+              )}
+            </div>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">
+                  Désignation
+                </p>
+                <p className="mt-1 font-medium text-foreground">
+                  {selectedProductDetail.designation}
+                </p>
+              </div>
+              {selectedProductDetail.description?.trim() ? (
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">
+                    Description
+                  </p>
+                  <p className="mt-1 whitespace-pre-line text-foreground">
+                    {selectedProductDetail.description}
+                  </p>
+                </div>
+              ) : null}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Référence</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {selectedProductDetail.reference}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Catégorie</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {selectedProductDetail.categorie?.nom || "-"}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Stock</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {toNumber(selectedProductDetail.stock?.stockActuel)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">TVA</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {toNumber(selectedProductDetail.tauxTva)}%
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">
+                  Prix de vente HT
+                </p>
+                <p className="mt-1 text-lg font-semibold text-primary">
+                  {fmtCurrency(toNumber(selectedProductDetail.prixVenteHt))}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted-foreground">Prix estimé TTC</p>
+                <p className="mt-1 font-semibold text-foreground">
+                  {fmtCurrency(
+                    toNumber(selectedProductDetail.prixVenteHt) *
+                      (1 + toNumber(selectedProductDetail.tauxTva) / 100),
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </AppModal>
 
       <AppModal
         open={confirmOpen}

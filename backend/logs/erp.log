@@ -4591,3 +4591,55 @@ Unique constraint failed on the constraint: `uk_prevision` {"stack":"PrismaClien
 2026-08-19T10:26:20.719Z info: Socket connecte UlQLbhrzOURq3eQjAAAJ
 2026-08-19T10:27:04.927Z info: Socket deconnecte UlQLbhrzOURq3eQjAAAJ
 2026-08-19T10:30:08.878Z info: Socket connecte F2waMk7orArGqiIFAAAL
+2026-08-19T12:52:25.815Z info: Socket deconnecte F2waMk7orArGqiIFAAAL
+2026-08-19T12:54:57.412Z info: Socket connecte MxSH5AP0SMX9SGWPAAAN
+2026-08-19T12:55:51.597Z error: 
+Invalid `prisma.facture.findMany()` invocation:
+
+
+Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.facture.findMany()` invocation:\n\n\nCan't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/factures/factures.service.js:18:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/factures/factures.controller.js:5:48)","code":"P1001"}
+2026-08-19T12:56:19.359Z info: Socket deconnecte MxSH5AP0SMX9SGWPAAAN
+2026-08-19T12:56:25.167Z info: Socket connecte gIXPNEuoeQIjw2jBAAAP
+2026-08-19T13:05:43.231Z info: Socket deconnecte gIXPNEuoeQIjw2jBAAAP
+2026-08-19T15:14:25.870Z error: Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientInitializationError: Can't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at r (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:112:2770)\n    at async connectDB (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/config/database.js:17:5)\n    at async bootstrap (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/server.js:10:3)"}
+2026-08-19T15:17:11.256Z info: Base de donnees connectee
+2026-08-19T15:17:11.273Z info: Serveur demarre port 3000
+2026-08-19T15:19:49.985Z info: Socket connecte zHsk_JVbAus9KkgPAAAC
+2026-08-19T15:34:19.892Z info: Base de donnees connectee
+2026-08-19T15:34:19.914Z info: Serveur demarre port 3000
+2026-08-19T15:38:44.310Z info: Base de donnees connectee
+2026-08-19T15:38:44.352Z info: Serveur demarre port 3000
+2026-08-19T15:40:46.908Z info: Base de donnees connectee
+2026-08-19T15:40:46.925Z info: Serveur demarre port 3000
+2026-08-19T15:43:14.414Z info: Base de donnees connectee
+2026-08-19T15:43:14.432Z info: Serveur demarre port 3000
+2026-08-19T15:44:00.401Z info: Socket connecte tfc5qTpIzHsI7VZKAAAC
+2026-08-19T16:49:20.532Z error: 
+Invalid `prisma.stock.findMany()` invocation:
+
+
+Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientKnownRequestError: \nInvalid `prisma.stock.findMany()` invocation:\n\n\nCan't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at ei.handleRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:7268)\n    at ei.handleAndLogRequestError (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6593)\n    at ei.request (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:121:6300)\n    at async a (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:130:9551)\n    at async Promise.all (index 0)\n    at async Object.list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/stocks/stocks.service.js:9:27)\n    at async list (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/stocks/stocks.controller.js:7:17)","code":"P1001"}
+2026-08-19T17:07:42.012Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-19T18:21:53.846Z info: Arret du serveur
+2026-08-20T11:17:32.017Z info: Base de donnees connectee
+2026-08-20T11:17:32.034Z info: Serveur demarre port 3000
+2026-08-20T11:17:32.872Z info: Socket connecte J95_RCXFE2zFAX8VAAAB
+2026-08-20T11:17:51.357Z info: Socket deconnecte J95_RCXFE2zFAX8VAAAB
+2026-08-20T11:18:10.746Z info: Socket connecte dSc2DnNHont4HpOBAAAE
+2026-08-20T13:46:37.102Z info: Socket deconnecte dSc2DnNHont4HpOBAAAE
+2026-08-20T13:52:06.809Z info: Socket connecte oIX4D2VDc-LJnK8EAAAG
+2026-08-20T14:12:25.008Z info: Base de donnees connectee
+2026-08-20T14:12:25.072Z info: Serveur demarre port 3000
+2026-08-20T14:12:29.623Z info: Socket connecte 9h1v4PYk2_lPTgdVAAAB
+2026-08-20T14:13:26.178Z info: Socket deconnecte 9h1v4PYk2_lPTgdVAAAB
+2026-08-20T14:19:04.599Z info: Socket connecte GKYSd1Y9TRcAwkG0AAAE
+2026-08-20T14:29:53.715Z info: Socket deconnecte GKYSd1Y9TRcAwkG0AAAE
+2026-08-20T14:30:29.521Z info: Socket connecte LpaWGm21UOSsdhzkAAAG
+2026-08-20T14:47:45.357Z info: Socket deconnecte LpaWGm21UOSsdhzkAAAG
+2026-08-20T14:48:18.475Z info: Socket connecte 8DHwJ6L3VXgkwk4WAAAJ

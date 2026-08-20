@@ -650,6 +650,7 @@ function PurchasesPage() {
     {
       key: "ref",
       header: "Bon de commande",
+      align: "left",
       render: (o) => (
         <span className="font-medium text-foreground">{o.ref}</span>
       ),
@@ -676,13 +677,13 @@ function PurchasesPage() {
     {
       key: "factureRecue",
       header: "Facture recue",
-      align: "center",
+      align: "right",
       render: (o) => {
         const canCreateInvoice = canCreateInvoiceForStatus(o.statutRaw);
 
         return (
           <div
-            className="flex flex-col items-center gap-1"
+            className="flex flex-col items-end gap-1"
             onClick={(e) => e.stopPropagation()}
           >
             <Switch
@@ -1655,31 +1656,99 @@ function PurchasesPage() {
       <SectionCard
         title="Workflow d'achat"
         description="Cycle de vie d'un bon de commande"
-        className="mb-6"
+        className="mb-3 bg-gradient-to-r from-blue-500/2 via-sky-500/4 to-indigo-500/2 border border-blue-200/50"
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
           {steps.map((s, i) => (
-            <div key={s.label} className="flex flex-1 items-center gap-3">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${s.done ? "bg-gradient-primary text-white" : "border-2 border-dashed border-border text-muted-foreground"}`}
-                >
-                  <s.icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-xs text-muted-foreground">Étape {i + 1}</p>
-                  <p
-                    className={`text-sm font-medium ${s.done ? "text-foreground" : "text-muted-foreground"}`}
+            <div
+              key={s.label}
+              className="flex flex-1 items-center gap-2 sm:flex-col sm:items-center sm:gap-0"
+            >
+              {/* Étape + connecteur horizontal */}
+              <div className="flex w-full items-center sm:flex-col sm:items-center">
+                {/* Cercle de l'étape */}
+                <div className="relative flex flex-col items-center">
+                  {/* Badge numéro */}
+                  <span className="absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-background text-[9px] font-bold ring-1 ring-border text-muted-foreground">
+                    {i + 1}
+                  </span>
+
+                  <span
+                    className={cn(
+                      "flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300",
+                      s.done
+                        ? "bg-gradient-primary text-white shadow-md shadow-primary/30 ring-4 ring-primary/10"
+                        : "border-2 border-dashed border-border bg-muted/40 text-muted-foreground",
+                    )}
                   >
-                    {s.label}
-                  </p>
+                    <s.icon className="h-5 w-5" />
+                  </span>
+
+                  {/* Indicateur done */}
+                  {s.done && (
+                    <span className="absolute -bottom-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-green-500 ring-2 ring-background">
+                      <svg
+                        className="h-2 w-2 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </span>
+                  )}
                 </div>
+
+                {/* Connecteur — horizontal sur desktop, vertical sur mobile */}
+                {i < steps.length - 1 && (
+                  <>
+                    {/* Desktop → trait horizontal */}
+                    <div
+                      className={cn(
+                        "hidden h-0.5 flex-1 sm:block",
+                        s.done
+                          ? "bg-gradient-to-r from-primary/60 to-primary/20"
+                          : "bg-border/60",
+                      )}
+                    />
+                    {/* Mobile → trait vertical */}
+                    <div
+                      className={cn(
+                        "mx-5 my-1 h-5 w-0.5 sm:hidden",
+                        s.done ? "bg-primary/40" : "bg-border/60",
+                      )}
+                    />
+                  </>
+                )}
               </div>
-              {i < steps.length - 1 && (
-                <div
-                  className={`hidden h-0.5 flex-1 sm:block ${s.done ? "bg-primary/40" : "bg-border"}`}
-                />
-              )}
+
+              {/* Texte */}
+              <div className="sm:mt-3 sm:text-center">
+                <p
+                  className={cn(
+                    "text-sm font-semibold leading-tight",
+                    s.done ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {s.label}
+                </p>
+                {/* Statut texte */}
+                <p
+                  className={cn(
+                    "mt-0.5 text-[11px]",
+                    s.done
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-muted-foreground/60",
+                  )}
+                >
+                  {s.done ? "Complété" : "En attente"}
+                </p>
+              </div>
             </div>
           ))}
         </div>

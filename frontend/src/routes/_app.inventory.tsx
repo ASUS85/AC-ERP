@@ -132,6 +132,7 @@ function InventoryPage() {
   const [alertes, setAlertes] = useState<Alerte[]>([]);
   const [inventaires, setInventaires] = useState<Inventaire[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<"stocks" | "mouvements" | "inventaires">(
     "stocks",
   );
@@ -195,82 +196,98 @@ function InventoryPage() {
   const fetchProducts = useProductsStore((state) => state.fetchList);
 
   // ── Chargement ──
-  const loadAll = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [skRes, mvRes, alRes, invRes, prodRes] = await Promise.allSettled([
-        getStocks({ page: skPage, limit: PAGE_SIZE }),
-        getMouvements({
-          page: mvPage,
-          limit: PAGE_SIZE,
-          search: search || undefined,
-          date: mouvementDate || undefined,
-        }),
-        getAlertes(),
-        (async () => {
-          const { default: api } = await import("@/lib/api/client");
-          return api.get("/stocks/inventaires");
-        })(),
-        fetchProducts({ limit: 1000, statut: "ACTIF" }),
-      ]);
-      const stockData =
-        skRes.status === "fulfilled" ? (skRes.value as any) : null;
-      const movementData =
-        mvRes.status === "fulfilled" ? (mvRes.value as any) : null;
-      const alertData =
-        alRes.status === "fulfilled" ? (alRes.value as any) : null;
-      const inventaireData =
-        invRes.status === "fulfilled" ? (invRes.value as any) : null;
-      const productData =
-        prodRes.status === "fulfilled" ? (prodRes.value as any) : null;
+  const loadAll = useCallback(
+    async (force = false) => {
+      setLoading(true);
+      try {
+        const [skRes, mvRes, alRes, invRes, prodRes] = await Promise.allSettled(
+          [
+            getStocks({ page: skPage, limit: PAGE_SIZE }),
+            getMouvements({
+              page: mvPage,
+              limit: PAGE_SIZE,
+              search: search || undefined,
+              date: mouvementDate || undefined,
+            }),
+            getAlertes(),
+            (async () => {
+              const { default: api } = await import("@/lib/api/client");
+              return api.get("/stocks/inventaires");
+            })(),
+            fetchProducts({ limit: 1000, statut: "ACTIF" }, force),
+          ],
+        );
+        const stockData =
+          skRes.status === "fulfilled" ? (skRes.value as any) : null;
+        const movementData =
+          mvRes.status === "fulfilled" ? (mvRes.value as any) : null;
+        const alertData =
+          alRes.status === "fulfilled" ? (alRes.value as any) : null;
+        const inventaireData =
+          invRes.status === "fulfilled" ? (invRes.value as any) : null;
+        const productData =
+          prodRes.status === "fulfilled" ? (prodRes.value as any) : null;
 
-      setStocks((stockData?.data || []) as StockItem[]);
-      setSkMeta(
-        stockData?.meta || {
-          total: 0,
-          page: skPage,
-          limit: PAGE_SIZE,
+        setStocks((stockData?.data || []) as StockItem[]);
+        setSkMeta(
+          stockData?.meta || {
+            total: 0,
+            page: skPage,
+            limit: PAGE_SIZE,
+            totalPages: 1,
+          },
+        );
+        setMouvements((movementData?.data || []) as Mouvement[]);
+        setMvMeta(
+          movementData?.meta || {
+            total: 0,
+            page: mvPage,
+            limit: PAGE_SIZE,
+            totalPages: 1,
+          },
+        );
+        setAlertes((alertData?.data || []) as Alerte[]);
+        setInventaires((inventaireData?.data || []) as Inventaire[]);
+        setInvMeta({
+          total: (inventaireData?.data || []).length,
+          page: 1,
+          limit: 10000,
           totalPages: 1,
-        },
-      );
-      setMouvements((movementData?.data || []) as Mouvement[]);
-      setMvMeta(
-        movementData?.meta || {
-          total: 0,
-          page: mvPage,
-          limit: PAGE_SIZE,
-          totalPages: 1,
-        },
-      );
-      setAlertes((alertData?.data || []) as Alerte[]);
-      setInventaires((inventaireData?.data || []) as Inventaire[]);
-      setInvMeta({
-        total: (inventaireData?.data || []).length,
-        page: 1,
-        limit: 10000,
-        totalPages: 1,
-      });
-      const produitsRaw = productData?.data || [];
-      setAdjProduits(
-        produitsRaw.map((p: any) => ({
-          id: p.id,
-          label: `${p.designation} (${p.reference}) - stock: ${p.stock?.stockActuel ?? 0}`,
-        })),
-      );
-    } catch {
-      setStocks([]);
-      setMouvements([]);
-      setAlertes([]);
-      setInventaires([]);
-      setAdjProduits([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchProducts, skPage, mvPage, search, mouvementDate]);
+        });
+        const produitsRaw = productData?.data || [];
+        setAdjProduits(
+          produitsRaw.map((p: any) => ({
+            id: p.id,
+            label: `${p.designation} (${p.reference}) - stock: ${p.stock?.stockActuel ?? 0}`,
+          })),
+        );
+      } catch {
+        setStocks([]);
+        setMouvements([]);
+        setAlertes([]);
+        setInventaires([]);
+        setAdjProduits([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchProducts, skPage, mvPage, search, mouvementDate],
+  );
 
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  const refreshStocks = async () => {
+    setRefreshing(true);
+    try {
+      await loadAll(true);
+      toast.success("Stocks actualisés");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     setMvPage(1);
   }, [search]);
@@ -788,6 +805,20 @@ function InventoryPage() {
                 : `${invMeta.total} inventaire${invMeta.total > 1 ? "s" : ""}`
           }
           className="lg:col-span-3"
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => void refreshStocks()}
+              disabled={refreshing || loading}
+            >
+              <RefreshCw
+                className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+              />
+              Actualiser
+            </Button>
+          }
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex w-full max-w-xl  items-center gap-2">
@@ -949,13 +980,8 @@ function InventoryPage() {
                 columns={invCols}
                 rows={paginatedInventaires}
                 rowKey={(i) => i.id}
-                rowActions={(inv) => [
-                  {
-                    label: "Voir details",
-                    icon: <Eye className="h-4 w-4" />,
-                    onClick: () => void openInvDetail(inv.id),
-                  },
-                ]}
+                onRowClick={(p) => void openInvDetail(p.id)}
+                withActions={false}
               />
               <Pagination
                 count={filteredInventaires.length}

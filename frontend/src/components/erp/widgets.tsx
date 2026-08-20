@@ -9,6 +9,34 @@ import { cn } from "@/lib/utils";
 // ─────────────────────────────────────────────────────────────
 // StatCard
 // ─────────────────────────────────────────────────────────────
+const statCardTones = [
+  {
+    gradient: "from-sky-100/80 via-sky-50/40 to-transparent",
+    iconBg: "bg-sky-500/10",
+    iconColor: "text-sky-600",
+  },
+  {
+    gradient: "from-emerald-100/80 via-emerald-50/40 to-transparent",
+    iconBg: "bg-emerald-500/10",
+    iconColor: "text-emerald-600",
+  },
+  {
+    gradient: "from-violet-100/80 via-violet-50/40 to-transparent",
+    iconBg: "bg-violet-500/10",
+    iconColor: "text-violet-600",
+  },
+  {
+    gradient: "from-amber-100/80 via-amber-50/40 to-transparent",
+    iconBg: "bg-amber-500/10",
+    iconColor: "text-amber-600",
+  },
+];
+
+function toneForLabel(label: string) {
+  const sum = Array.from(label).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return statCardTones[sum % statCardTones.length];
+}
+
 export function StatCard({
   label,
   value,
@@ -24,17 +52,30 @@ export function StatCard({
   sub?: string;
   icon: ReactNode;
 }) {
+  const tone = toneForLabel(label);
   return (
-    <Card className="flex flex-col gap-3 p-5 shadow-card transition-shadow hover:shadow-pop">
-      <div className="flex items-start justify-between">
+    <Card
+      className={cn(
+        "relative flex flex-col gap-3 overflow-hidden bg-gradient-to-br p-5 shadow-card transition-shadow hover:shadow-pop",
+        tone.gradient,
+      )}
+    >
+      <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-current opacity-[0.06]" />
+      <div className="relative flex items-start justify-between">
         <span className="text-sm font-medium text-muted-foreground">
           {label}
         </span>
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <span
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-lg",
+            tone.iconBg,
+            tone.iconColor,
+          )}
+        >
           {icon}
         </span>
       </div>
-      <div>
+      <div className="relative">
         <div className="text-2xl font-bold tracking-tight text-foreground">
           {value}
         </div>
@@ -86,7 +127,7 @@ export function SectionCard({
       className={cn("flex flex-col overflow-hidden p-0 shadow-card", className)}
       style={style}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
           {description && (
@@ -97,7 +138,7 @@ export function SectionCard({
         </div>
         {action}
       </div>
-      <div className={cn("p-5", contentClassName)}>{children}</div>
+      <div className={cn("p-3", contentClassName)}>{children}</div>
     </Card>
   );
 }

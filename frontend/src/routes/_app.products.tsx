@@ -7,6 +7,7 @@ import {
   Loader2,
   Package,
   Pencil,
+  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
@@ -35,7 +36,6 @@ import { fmtCurrency, fmtNumber } from "@/lib/erp-data";
 import {
   archiveProduit,
   createProduit,
-  getProduits,
   getProduitsPdf,
   uploadProduitPhoto,
   updateProduit,
@@ -133,11 +133,11 @@ function ProductsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const pageSize = 40;
   const fetchCategories = useCategoriesStore((state) => state.fetchList);
@@ -149,15 +149,18 @@ function ProductsPage() {
     setCategories(responseData<Category>(response));
   };
 
-  const loadProducts = async () => {
+  const loadProducts = async (force = false) => {
     setLoading(true);
     try {
-      const response = await fetchProducts({
-        page,
-        limit: pageSize,
-        search: search.trim() || undefined,
-        categorieId: categoryFilter === "all" ? undefined : categoryFilter,
-      });
+      const response = await fetchProducts(
+        {
+          page,
+          limit: pageSize,
+          search: search.trim() || undefined,
+          categorieId: categoryFilter === "all" ? undefined : categoryFilter,
+        },
+        force,
+      );
       setProducts(responseData<Product>(response));
       setMeta(
         response?.meta || { total: 0, page, limit: pageSize, totalPages: 1 },
@@ -182,6 +185,16 @@ function ProductsPage() {
   useEffect(() => {
     setPage(1);
   }, [search, categoryFilter]);
+
+  const refreshProducts = async () => {
+    setRefreshing(true);
+    try {
+      await loadProducts(true);
+      toast.success("Catalogue actualisé");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const stats = useMemo(() => {
     const total = meta.total;
@@ -374,65 +387,6 @@ function ProductsPage() {
     }
   };
 
-  const exportProducts = async () => {
-    setExporting(true);
-    try {
-      const response = await getProduits({
-        limit: 10000,
-        search: search.trim() || undefined,
-        categorieId: categoryFilter === "all" ? undefined : categoryFilter,
-      });
-      const rows = responseData<Product>(response);
-      const csvRows = [
-        [
-          "Référence",
-          "Désignation",
-          "Catégorie",
-          "Unité",
-          "Prix achat HT",
-          "Prix vente HT",
-          "TVA",
-          "Stock",
-          "Stock minimum",
-          "Statut",
-        ],
-        ...rows.map((product) => [
-          product.reference,
-          product.designation,
-          product.categorie?.nom || "",
-          product.uniteMesure,
-          String(product.prixAchatHt),
-          String(product.prixVenteHt),
-          String(product.tauxTva),
-          String(product.stock?.stockActuel || 0),
-          String(product.stockMinimum || 0),
-          product.statut,
-        ]),
-      ];
-      const csv = csvRows
-        .map((row) =>
-          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(";"),
-        )
-        .join("\n");
-      const blob = new Blob([`\uFEFF${csv}`], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `produits-${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      toast.success("Liste des produits exportée");
-    } catch {
-      toast.error("Export impossible");
-    } finally {
-      setExporting(false);
-    }
-  };
-
   const cols: Column<Product>[] = [
     {
       key: "designation",
@@ -517,20 +471,6 @@ function ProductsPage() {
               )}
               Apercu
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => void exportProducts()}
-              disabled={exporting}
-            >
-              {exporting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4" />
-              )}
-              Exporter
-            </Button>
           </>
         }
       />
@@ -563,6 +503,20 @@ function ProductsPage() {
       <SectionCard
         title="Catalogue produits"
         description={`${meta.total} produit${meta.total > 1 ? "s" : ""}`}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void refreshProducts()}
+            disabled={refreshing}
+          >
+            <RefreshCw
+              className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+            />
+            Actualiser
+          </Button>
+        }
       >
         <div className="mb-4">
           <Toolbar

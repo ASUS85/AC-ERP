@@ -36,7 +36,7 @@ import { ChartFrame } from "@/components/erp/ChartFrame";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getDashboardPdf } from "@/lib/api/dashboard.service";
 import { getStoredCurrency } from "@/lib/currency";
 import { fmtCurrency } from "@/lib/erp-data";
@@ -111,7 +111,6 @@ function Dashboard() {
   const dashboardData = useDashboardStore((state) => state.data);
   const loading = useDashboardStore((state) => state.loading);
   const fetchOverview = useDashboardStore((state) => state.fetchOverview);
-  const [exporting, setExporting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -135,25 +134,25 @@ function Dashboard() {
   const { kpis, salesTrend, topProducts, stockSplit, recentSales, alerts } =
     dashboardData || EMPTY_DASHBOARD_OVERVIEW;
 
-  const exportDashboard = async () => {
-    try {
-      setExporting(true);
-      const blob = (await getDashboardPdf()) as unknown as Blob;
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `dashboard-${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      toast.success("PDF du dashboard exporte");
-    } catch {
-      toast.error("Export PDF impossible");
-    } finally {
-      setExporting(false);
-    }
-  };
+  const margeTrend = useMemo(
+    () =>
+      salesTrend.map((t) => ({
+        mois: t.mois,
+        marge: Number(t.ventes || 0) - Number(t.achats || 0),
+      })),
+    [salesTrend],
+  );
+
+  const statusSplit = useMemo(() => {
+    const counts = new Map<string, number>();
+    recentSales.forEach((s) => {
+      counts.set(s.statut, (counts.get(s.statut) || 0) + 1);
+    });
+    return Array.from(counts.entries()).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [recentSales]);
 
   const openPreview = async () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -192,16 +191,6 @@ function Dashboard() {
               )}
               Apercu
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={exportDashboard}
-              disabled={loading || exporting}
-            >
-              <Download className="h-4 w-4" />{" "}
-              {exporting ? "Export..." : "Exporter"}
-            </Button>
             <Button size="sm" className="gap-1.5" asChild>
               <Link to="/sales">
                 <Plus className="h-4 w-4" /> Nouvelle vente
@@ -228,7 +217,6 @@ function Dashboard() {
         <SectionCard
           title="Evolution des ventes & achats"
           description="Chiffre d'affaires mensuel sur 12 mois"
-          className="lg:col-span-2"
         >
           <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -335,13 +323,60 @@ function Dashboard() {
             </ResponsiveContainer>
           </ChartFrame>
         </SectionCard>
+        <SectionCard
+          title="Marge mensuelle"
+          description="Ventes - achats sur 12 mois"
+        >
+          <ChartFrame loading={loading} className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={margeTrend}
+                margin={{ left: -10, right: 8, top: 8 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="mois"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--muted-foreground)"
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--muted-foreground)"
+                  tickFormatter={(v) => `${v / 1000}k`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    fontSize: 12,
+                  }}
+                  formatter={(v: number) => fmtCurrency(v)}
+                />
+                <Bar
+                  dataKey="marge"
+                  name="Marge"
+                  fill="var(--chart-2)"
+                  radius={[6, 6, 0, 0]}
+                  barSize={18}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartFrame>
+        </SectionCard>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SectionCard
           title="Produits les plus vendus"
           description="Top 5 ce mois-ci"
-          className="lg:col-span-2"
         >
           <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -391,10 +426,44 @@ function Dashboard() {
           </ChartFrame>
         </SectionCard>
         <SectionCard
+          title="Ventes recentes par statut"
+          description="Repartition des dernieres ventes"
+        >
+          <ChartFrame loading={loading} className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={statusSplit}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={45}
+                  outerRadius={78}
+                  paddingAngle={3}
+                >
+                  {statusSplit.map((_, i) => (
+                    <Cell key={i} fill={pieColors[i % pieColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    fontSize: 12,
+                  }}
+                />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartFrame>
+        </SectionCard>
+      </div>
+
+      <div className="mt-4">
+        <SectionCard
           title="Alertes & notifications"
           description="Elements necessitant votre attention"
         >
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {alerts.map((a) => (
               <div
                 key={a.title}

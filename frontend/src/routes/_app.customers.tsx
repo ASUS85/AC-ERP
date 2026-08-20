@@ -530,7 +530,7 @@ function CustomersPage() {
               rowKey={(c) => c.id}
               rowActions={(client) => [
                 {
-                  label: "Modifier",
+                  label: " ",
                   icon: <Pencil className="h-4 w-4" />,
                   onClick: () => {
                     setEditingClient(client);
@@ -555,7 +555,7 @@ function CustomersPage() {
                 },
 
                 {
-                  label: "Supprimer",
+                  label: "",
                   icon: <Trash2 className="h-4 w-4" />,
                   destructive: true,
                   onClick: () => openDeleteModal(client),

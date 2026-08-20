@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowDownLeft, ArrowUpRight, Wallet, Receipt, Loader2, FileText, User, Search } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Wallet,
+  Receipt,
+  Loader2,
+  FileText,
+  User,
+  Search,
+} from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import {
   SectionCard,
@@ -47,7 +56,9 @@ function PaymentsPage() {
 
   // Modal states
   const [detailOpen, setDetailOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<PaiementApi | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaiementApi | null>(
+    null,
+  );
 
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -84,6 +95,7 @@ function PaymentsPage() {
       {
         key: "reference",
         header: "Réf. Facture",
+        align: "left",
         render: (p) => (
           <span className="font-medium text-foreground">
             {p.facture?.numeroFacture || "N/A"}
@@ -127,7 +139,7 @@ function PaymentsPage() {
         description="Historique des encaissements et décaissements"
         breadcrumb={["Transactions", "Paiements"]}
       />
-      
+
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* Les stats sont gardées statiques pour l'instant afin de conserver le rendu visuel, à rendre dynamiques plus tard avec un endpoint de dashboard */}
         <StatCard
@@ -204,7 +216,7 @@ function PaymentsPage() {
             </div>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -250,15 +262,21 @@ function PaymentsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-1">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Montant Encaissé</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Montant Encaissé
+                </p>
                 <p className="text-3xl font-bold text-success">
                   {fmtCurrency(Number(selectedPayment.montant))}
                 </p>
               </div>
               <div className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-2 flex flex-col justify-center">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Réf. de transaction / Notes</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Réf. de transaction / Notes
+                </p>
                 <p className="text-lg font-medium text-foreground">
-                  {selectedPayment.reference || selectedPayment.notes || "Aucune référence"}
+                  {selectedPayment.reference ||
+                    selectedPayment.notes ||
+                    "Aucune référence"}
                 </p>
               </div>
             </div>
@@ -271,18 +289,26 @@ function PaymentsPage() {
                 </h3>
                 <div className="grid gap-2 text-sm">
                   <div className="flex justify-between items-center py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">Méthode de paiement :</span>
+                    <span className="text-muted-foreground">
+                      Méthode de paiement :
+                    </span>
                     <span className="font-semibold uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md">
                       {selectedPayment.modePaiement}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-border/50">
                     <span className="text-muted-foreground">Date :</span>
-                    <span className="font-medium">{formatDate(selectedPayment.datePaiement)}</span>
+                    <span className="font-medium">
+                      {formatDate(selectedPayment.datePaiement)}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">Facture liée :</span>
-                    <span className="font-medium">{selectedPayment.facture?.numeroFacture || "N/A"}</span>
+                    <span className="text-muted-foreground">
+                      Facture liée :
+                    </span>
+                    <span className="font-medium">
+                      {selectedPayment.facture?.numeroFacture || "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -294,13 +320,21 @@ function PaymentsPage() {
                 </h3>
                 <div className="grid gap-2 text-sm">
                   <div className="flex flex-col gap-1 py-1 border-b border-border/50 pb-2">
-                    <span className="text-muted-foreground text-xs uppercase">Client concerné</span>
-                    <span className="font-medium">{selectedPayment.facture?.client?.nom || "Client occasionnel"}</span>
+                    <span className="text-muted-foreground text-xs uppercase">
+                      Client concerné
+                    </span>
+                    <span className="font-medium">
+                      {selectedPayment.facture?.client?.nom ||
+                        "Client occasionnel"}
+                    </span>
                   </div>
                   <div className="flex flex-col gap-1 py-1 border-b border-border/50 pb-2">
-                    <span className="text-muted-foreground text-xs uppercase">Enregistré par</span>
+                    <span className="text-muted-foreground text-xs uppercase">
+                      Enregistré par
+                    </span>
                     <span className="font-medium">
-                      {selectedPayment.utilisateur?.nom} {selectedPayment.utilisateur?.prenom}
+                      {selectedPayment.utilisateur?.nom}{" "}
+                      {selectedPayment.utilisateur?.prenom}
                     </span>
                   </div>
                 </div>
@@ -316,4 +350,3 @@ function PaymentsPage() {
     </>
   );
 }
-

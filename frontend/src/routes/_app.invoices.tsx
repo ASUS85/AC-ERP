@@ -73,6 +73,7 @@ const cols: Column<InvoiceRow>[] = [
   {
     key: "ref",
     header: "N facture",
+    align: "left",
     render: (i) => <span className="font-medium text-foreground">{i.ref}</span>,
   },
   { key: "tiers", header: "Client / Fournisseur" },

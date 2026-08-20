@@ -362,7 +362,7 @@ function SuppliersPage() {
               rowKey={(s) => s.id}
               rowActions={(fournisseur) => [
                 {
-                  label: "Modifier",
+                  label: "",
                   icon: <Pencil className="h-4 w-4" />,
                   onClick: () => void openEditModal(fournisseur.id),
                 },
