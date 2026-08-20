@@ -131,6 +131,7 @@ function ReportsPage() {
         <SectionCard
           title="Configuration"
           description="Choisissez le type de rapport"
+          headerGradient
         >
           <div className="space-y-2">
             {types.map((t) => (
@@ -204,6 +205,7 @@ function ReportsPage() {
           title="Prévisualisation"
           description={active.label}
           className="lg:col-span-2"
+          headerGradient
           action={
             report && (
               <Button

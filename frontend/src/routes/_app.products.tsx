@@ -391,6 +391,7 @@ function ProductsPage() {
     {
       key: "designation",
       header: "Produit",
+      align: "left",
       render: (product) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">

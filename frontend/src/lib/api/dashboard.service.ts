@@ -23,6 +23,7 @@ export type DashboardOverview = {
     title: string;
     text: string;
     icon: "stock" | "invoice" | "ai" | "goal";
+    createdAt?: string;
   }>;
   recentSales: Array<{
     ref: string;

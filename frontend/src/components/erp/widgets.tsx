@@ -25,11 +25,6 @@ const statCardTones = [
     iconBg: "bg-violet-500/10",
     iconColor: "text-violet-600",
   },
-  {
-    gradient: "from-amber-100/80 via-amber-50/40 to-transparent",
-    iconBg: "bg-amber-500/10",
-    iconColor: "text-amber-600",
-  },
 ];
 
 function toneForLabel(label: string) {
@@ -112,6 +107,7 @@ export function SectionCard({
   children,
   className,
   contentClassName,
+  headerGradient = false,
   style,
 }: {
   title: string;
@@ -120,14 +116,23 @@ export function SectionCard({
   children: ReactNode;
   className?: string;
   contentClassName?: string;
+  headerGradient?: boolean;
   style?: CSSProperties;
 }) {
+  const tone = toneForLabel(title);
+
   return (
     <Card
       className={cn("flex flex-col overflow-hidden p-0 shadow-card", className)}
       style={style}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-3 border-b border-border px-3 py-2",
+          headerGradient && "bg-gradient-to-br",
+          headerGradient && tone.gradient,
+        )}
+      >
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
           {description && (

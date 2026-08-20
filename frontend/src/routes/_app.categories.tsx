@@ -336,17 +336,16 @@ function CategoriesPage() {
           icon={<FolderTree className="h-5 w-5" />}
         />
         <StatCard
-  label="Sous-catégories"
-  value={String(
-    arbre.reduce(
-      (total, categorie) =>
-        total + (categorie.enfants?.length || 0),
-      0,
-    ),
-  )}
-  sub="au total"
-  icon={<FolderTree className="h-5 w-5" />}
-/>
+          label="Sous-catégories"
+          value={String(
+            arbre.reduce(
+              (total, categorie) => total + (categorie.enfants?.length || 0),
+              0,
+            ),
+          )}
+          sub="au total"
+          icon={<FolderTree className="h-5 w-5" />}
+        />
         <StatCard
           label="Avec produits"
           value={String(stats.totalProduits)}
@@ -360,7 +359,7 @@ function CategoriesPage() {
           icon={<Folder className="h-5 w-5" />}
         />
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         {/* Arborescence pliable */}
         <SectionCard
           title="Arborescence"
@@ -380,7 +379,7 @@ function CategoriesPage() {
         {/* Tableau des categories */}
         <SectionCard
           title="Toutes les categories"
-          className="lg:col-span-2"
+          className="lg:col-span-3"
           description={`${meta.total} categorie${meta.total > 1 ? "s" : ""}`}
         >
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

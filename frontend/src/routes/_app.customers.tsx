@@ -88,6 +88,7 @@ const cols: Column<Client>[] = [
   {
     key: "nom",
     header: "Client",
+    align: "left",
     render: (c) => (
       <div className="flex items-center gap-3">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -530,7 +531,7 @@ function CustomersPage() {
               rowKey={(c) => c.id}
               rowActions={(client) => [
                 {
-                  label: " ",
+                  label: "Modifier",
                   icon: <Pencil className="h-4 w-4" />,
                   onClick: () => {
                     setEditingClient(client);
@@ -555,7 +556,7 @@ function CustomersPage() {
                 },
 
                 {
-                  label: "",
+                  label: "Supprimer",
                   icon: <Trash2 className="h-4 w-4" />,
                   destructive: true,
                   onClick: () => openDeleteModal(client),

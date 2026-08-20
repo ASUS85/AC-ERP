@@ -524,6 +524,7 @@ function InventoryPage() {
     {
       key: "produit",
       header: "Produit",
+      align: "left",
       render: (s) => (
         <div>
           <p className="font-medium text-foreground">{s.produit.designation}</p>

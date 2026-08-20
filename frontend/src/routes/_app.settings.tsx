@@ -24,6 +24,8 @@ import {
   BarChart3,
   LineChart,
   Bot,
+  Clock,
+  Calendar,
   ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
@@ -804,6 +806,26 @@ function AuditRow({ audit }: { audit: Audit }) {
 
   const displayData = getDisplayData(audit);
 
+  const formatDateTime = (value: string) => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return { time: "", date: "" };
+
+    const time = new Intl.DateTimeFormat("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+
+    const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(date);
+
+    return { time, date: formattedDate };
+  };
+
+  const { time, date } = formatDateTime(audit.createdAt);
+
   const status =
     typeof audit.newValues?.status === "number"
       ? audit.newValues.status
@@ -932,7 +954,16 @@ function AuditRow({ audit }: { audit: Audit }) {
         {/* Heure + chevron */}
         <div className="flex shrink-0 flex-col items-end gap-0.5">
           <span className="tabular-nums text-xs text-muted-foreground">
-            {fmtTime(audit.createdAt)}
+            <div className="inline-flex flex-col items-end gap-0.5 rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 text-xs">
+              <div className="flex items-center gap-1 font-semibold text-foreground/80">
+                <Clock className="h-3 w-3 text-muted-foreground" />
+                <span>{time}</span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Calendar className="h-3 w-3 text-muted-foreground/70" />
+                <span>{date}</span>
+              </div>
+            </div>
           </span>
           {hasDetails && (
             <ChevronDown

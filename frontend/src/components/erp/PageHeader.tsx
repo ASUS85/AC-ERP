@@ -72,7 +72,7 @@ export function PageHeader({
   ];
 
   return (
-    <div className="relative mb-1 overflow-hidden">
+    <div className="relative mb-2 overflow-hidden">
       <nav className="relative z-10 mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Link
           to="/"

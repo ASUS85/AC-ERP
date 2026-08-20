@@ -248,6 +248,7 @@ function SuppliersPage() {
     {
       key: "raisonSociale",
       header: "Fournisseur",
+      align: "left",
       render: (s) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-warning/15 text-warning-foreground">

@@ -138,6 +138,7 @@ function AiPage() {
           title="Prévision des ventes"
           description="Projection sur 6 mois (modèle prédictif)"
           className="lg:col-span-2"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -198,6 +199,7 @@ function AiPage() {
         <SectionCard
           title="Recommandations IA"
           description="Actions prioritaires"
+          headerGradient
         >
           <div className="space-y-3">
             {recommandations.map((r) => (
@@ -224,6 +226,7 @@ function AiPage() {
         <SectionCard
           title="Risques de rupture de stock"
           description="Produits critiques détectés par l'IA"
+          headerGradient
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

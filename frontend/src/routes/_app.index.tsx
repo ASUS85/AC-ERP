@@ -154,6 +154,27 @@ function Dashboard() {
     }));
   }, [recentSales]);
 
+  const visibleAlerts = useMemo(
+    () =>
+      alerts
+        .map((alert, index) => ({
+          alert,
+          index,
+          createdTime: alert.createdAt
+            ? new Date(alert.createdAt).getTime()
+            : Number.NaN,
+        }))
+        .sort((a, b) => {
+          if (Number.isNaN(a.createdTime) || Number.isNaN(b.createdTime)) {
+            return a.index - b.index;
+          }
+          return a.createdTime - b.createdTime;
+        })
+        .slice(-3)
+        .map(({ alert }) => alert),
+    [alerts],
+  );
+
   const openPreview = async () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
@@ -217,6 +238,7 @@ function Dashboard() {
         <SectionCard
           title="Evolution des ventes & achats"
           description="Chiffre d'affaires mensuel sur 12 mois"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -294,6 +316,7 @@ function Dashboard() {
         <SectionCard
           title="Repartition des stocks"
           description="Par categorie de produits"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -326,6 +349,7 @@ function Dashboard() {
         <SectionCard
           title="Marge mensuelle"
           description="Ventes - achats sur 12 mois"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -373,10 +397,11 @@ function Dashboard() {
         </SectionCard>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SectionCard
           title="Produits les plus vendus"
           description="Top 5 ce mois-ci"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -428,6 +453,7 @@ function Dashboard() {
         <SectionCard
           title="Ventes recentes par statut"
           description="Repartition des dernieres ventes"
+          headerGradient
         >
           <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -456,15 +482,18 @@ function Dashboard() {
             </ResponsiveContainer>
           </ChartFrame>
         </SectionCard>
-      </div>
-
-      <div className="mt-4">
         <SectionCard
           title="Alertes & notifications"
           description="Elements necessitant votre attention"
+          headerGradient
+          action={
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/notifications">Tout voir</Link>
+            </Button>
+          }
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {alerts.map((a) => (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-1">
+            {visibleAlerts.map((a) => (
               <div
                 key={a.title}
                 className="flex items-start gap-3 rounded-lg border border-border p-3"
@@ -490,6 +519,7 @@ function Dashboard() {
         <SectionCard
           title="Dernieres ventes"
           description="Activite recente"
+          headerGradient
           action={
             <Button variant="ghost" size="sm" asChild>
               <Link to="/sales">Tout voir</Link>
@@ -499,7 +529,7 @@ function Dashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border text-left text-xs uppercase bg-secondary/50 tracking-wide text-muted-foreground">
                   <th className="pb-2 font-medium">Reference</th>
                   <th className="pb-2 font-medium">Client</th>
                   <th className="pb-2 font-medium">Date</th>

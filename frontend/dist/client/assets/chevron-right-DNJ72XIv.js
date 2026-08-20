@@ -1,1 +1,0 @@
-import{c}from"./input-CCj4OjLl.js";const o=[["path",{d:"M20 6 9 17l-5-5",key:"1gmf2c"}]],h=c("check",o);const e=[["path",{d:"m9 18 6-6-6-6",key:"mthhwq"}]],n=c("chevron-right",e);export{n as C,h as a};

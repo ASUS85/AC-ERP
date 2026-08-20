@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   CheckCheck,
   LoaderCircle,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard } from "@/components/erp/widgets";
@@ -28,19 +30,19 @@ export const Route = createFileRoute("/_app/notifications")({
 
 const styles: Record<string, { wrap: string; icon: React.ReactNode }> = {
   destructive: {
-    wrap: "bg-destructive/10 text-destructive",
+    wrap: "bg-destructive/10 text-destructive border-destructive/20",
     icon: <FileWarning className="h-4 w-4" />,
   },
   warning: {
-    wrap: "bg-warning/15 text-warning-foreground",
+    wrap: "bg-warning/15 text-warning-foreground border-warning/20",
     icon: <AlertTriangle className="h-4 w-4" />,
   },
   info: {
-    wrap: "bg-info/12 text-info",
+    wrap: "bg-info/12 text-info border-info/20",
     icon: <Sparkles className="h-4 w-4" />,
   },
   success: {
-    wrap: "bg-success/12 text-success",
+    wrap: "bg-success/12 text-success border-success/20",
     icon: <CheckCircle2 className="h-4 w-4" />,
   },
 };
@@ -63,11 +65,6 @@ const isAiNotification = (notification: Notification) =>
     `${notification.titre} ${notification.message}`,
   );
 
-const localDateValue = (date = new Date()) => {
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-};
-
 const dateBounds = (value: string) => {
   const start = new Date(`${value}T00:00:00`);
   const end = new Date(`${value}T23:59:59.999`);
@@ -89,6 +86,24 @@ const relativeTime = (value: string) => {
       return formatter.format(-Math.floor(elapsed / size), unit);
   }
   return "à l'instant";
+};
+
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return { time: "", date: "" };
+
+  const time = new Intl.DateTimeFormat("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+
+  const formattedDate = new Intl.DateTimeFormat("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+
+  return { time, date: formattedDate };
 };
 
 function NotificationsPage() {
@@ -165,7 +180,7 @@ function NotificationsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 bg-primary text-primary-foreground shadow hover:bg-primary/90 hover:text-primary-foreground/90"
+            className="gap-1.5 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground/90 transition-all"
             onClick={markAllAsRead}
           >
             <CheckCheck className="h-4 w-4" /> Tout marquer comme lu
@@ -178,7 +193,7 @@ function NotificationsPage() {
         className="mb-4"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
+          <TabsList className="bg-muted/50 p-1">
             <TabsTrigger value="all">Toutes</TabsTrigger>
             <TabsTrigger value="unread">Non lues</TabsTrigger>
             <TabsTrigger value="ai">Alertes IA</TabsTrigger>
@@ -189,40 +204,48 @@ function NotificationsPage() {
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm outline-none transition-all focus:ring-2 focus:ring-ring"
               aria-label="Filtrer les notifications par date"
             />
           </label>
         </div>
       </Tabs>
+
       <SectionCard
         title="Activité"
         description={`${visibleItems.length} notification${visibleItems.length > 1 ? "s" : ""}${selectedDate ? " pour cette date" : ""}`}
+        headerGradient
       >
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {loading && (
-            <div className="flex justify-center py-8">
-              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="flex justify-center py-10">
+              <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
+
           {!loading && visibleItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <img
                 src="/src/assets/sorry.svg"
                 alt="Aucun élément"
-                className="mb-3 w-28 opacity-90"
+                className="mb-3 w-28 opacity-80"
               />
-              <p className="mt-1 text-xs text-muted-foreground/70">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {selectedDate
                   ? "Aucune notification pour cette date."
                   : "Aucune notification disponible."}
               </p>
             </div>
           )}
+
           {!loading &&
-            visibleItems.map((n) => {
+            visibleItems.map((n, index) => {
+              // 1. On récupère "index" ici
               const s = notificationStyle(n.typeNotif);
               const expanded = expandedIds.has(n.id);
+              const { time, date } = formatDateTime(n.createdAt);
+              const isEven = index % 2 === 0; // 2. On vérifie si l'index est pair
+
               return (
                 <button
                   type="button"
@@ -230,40 +253,75 @@ function NotificationsPage() {
                   onClick={() => toggleNotification(n)}
                   aria-expanded={expanded}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-all hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    n.isLue
-                      ? "border-border"
-                      : "border-primary/20 bg-primary/[0.03]",
+                    "relative group flex w-full items-start gap-3.5 rounded-xl border p-4 text-left transition-all duration-200 hover:shadow-sm hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+
+                    // Notifications non lues
+                    !n.isLue &&
+                      "border-primary/25 bg-primary/10 shadow-xs hover:bg-primary/15",
+
+                    // Notifications lues : Alternance 1 sur 2
+                    n.isLue &&
+                      isEven &&
+                      "border-border/60 bg-primary/5 hover:bg-primary/10",
+                    n.isLue &&
+                      !isEven &&
+                      "border-border/60 bg-card/50 hover:bg-accent/40",
                   )}
                 >
+                  {/* Indicateur visuel d'état non-lu */}
+                  {!n.isLue && (
+                    <span className="absolute top-4 left-2.5 h-2 w-2 rounded-full bg-primary ring-4 ring-primary/10" />
+                  )}
+
+                  {/* Icône de type */}
                   <span
                     className={cn(
-                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border shadow-xs transition-transform group-hover:scale-105",
                       s.wrap,
                     )}
                   >
                     {s.icon}
                   </span>
-                  <div className="min-w-0 flex-1">
+
+                  {/* Contenu principal */}
+                  <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground">
+                      <p
+                        className={cn(
+                          "text-sm tracking-tight text-foreground",
+                          n.isLue ? "font-medium" : "font-semibold",
+                        )}
+                      >
                         {n.titre}
                       </p>
-                      {!n.isLue && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      )}
                     </div>
+
                     <p
                       className={cn(
-                        "whitespace-pre-wrap break-words text-sm text-muted-foreground",
+                        "whitespace-pre-wrap break-words text-xs leading-relaxed text-muted-foreground/90 transition-all",
                         !expanded && "line-clamp-2",
                       )}
                     >
                       {n.message}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground/70">
-                      {relativeTime(n.createdAt)}
-                    </p>
+
+                    <div className="flex items-center gap-1.5 pt-0.5 text-[11px] font-medium text-muted-foreground/70">
+                      <span>{relativeTime(n.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {/* Horodatage à l'extrême droite */}
+                  <div className="shrink-0 self-start text-right pl-2">
+                    <div className="inline-flex flex-col items-end gap-0.5 rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 text-xs">
+                      <div className="flex items-center gap-1 font-semibold text-foreground/80">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <span>{time}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3 text-muted-foreground/70" />
+                        <span>{date}</span>
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
