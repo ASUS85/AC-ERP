@@ -39,6 +39,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({ meta: [{ title: "Assistant ERP — AC ERP" }] }),
@@ -461,13 +463,117 @@ function AssistantPage() {
                   )}
                   <div
                     className={cn(
-                      "max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      "max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                       m.role === "ai"
                         ? "bg-secondary text-foreground"
-                        : "bg-primary text-primary-foreground",
+                        : "bg-primary text-primary-foreground whitespace-pre-wrap",
                     )}
                   >
-                    {m.text}
+                    {m.role === "ai" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Tableaux
+                          table: ({ children }) => (
+                            <div className="my-2 overflow-x-auto rounded-lg border border-border">
+                              <table className="w-full text-sm">
+                                {children}
+                              </table>
+                            </div>
+                          ),
+                          thead: ({ children }) => (
+                            <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
+                              {children}
+                            </thead>
+                          ),
+                          tbody: ({ children }) => (
+                            <tbody className="divide-y divide-border">
+                              {children}
+                            </tbody>
+                          ),
+                          tr: ({ children }) => (
+                            <tr className="transition-colors hover:bg-muted/30">
+                              {children}
+                            </tr>
+                          ),
+                          th: ({ children }) => (
+                            <th className="px-3 py-2 text-left font-semibold">
+                              {children}
+                            </th>
+                          ),
+                          td: ({ children }) => (
+                            <td className="px-3 py-2">{children}</td>
+                          ),
+
+                          // Blocs de code
+                          code: ({ inline, children, ...props }: any) =>
+                            inline ? (
+                              <code
+                                className="rounded bg-background/80 px-1.5 py-0.5 font-mono text-xs text-primary"
+                                {...props}
+                              >
+                                {children}
+                              </code>
+                            ) : (
+                              <pre className="my-2 overflow-x-auto rounded-lg bg-background/80 p-3">
+                                <code
+                                  className="font-mono text-xs text-foreground"
+                                  {...props}
+                                >
+                                  {children}
+                                </code>
+                              </pre>
+                            ),
+
+                          // Titres
+                          h2: ({ children }) => (
+                            <h2 className="mb-2 mt-3 text-sm font-bold text-foreground first:mt-0">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="mb-1 mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground first:mt-0">
+                              {children}
+                            </h3>
+                          ),
+
+                          // Listes
+                          ul: ({ children }) => (
+                            <ul className="my-1.5 space-y-1 pl-4">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="my-1.5 list-decimal space-y-1 pl-4">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="text-sm leading-relaxed">
+                              {children}
+                            </li>
+                          ),
+
+                          // Gras
+                          strong: ({ children }) => (
+                            <strong className="font-semibold text-foreground">
+                              {children}
+                            </strong>
+                          ),
+
+                          // Paragraphes
+                          p: ({ children }) => (
+                            <p className="mb-1.5 leading-relaxed last:mb-0">
+                              {children}
+                            </p>
+                          ),
+                        }}
+                      >
+                        {m.text}
+                      </ReactMarkdown>
+                    ) : (
+                      m.text
+                    )}
                   </div>
                 </div>
               ))}

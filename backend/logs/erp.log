@@ -4678,3 +4678,59 @@ Please make sure your database server is running at `localhost:3306`. {"stack":"
 2026-08-20T19:17:58.142Z info: Socket connecte EtTxB0F_dcxDyxXzAAAO
 2026-08-20T19:18:25.685Z info: Socket deconnecte EtTxB0F_dcxDyxXzAAAO
 2026-08-20T19:18:29.304Z info: Socket connecte UyFgeUDjqV6nWUpPAAAR
+2026-08-20T19:47:51.309Z info: Base de donnees connectee
+2026-08-20T19:47:51.428Z info: Serveur demarre port 3000
+2026-08-20T19:47:51.570Z info: Socket connecte 69K6f1mxJTeg23eGAAAC
+2026-08-20T19:48:11.622Z info: Socket deconnecte 69K6f1mxJTeg23eGAAAC
+2026-08-20T19:48:11.812Z info: Socket connecte XLlKXOBOlqkazV_fAAAF
+2026-08-20T19:48:16.911Z info: Socket deconnecte XLlKXOBOlqkazV_fAAAF
+2026-08-20T19:48:18.131Z info: Socket connecte 4XpcE-Xo3oskym12AAAI
+2026-08-20T20:06:42.428Z info: Base de donnees connectee
+2026-08-20T20:06:42.445Z info: Serveur demarre port 3000
+2026-08-20T20:06:44.350Z info: Socket connecte l7fS3ykSR_1S1Y2ZAAAB
+2026-08-20T20:07:02.770Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:07:27.515Z info: Base de donnees connectee
+2026-08-20T20:07:27.532Z info: Serveur demarre port 3000
+2026-08-20T20:07:29.698Z info: Socket connecte i5z6ZbCKb9hyC_9MAAAB
+2026-08-20T20:08:08.337Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:13:33.997Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:15:33.418Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:15:37.578Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:15:48.506Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:17:45.319Z info: Arret du serveur
+2026-08-20T20:17:52.417Z info: Base de donnees connectee
+2026-08-20T20:17:52.430Z info: Serveur demarre port 3000
+2026-08-20T20:17:52.509Z info: Socket connecte W5xFs3lyF_tDDXq6AAAB
+2026-08-20T20:18:09.525Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:18:36.672Z error: Le service IA est temporairement indisponible. Réessayez dans quelques instants. {"stack":"ApiError: Le service IA est temporairement indisponible. Réessayez dans quelques instants.\n    at askClaude (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:48:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async Object.chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.service.js:534:20)\n    at async chat (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/modules/ia/ia.controller.js:9:9)","code":"IA_UNAVAILABLE"}
+2026-08-20T20:18:40.657Z info: Arret du serveur
+2026-08-20T20:18:48.638Z info: Base de donnees connectee
+2026-08-20T20:18:48.769Z info: Serveur demarre port 3000
+2026-08-20T20:18:54.153Z info: Socket connecte nmlTQ1-qjUOU8otWAAAB
+2026-08-20T20:19:18.226Z info: Arret du serveur
+2026-08-21T10:07:57.441Z error: Can't reach database server at `localhost:3306`
+
+Please make sure your database server is running at `localhost:3306`. {"stack":"PrismaClientInitializationError: Can't reach database server at `localhost:3306`\n\nPlease make sure your database server is running at `localhost:3306`.\n    at r (C:\\Users\\Asus\\Documents\\Travail\\Projet Soutenance Licence\\ac_erp\\backend\\node_modules\\@prisma\\client\\runtime\\library.js:112:2770)\n    at async connectDB (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/config/database.js:17:5)\n    at async bootstrap (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp/backend/src/server.js:10:3)"}
+2026-08-21T10:10:00.277Z info: Base de donnees connectee
+2026-08-21T10:10:00.384Z info: Serveur demarre port 3000
+2026-08-21T10:10:04.778Z info: Socket connecte sjPs-MjNwjaszg-LAAAB
+2026-08-21T10:23:48.416Z info: Base de donnees connectee
+2026-08-21T10:23:48.439Z info: Serveur demarre port 3000
+2026-08-21T10:23:51.140Z info: Socket connecte iERqdWsZaKZPKByJAAAB
+2026-08-21T10:35:24.951Z info: Base de donnees connectee
+2026-08-21T10:35:25.009Z info: Serveur demarre port 3000
+2026-08-21T10:35:28.218Z info: Socket connecte bZqsiXCg3ZeKIoG_AAAB
+2026-08-21T10:36:08.350Z info: Base de donnees connectee
+2026-08-21T10:36:08.580Z info: Serveur demarre port 3000
+2026-08-21T10:36:11.141Z info: Socket connecte 5GLhAOedMwuauj-_AAAB
+2026-08-21T10:38:06.106Z info: Base de donnees connectee
+2026-08-21T10:38:06.252Z info: Serveur demarre port 3000
+2026-08-21T10:38:22.400Z info: Base de donnees connectee
+2026-08-21T10:38:22.427Z info: Serveur demarre port 3000
+2026-08-21T10:38:26.247Z info: Socket connecte qf2r0Q00OQeZSi_HAAAB
+2026-08-21T10:39:47.241Z info: Base de donnees connectee
+2026-08-21T10:39:47.294Z info: Serveur demarre port 3000
+2026-08-21T10:45:39.978Z info: Socket connecte REDsNBAv4hns1qEnAAAC
+2026-08-21T10:50:31.174Z info: Base de donnees connectee
+2026-08-21T10:50:31.325Z info: Serveur demarre port 3000
+2026-08-21T10:50:34.337Z info: Socket connecte ATQ9ws1W09WguVl3AAAB
