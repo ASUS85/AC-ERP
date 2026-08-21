@@ -312,7 +312,7 @@ function RolesPage() {
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-12 items-start">
           {/* Card Rôles (Hauteur Fixe + Scroll interne) */}
           <div className="lg:col-span-3 rounded-xl border border-border/70 bg-card p-4 shadow-sm h-[800px] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-border/50 shrink-0">
+            <div className="flex items-center justify-between pb-3 border-b border-border/50 shrink-0 bg-primary/10 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold text-sm text-foreground">
