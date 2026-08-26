@@ -24,6 +24,20 @@ export async function ensureSettingsTables() {
     mode_maintenance BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
   )`);
+  // Migration : colonne du lien vers la plateforme d'échange
+  // (MySQL 8 ne supporte pas ADD COLUMN IF NOT EXISTS)
+  const [linkCol] = await prisma.$queryRawUnsafe(
+    `SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = 'parametres_entreprise'
+       AND COLUMN_NAME = 'lien_plateforme_echange'`,
+  );
+  if (Number(linkCol?.cnt) === 0) {
+    await prisma.$executeRawUnsafe(
+      "ALTER TABLE parametres_entreprise ADD COLUMN lien_plateforme_echange VARCHAR(500) NULL AFTER logo",
+    );
+  }
+
   await prisma.$executeRawUnsafe(
     "INSERT IGNORE INTO parametres_entreprise (id) VALUES ('default')",
   );
@@ -43,6 +57,7 @@ const companyFromDb = (row) => ({
   devise: row.devise,
   fuseauHoraire: row.fuseau_horaire,
   logo: row.logo,
+  lienPlateformeEchange: row.lien_plateforme_echange,
   updatedAt: normalizeDbDate(row.updated_at),
 });
 const systemFromDb = (row) => ({
@@ -66,7 +81,7 @@ export const parametresRepository = {
   async entreprise() {
     await ensureSettingsTables();
     const [row] =
-      await prisma.$queryRawUnsafe(`SELECT id, raison_sociale, numero_fiscal, adresse, telephone, email, devise, fuseau_horaire, logo,
+      await prisma.$queryRawUnsafe(`SELECT id, raison_sociale, numero_fiscal, adresse, telephone, email, devise, fuseau_horaire, logo, lien_plateforme_echange,
       DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s.%f') AS updated_at
       FROM parametres_entreprise WHERE id = 'default'`);
     return companyFromDb(row);
@@ -76,7 +91,7 @@ export const parametresRepository = {
     const current = await this.entreprise();
     const value = { ...current, ...data };
     await prisma.$executeRawUnsafe(
-      "UPDATE parametres_entreprise SET raison_sociale=?, numero_fiscal=?, adresse=?, telephone=?, email=?, devise=?, fuseau_horaire=?, logo=? WHERE id='default'",
+      "UPDATE parametres_entreprise SET raison_sociale=?, numero_fiscal=?, adresse=?, telephone=?, email=?, devise=?, fuseau_horaire=?, logo=?, lien_plateforme_echange=? WHERE id='default'",
       value.raisonSociale,
       value.numeroFiscal || null,
       value.adresse || null,
@@ -85,6 +100,7 @@ export const parametresRepository = {
       value.devise,
       value.fuseauHoraire,
       value.logo || null,
+      value.lienPlateformeEchange || null,
     );
     return this.entreprise();
   },

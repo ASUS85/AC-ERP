@@ -2,7 +2,7 @@ import { ApiError } from "../../utils/response.util.js";
 import { authRepository } from "../auth/auth.repository.js";
 import { parametresRepository } from "./parametres.repository.js";
 
-const companyFields = ["raisonSociale", "numeroFiscal", "adresse", "telephone", "email", "devise", "fuseauHoraire", "logo"];
+const companyFields = ["raisonSociale", "numeroFiscal", "adresse", "telephone", "email", "devise", "fuseauHoraire", "logo", "lienPlateformeEchange"];
 const systemFields = ["notificationsEmail", "alertesIa", "facturationAutomatique"];
 
 const pick = (source, fields) => Object.fromEntries(fields.filter((field) => source[field] !== undefined).map((field) => [field, source[field]]));

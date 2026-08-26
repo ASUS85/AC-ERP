@@ -27,9 +27,11 @@ import {
   Clock,
   Calendar,
   ChevronDown,
+  DatabaseBackup,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard } from "@/components/erp/widgets";
+import { AppModal } from "@/components/erp/AppModal";
 import { useGlobalLoader } from "@/components/erp/GlobalLoader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveAvatarUrl } from "@/lib/avatar";
@@ -49,10 +51,17 @@ import {
 } from "@/lib/api/auth.service";
 import {
   getJournal,
+  getSysteme,
   updateEntreprise,
   updateMaintenance,
   updateSysteme,
 } from "@/lib/api/parametres.service";
+import {
+  createBackup,
+  listBackups,
+  restoreBackup,
+  type BackupInfo,
+} from "@/lib/api/backup.service";
 import {
   AFRICAN_CURRENCIES,
   getCurrencyMeta,
@@ -88,6 +97,7 @@ type Company = {
   devise: string;
   fuseauHoraire: string;
   logo?: string;
+  lienPlateformeEchange?: string;
 };
 type SystemSettings = {
   notificationsEmail: boolean;
@@ -116,7 +126,7 @@ type Audit = {
   createdAt: string;
   utilisateur?: { nom: string; prenom: string; email: string; avatar?: string };
 };
-type Session = { id: string; createdAt: string; expiresAt: string };
+type Session = { id: string; createdAt: string; lastSeenAt: string };
 type ApiResponse<T> = { data: T };
 type ApiError = { response?: { data?: { error?: { message?: unknown } } } };
 type AvatarUploadResponse = { avatar: string };
@@ -303,6 +313,7 @@ const DISPLAY_FIELDS: Record<string, string> = {
   devise: "Devise",
   fuseauHoraire: "Fuseau horaire",
   adresse: "Adresse",
+  lienPlateformeEchange: "Lien plateforme d'échange",
 };
 
 // ── Champs techniques/sensibles à masquer ────────────────────────────────
@@ -713,6 +724,23 @@ function fmtTime(date: string | Date): string {
   });
 }
 
+// ── Formatage date + heure d'une sauvegarde ──────────────────────────────
+function fmtBackupDateTime(value: string): { time: string; date: string } {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return { time: "—", date: "—" };
+  return {
+    time: new Intl.DateTimeFormat("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(d),
+    date: new Intl.DateTimeFormat("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(d),
+  };
+}
+
 function getDisplayName(user?: Audit["utilisateur"]) {
   const fullName = `${user?.prenom || ""} ${user?.nom || ""}`.trim();
 
@@ -1007,6 +1035,10 @@ function SettingsPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const [loading, setLoading] = useState(true);
+  const [backups, setBackups] = useState<BackupInfo[]>([]);
+  const [creatingBackup, setCreatingBackup] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState<BackupInfo | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const canManageSettings = hasPermission("users", "modifier");
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
@@ -1018,6 +1050,8 @@ function SettingsPage() {
   const setCachedEntreprise = useSettingsStore((state) => state.setEntreprise);
   const setCachedSysteme = useSettingsStore((state) => state.setSysteme);
   const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
+  // L'API /backup exige la permission users:supprimer (super admin)
+  const canManageBackups = hasPermission("users", "supprimer");
 
   // Chargement initial
   useEffect(() => {
@@ -1082,6 +1116,17 @@ function SettingsPage() {
       .then((r) => setAudits(unwrap(r as ApiResponse<Audit[]>) || []))
       .catch(() => toast.error("Impossible de charger le journal"));
   }, [logDate, canManageSettings]);
+
+  // Chargement des sauvegardes (synchronisation)
+  useEffect(() => {
+    if (!canManageBackups) {
+      setBackups([]);
+      return;
+    }
+    listBackups()
+      .then((r) => setBackups(unwrap(r as ApiResponse<BackupInfo[]>) || []))
+      .catch(() => toast.error("Impossible de charger les sauvegardes"));
+  }, [canManageBackups]);
 
   // Nettoyage preview avatar
   useEffect(() => {
@@ -1235,6 +1280,63 @@ function SettingsPage() {
       toast.success("Les autres sessions ont été déconnectées");
     } catch {
       toast.error("Impossible de révoquer les sessions");
+    }
+  };
+
+  const refreshBackups = async () => {
+    try {
+      const r = await listBackups();
+      setBackups(unwrap(r as ApiResponse<BackupInfo[]>) || []);
+    } catch {
+      // La liste sera rafraîchie au prochain chargement
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    if (creatingBackup) return;
+    setCreatingBackup(true);
+    try {
+      await createBackup();
+      await refreshBackups();
+      toast.success("Sauvegarde créée avec succès");
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Échec de la création de la sauvegarde"));
+    } finally {
+      setCreatingBackup(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!selectedBackup || restoring) return;
+
+    // Vérifie l'état FRAIS du mode maintenance côté serveur
+    try {
+      const r = await getSysteme();
+      const sys = unwrap(r as ApiResponse<SystemSettings>);
+      setSystem(sys);
+      setCachedSysteme(sys);
+      if (!sys?.modeMaintenance) {
+        toast.warning("Mode maintenance requis", {
+          description:
+            "La restauration nécessite que le système soit préalablement placé en mode maintenance. Activez-le dans les paramètres système avant de restaurer les données.",
+        });
+        return;
+      }
+    } catch {
+      toast.error("Impossible de vérifier l'état du système");
+      return;
+    }
+
+    setRestoring(true);
+    try {
+      await restoreBackup(selectedBackup.filename);
+      toast.success("Base de données restaurée avec succès");
+      setSelectedBackup(null);
+    } catch (error: unknown) {
+      toast.error(errorMessage(error, "Échec de la restauration"));
+    } finally {
+      setRestoring(false);
+      await refreshBackups();
     }
   };
 
@@ -1452,6 +1554,14 @@ function SettingsPage() {
                     placeholder="https://exemple.com/logo.png"
                     onChange={(v) => updateCompanyField("logo", v)}
                   />
+                  <Field
+                    label="Lien plateforme d'échange"
+                    value={company.lienPlateformeEchange || ""}
+                    placeholder="https://chat.whatsapp.com/... ou https://t.me/..."
+                    onChange={(v) =>
+                      updateCompanyField("lienPlateformeEchange", v)
+                    }
+                  />
                 </div>
               )}
               <Button className="mt-4" onClick={saveCompany}>
@@ -1464,44 +1574,125 @@ function SettingsPage() {
         {/* ── Système ── */}
         {canManageSettings ? (
           <TabsContent value="system">
-            <SectionCard
-              title="Paramètres système"
-              description="Préférences globales de la plateforme"
-            >
-              {system && (
-                <div className="space-y-4">
-                  <Setting
-                    label="Notifications par e-mail"
-                    description="Recevoir les alertes importantes par e-mail"
-                    checked={system.notificationsEmail}
-                    onChange={(v) => toggleSystem("notificationsEmail", v)}
-                  />
-                  <Setting
-                    label="Alertes IA proactives"
-                    description="Prévisions et recommandations automatiques"
-                    checked={system.alertesIa}
-                    onChange={(v) => toggleSystem("alertesIa", v)}
-                  />
-                  <Setting
-                    label="Facturation automatique"
-                    description="Générer les factures à la validation des ventes"
-                    checked={system.facturationAutomatique}
-                    onChange={(v) => toggleSystem("facturationAutomatique", v)}
-                  />
-                  <Setting
-                    label="Mode maintenance"
-                    description={
-                      isSuperAdmin
-                        ? "Bloque les écritures pour tous sauf le super administrateur"
-                        : "Seul le super administrateur peut modifier ce réglage"
-                    }
-                    checked={system.modeMaintenance}
-                    disabled={!isSuperAdmin}
-                    onChange={(v) => toggleSystem("modeMaintenance", v)}
-                  />
-                </div>
-              )}
-            </SectionCard>
+            <div className="grid gap-4">
+              <SectionCard
+                title="Paramètres système"
+                description="Préférences globales de la plateforme"
+              >
+                {system && (
+                  <div className="space-y-4">
+                    <Setting
+                      label="Notifications par e-mail"
+                      description="Recevoir les alertes importantes par e-mail"
+                      checked={system.notificationsEmail}
+                      onChange={(v) => toggleSystem("notificationsEmail", v)}
+                    />
+                    <Setting
+                      label="Alertes IA proactives"
+                      description="Prévisions et recommandations automatiques"
+                      checked={system.alertesIa}
+                      onChange={(v) => toggleSystem("alertesIa", v)}
+                    />
+                    <Setting
+                      label="Facturation automatique"
+                      description="Générer les factures à la validation des ventes"
+                      checked={system.facturationAutomatique}
+                      onChange={(v) =>
+                        toggleSystem("facturationAutomatique", v)
+                      }
+                    />
+                    <Setting
+                      label="Mode maintenance"
+                      description={
+                        isSuperAdmin
+                          ? "Bloque les écritures pour tous sauf le super administrateur"
+                          : "Seul le super administrateur peut modifier ce réglage"
+                      }
+                      checked={system.modeMaintenance}
+                      disabled={!isSuperAdmin}
+                      onChange={(v) => toggleSystem("modeMaintenance", v)}
+                    />
+                  </div>
+                )}
+              </SectionCard>
+
+              {/* ── Synchronisation (sauvegardes) ── */}
+              {canManageBackups ? (
+                <SectionCard
+                  title="Synchronisation"
+                  description="Sauvegardes de la base de données"
+                >
+                  <div className="flex items-center gap-3 rounded-lg bg-secondary/50 p-4">
+                    <DatabaseBackup className="h-8 w-8 text-primary" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {backups.length} sauvegarde
+                        {backups.length > 1 ? "s" : ""} disponible
+                        {backups.length > 1 ? "s" : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Sauvegarde automatique chaque nuit à 2h00
+                      </p>
+                    </div>
+                  </div>
+
+                  {backups.length > 0 && (
+                    <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+                      {backups.slice(0, 5).map((backup) => {
+                        const { time, date } = fmtBackupDateTime(
+                          backup.createdAt,
+                        );
+                        return (
+                          <button
+                            key={backup.filename}
+                            type="button"
+                            onClick={() => setSelectedBackup(backup)}
+                            className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-border/70 bg-background p-3 text-left transition-colors hover:border-primary/40 hover:bg-muted/30"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate font-mono text-xs text-muted-foreground">
+                                {backup.filename}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground/70">
+                                {backup.sizeKb} Ko
+                              </p>
+                            </div>
+                            <div className="inline-flex shrink-0 flex-col items-end gap-0.5 rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 text-xs">
+                              <div className="flex items-center gap-1 font-semibold text-foreground/80">
+                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <span>{time}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <Calendar className="h-3 w-3 text-muted-foreground/70" />
+                                <span>{date}</span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <Button
+                    className="mt-4 w-full"
+                    onClick={handleCreateBackup}
+                    disabled={creatingBackup}
+                  >
+                    {creatingBackup ? (
+                      <>
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                        Sauvegarde en cours...
+                      </>
+                    ) : (
+                      <>
+                        <DatabaseBackup className="mr-2 h-4 w-4" />
+                        Lancer la sauvegarde
+                      </>
+                    )}
+                  </Button>
+                </SectionCard>
+              ) : null}
+            </div>
           </TabsContent>
         ) : null}
 
@@ -1639,6 +1830,86 @@ function SettingsPage() {
           </TabsContent>
         ) : null}
       </Tabs>
+
+      {/* ── Modal détails / restauration d'une sauvegarde ── */}
+      <AppModal
+        open={Boolean(selectedBackup)}
+        onOpenChange={(open) => {
+          if (!open && !restoring) setSelectedBackup(null);
+        }}
+        title="Détails de la sauvegarde"
+        description="Consultation d'une sauvegarde"
+        size="lg"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={restoring}
+              onClick={() => setSelectedBackup(null)}
+            >
+              Fermer
+            </Button>
+            <Button onClick={handleRestore} disabled={restoring}>
+              {restoring ? (
+                <>
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  Restauration en cours...
+                </>
+              ) : (
+                <>
+                  <DatabaseBackup className="mr-2 h-4 w-4" />
+                  Restaurer cette sauvegarde
+                </>
+              )}
+            </Button>
+          </div>
+        }
+      >
+        {selectedBackup && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <span className="text-sm text-muted-foreground">Fichier</span>
+                <span className="max-w-[60%] truncate font-mono text-xs font-medium">
+                  {selectedBackup.filename}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <span className="text-sm text-muted-foreground">Date</span>
+                <span className="text-sm font-medium">
+                  {fmtBackupDateTime(selectedBackup.createdAt).date}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <span className="text-sm text-muted-foreground">Heure</span>
+                <span className="text-sm font-medium">
+                  {fmtBackupDateTime(selectedBackup.createdAt).time}
+                </span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border bg-background p-3">
+                <span className="text-sm text-muted-foreground">Taille</span>
+                <span className="text-sm font-medium">
+                  {selectedBackup.sizeKb} Ko
+                </span>
+              </div>
+            </div>
+
+            {!system?.modeMaintenance && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+                Le mode maintenance doit être activé avant toute restauration.
+                Activez-le dans les paramètres système ci-dessus.
+              </div>
+            )}
+
+            {restoring && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs text-foreground">
+                Restauration en cours… Veuillez patienter et ne pas fermer cette
+                page pendant l'opération.
+              </div>
+            )}
+          </div>
+        )}
+      </AppModal>
     </>
   );
 }

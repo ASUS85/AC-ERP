@@ -1,0 +1,1 @@
+import{o as r}from"./index-BafRV8lL.js";const e=s=>r.get("/fournisseurs",{params:s}),t=s=>r.get(`/fournisseurs/${s}`),n=s=>r.post("/fournisseurs",s),i=(s,u)=>r.put(`/fournisseurs/${s}`,u);export{t as a,n as c,e as g,i as u};

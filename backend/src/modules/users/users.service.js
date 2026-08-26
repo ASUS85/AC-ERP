@@ -6,6 +6,7 @@ import { ApiError } from "../../utils/response.util.js";
 import { BCRYPT_ROUNDS } from "../../config/constants.js";
 import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { sendWelcomeEmail } from "../../services/email.service.js";
+import { parametresRepository } from "../parametres/parametres.repository.js";
 import { usersRepository } from "./users.repository.js";
 
 function normalizeUserPayload(data) {
@@ -110,7 +111,18 @@ export const usersService = {
 
     try {
       const user = await usersRepository.create(payload);
-      sendWelcomeEmail(user.email, user.nom, motDePasseTemp).catch(() => {});
+      // Inclut le lien vers la plateforme d'échange (paramètres entreprise)
+      parametresRepository
+        .entreprise()
+        .then((entreprise) =>
+          sendWelcomeEmail(
+            user.email,
+            user.nom,
+            motDePasseTemp,
+            entreprise?.lienPlateformeEchange || null,
+          ),
+        )
+        .catch(() => {});
       return user;
     } catch (error) {
       if (

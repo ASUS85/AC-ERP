@@ -64,7 +64,14 @@ function maskEmail(email) {
   return `${visible}${"*".repeat(Math.max(local.length - 2, 3))}@${domain}`;
 }
 
-async function createMfaChallenge(user) {
+function requestSessionMeta(req) {
+  return {
+    userAgent: req?.headers?.["user-agent"] || null,
+    ipAddress: req?.ip || req?.socket?.remoteAddress || null,
+  };
+}
+
+async function createMfaChallenge(user, meta = {}) {
   const code = generateMfaCode();
   const mfaToken = crypto.randomUUID();
   const now = Date.now();
@@ -75,6 +82,7 @@ async function createMfaChallenge(user) {
     expiresAt: now + MFA_CODE_TTL_MS,
     resendAfter: now + MFA_RESEND_DELAY_MS,
     attempts: 0,
+    meta,
   });
 
   await sendMfaCodeEmail(user.email, user.prenom || user.nom || "Utilisateur", code);
@@ -89,10 +97,20 @@ async function createMfaChallenge(user) {
   };
 }
 
-async function issueSession(user) {
-  const payload = { userId: user.id, roleId: user.idRole, permissions: permissionsFromUser(user) };
+async function issueSession(user, meta = {}) {
+  const session = await authRepository.createSession({
+    userId: user.id,
+    userAgent: meta.userAgent || null,
+    ipAddress: meta.ipAddress || null,
+  });
+  const payload = {
+    userId: user.id,
+    sessionId: session.id,
+    roleId: user.idRole,
+    permissions: permissionsFromUser(user),
+  };
   const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken({ userId: user.id });
+  const refreshToken = generateRefreshToken({ userId: user.id, sessionId: session.id });
   await authRepository.createRefreshToken({
     token: refreshToken,
     idUtilisateur: user.id,
@@ -103,7 +121,7 @@ async function issueSession(user) {
 }
 
 export const authService = {
-  async login({ email, password }) {
+  async login({ email, password }, req) {
     const user = await authRepository.findUserByEmail(email);
     if (!user) throw new ApiError(401, "INVALID_CREDENTIALS", "Email ou mot de passe invalide");
     if (user.statut !== "ACTIF") throw new ApiError(403, "ACCOUNT_DISABLED", "Compte inactif ou bloque");
@@ -122,7 +140,7 @@ export const authService = {
     }
 
     await authRepository.updateUser(user.id, { failedAttempts: 0, lockedUntil: null });
-    return createMfaChallenge(user);
+    return createMfaChallenge(user, requestSessionMeta(req));
   },
   async verifyMfa({ mfaToken, code }) {
     const challenge = mfaChallenges.get(mfaToken);
@@ -143,7 +161,7 @@ export const authService = {
     mfaChallenges.delete(mfaToken);
     const user = await authRepository.findUserById(challenge.userId);
     if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
-    return issueSession(user);
+    return issueSession(user, challenge.meta);
   },
   async resendMfa({ mfaToken }) {
     const challenge = mfaChallenges.get(mfaToken);
@@ -217,6 +235,7 @@ export const authService = {
     await authRepository.updateUser(user.id, { passwordHash, failedAttempts: 0, lockedUntil: null });
     await authRepository.markPasswordResetTokenUsed(resetToken.id);
     await authRepository.revokeRefreshTokensByUser(user.id);
+    await authRepository.deleteSessionsByUser(user.id);
 
     return { changed: true };
   },
@@ -224,6 +243,12 @@ export const authService = {
     if (!refreshToken) return { revoked: false };
     const existing = await authRepository.findRefreshToken(refreshToken);
     if (existing && !existing.isRevoked) await authRepository.revokeRefreshToken(refreshToken);
+    try {
+      const payload = verifyRefreshToken(refreshToken);
+      if (payload.sessionId) await authRepository.deleteSession(payload.sessionId);
+    } catch {
+      // Le refresh token peut deja etre invalide ou expire; la deconnexion reste idempotente.
+    }
     return { revoked: true };
   },
   async refresh(refreshToken) {
@@ -233,10 +258,19 @@ export const authService = {
       throw new ApiError(401, "UNAUTHORIZED", "Refresh token invalide");
     }
     const payload = verifyRefreshToken(refreshToken);
+    if (!payload.sessionId) {
+      throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
+    }
+    const session = await authRepository.findSession(payload.sessionId);
+    if (!session || session.userId !== payload.userId) {
+      throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
+    }
     const user = await authRepository.findUserById(payload.userId);
     if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+    await authRepository.touchSession(payload.sessionId);
     const accessToken = generateAccessToken({
       userId: user.id,
+      sessionId: payload.sessionId,
       roleId: user.idRole,
       permissions: permissionsFromUser(user),
     });
@@ -261,10 +295,11 @@ export const authService = {
     return publicUser(await authRepository.updateUser(userId, data));
   },
   sessions(userId) {
-    return authRepository.listRefreshTokens(userId);
+    return authRepository.listSessions(userId);
   },
-  async revokeOtherSessions(userId, currentToken) {
-    const result = await authRepository.revokeOtherRefreshTokens(userId, currentToken);
+  async revokeOtherSessions(userId, sessionId) {
+    if (!sessionId) throw new ApiError(401, "UNAUTHORIZED", "Session courante invalide");
+    const result = await authRepository.deleteOtherSessions(userId, sessionId);
     return { revoked: result.count };
   },
   async changePassword(userId, { ancienPassword, nouveauPassword }) {

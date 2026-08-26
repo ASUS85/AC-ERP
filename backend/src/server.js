@@ -2,6 +2,7 @@ import "dotenv/config";
 import app from "./app.js";
 import prisma, { connectDB } from "./config/database.js";
 import { initSocket } from "./services/socket.service.js";
+import { initCrons } from "./cron/index.js";
 import logger from "./utils/logger.js";
 
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ async function bootstrap() {
   });
 
   initSocket(server);
+  initCrons();
 
   const shutdown = async () => {
     logger.info("Arret du serveur");

@@ -729,6 +729,7 @@ function SalesPage() {
               description="Cliquez pour ajouter au panier"
               className="min-h-0 lg:col-span-2"
               contentClassName="flex min-h-0 flex-1 flex-col"
+              headerGradient
               style={
                 catalogHeight ? { height: `${catalogHeight}px` } : undefined
               }
@@ -839,6 +840,7 @@ function SalesPage() {
                 description={`${cart.length} article(s)`}
                 className="min-h-0"
                 contentClassName="min-h-0"
+                headerGradient
               >
                 <div className="mb-4 space-y-3 rounded-lg border border-border p-3">
                   <Label>Client</Label>
@@ -1110,7 +1112,7 @@ function SalesPage() {
         </TabsContent>
 
         <TabsContent value="list">
-          <SectionCard title="Historique des ventes">
+          <SectionCard title="Historique des ventes" headerGradient>
             <div className="mb-4 flex items-center gap-2">
               <div className="relative w-full max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

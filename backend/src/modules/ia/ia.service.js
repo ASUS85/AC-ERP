@@ -7,7 +7,7 @@ import { ApiError } from "../../utils/response.util.js";
 import { renderPdfDocument } from "../../services/pdf-render.service.js";
 import { iaRepository } from "./ia.repository.js";
 
-const MODEL = process.env.LLM_MODEL || "claude-haiku-4-5";
+const MODEL = process.env.LLM_MODEL;
 const FALLBACK_RECOMMENDATIONS = [
   "Analyser les tendances de vente récentes.",
   "Vérifier les niveaux de stock critiques.",
@@ -15,7 +15,7 @@ const FALLBACK_RECOMMENDATIONS = [
   "Optimiser les délais de réapprovisionnement.",
 ];
 const number = (value) => Number(value || 0);
-const money = (value) => `${number(value).toLocaleString("fr-FR")} FCFA`;
+const money = (value) => `${number(value).toLocaleString("fr-FR")}`;
 const escapeHtml = (value = "") =>
   String(value)
     .replace(/&/g, "&amp;")
@@ -32,7 +32,7 @@ function requireApiKey() {
 async function askClaude(
   system,
   messages,
-  maxTokens = Number(process.env.LLM_MAX_TOKENS) || 2000,
+  maxTokens = Number(process.env.LLM_MAX_TOKENS),
 ) {
   requireApiKey();
   try {

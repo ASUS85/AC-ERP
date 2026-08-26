@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
+import prisma from "../config/database.js";
 import { verifyAccessToken } from "../services/jwt.service.js";
 import { ApiError } from "../utils/response.util.js";
 
-export function authenticate(req, _res, next) {
+export async function authenticate(req, _res, next) {
   try {
     const header = req.headers.authorization || "";
     const [scheme, token] = header.split(" ");
@@ -11,8 +12,24 @@ export function authenticate(req, _res, next) {
     }
 
     const payload = verifyAccessToken(token);
+    const userId = payload.userId || payload.id;
+    if (!userId || !payload.sessionId) {
+      throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: payload.sessionId },
+      select: { id: true, userId: true },
+    });
+
+    if (!session || session.userId !== userId) {
+      throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
+    }
+
     req.user = {
-      userId: payload.userId || payload.id,
+      id: userId,
+      userId,
+      sessionId: session.id,
       roleId: payload.roleId,
       permissions: payload.permissions || [],
     };
@@ -25,4 +42,3 @@ export function authenticate(req, _res, next) {
     next(error instanceof ApiError ? error : new ApiError(401, "UNAUTHORIZED", "Token invalide"));
   }
 }
-

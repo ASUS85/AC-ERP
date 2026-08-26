@@ -68,10 +68,7 @@ export const uploadAvatar = (file: File) => {
   });
 };
 export const getSessions = () => api.get("/auth/sessions");
-export const revokeOtherSessions = () =>
-  api.delete("/auth/sessions/others", {
-    data: { refreshToken: localStorage.getItem("erp_refresh_token") },
-  });
+export const revokeOtherSessions = () => api.delete("/auth/sessions/others");
 export const changePassword = (
   ancienPassword: string,
   nouveauPassword: string,

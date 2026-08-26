@@ -6,7 +6,7 @@ export const authController = {
     try {
       return sendSuccess(
         res,
-        await authService.login(req.body),
+        await authService.login(req.body, req),
         "Connexion reussie",
       );
     } catch (error) {
@@ -136,8 +136,8 @@ export const authController = {
       return sendSuccess(
         res,
         await authService.revokeOtherSessions(
-          req.user.userId,
-          req.body.refreshToken,
+          req.user.id,
+          req.user.sessionId,
         ),
         "Autres sessions revoquees",
       );

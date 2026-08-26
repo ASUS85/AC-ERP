@@ -204,6 +204,7 @@ model Utilisateur {
   createdAt                DateTime                 @default(now()) @map("created_at")
   updatedAt                DateTime                 @updatedAt @map("updated_at")
   role                     Role                     @relation(fields: [idRole], references: [id], map: "fk_user_role")
+  sessions                 Session[]
   refreshTokens            RefreshToken[]
   passwordResetTokens      PasswordResetToken[]
   auditLogs                AuditLog[]
@@ -225,6 +226,19 @@ model Utilisateur {
   rapportsIa               RapportIa[]
 
   @@map("utilisateurs")
+}
+
+model Session {
+  id          String      @id @default(uuid()) @db.Char(36)
+  userId      String      @map("id_utilisateur") @db.Char(36)
+  userAgent   String?     @map("user_agent") @db.Text
+  ipAddress   String?     @map("ip_address") @db.VarChar(45)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  lastSeenAt  DateTime    @default(now()) @map("last_seen_at")
+  utilisateur Utilisateur @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_session_user")
+
+  @@index([userId], map: "idx_sessions_user")
+  @@map("sessions")
 }
 
 model RefreshToken {

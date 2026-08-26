@@ -1,30 +1,50 @@
 import { sendMail } from "../config/email.js";
 
+// Layout commun à tous les templates — responsive :
+// le conteneur passe en pleine largeur sous 650px et les espacements
+// se réduisent sur mobile via la media query ci-dessous.
 const layout = (title, body) => `
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<style>
+  img { max-width: 100%; height: auto; border: 0; }
+  @media screen and (max-width: 620px) {
+    .email-outer-pad { padding: 20px 8px !important; }
+    .email-header-pad { padding: 24px 14px 10px !important; }
+    .email-body-pad { padding: 22px 16px !important; }
+    .email-footer-pad { padding: 16px 14px !important; }
+    .email-title { font-size: 20px !important; }
+  }
+</style>
 </head>
 <body style="
     margin:0;
     padding:0;
+    width:100% !important;
     background:#f4f6f9;
     font-family:Segoe UI,Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+    -ms-text-size-adjust:100%;
 ">
-    <table width="100%" cellpadding="0" cellspacing="0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-            <td align="center" style="padding:40px 20px;">
-                <table width="650" cellpadding="0" cellspacing="0" style="
+            <td align="center" class="email-outer-pad" style="padding:40px 20px;">
+                <table role="presentation" width="650" cellpadding="0" cellspacing="0" border="0" style="
+                    width:100%;
+                    max-width:650px;
                     background:#ffffff;
                     border-radius:12px;
                     overflow:hidden;
                     box-shadow:0 2px 12px rgba(0,0,0,.08);
                 ">
-                    
+
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="
+                        <td align="center" class="email-header-pad" style="
                             background:#ffffff;
                             padding:30px 20px 10px;
                             border-bottom:1px solid #e5e7eb;
@@ -33,10 +53,10 @@ const layout = (title, body) => `
                                 src="https://ton-domaine.com/logo-ac-erp.png"
                                 alt="AC ERP"
                                 width="180"
-                                style="display:block"
+                                style="display:block;max-width:100%;height:auto;"
                             />
 
-                            <h1 style="
+                            <h1 class="email-title" style="
                                 margin:20px 0 0;
                                 color:#0f172a;
                                 font-size:24px;
@@ -48,7 +68,7 @@ const layout = (title, body) => `
 
                     <!-- Body -->
                     <tr>
-                        <td style="
+                        <td class="email-body-pad" style="
                             padding:35px;
                             color:#334155;
                             font-size:15px;
@@ -60,7 +80,7 @@ const layout = (title, body) => `
 
                     <!-- Footer -->
                     <tr>
-                        <td style="
+                        <td class="email-footer-pad" style="
                             background:#f8fafc;
                             padding:20px;
                             text-align:center;
@@ -81,7 +101,7 @@ const layout = (title, body) => `
 </html>
 `;
 
-export const sendWelcomeEmail = (to, nom, motDePasseTemp) =>
+export const sendWelcomeEmail = (to, nom, motDePasseTemp, lienPlateformeEchange) =>
   sendMail(
     to,
     "Bienvenue sur AC ERP",
@@ -112,6 +132,29 @@ export const sendWelcomeEmail = (to, nom, motDePasseTemp) =>
       <p>
         Nous vous recommandons de modifier ce mot de passe dès votre première connexion.
       </p>
+      ${
+        lienPlateformeEchange
+          ? `
+      <div style="text-align:center;margin:30px 0;">
+        <a href="${lienPlateformeEchange}" style="
+          background:#2563eb;
+          color:#ffffff;
+          text-decoration:none;
+          padding:14px 24px;
+          border-radius:8px;
+          font-weight:600;
+        ">
+          Rejoindre la plateforme d'échange
+        </a>
+      </div>
+
+      <p>
+        Rejoignez la plateforme d'échange de l'entreprise en cliquant sur le bouton
+        ci-dessus afin de rester informé des échanges et annonces internes.
+      </p>
+      `
+          : ""
+      }
       `,
     ),
   );
@@ -301,6 +344,49 @@ export const sendBonCommandeAnnuleeEmail = (
     ),
   );
 };
+
+export const sendRestoreNotificationEmail = (to, nom, details) =>
+  sendMail(
+    to,
+    "Restauration des données du système",
+    layout(
+      "Restauration des données effectuée",
+      `
+      <p>Bonjour <strong>${nom}</strong>,</p>
+
+      <p>
+        Nous vous informons qu'une <strong>restauration des données du système</strong>
+        vient d'être effectuée sur AC ERP.
+      </p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:20px 0;">
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#64748b;">Date de la sauvegarde</td>
+          <td align="right" style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${details.date}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#64748b;">Heure de la sauvegarde</td>
+          <td align="right" style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${details.heure}</td>
+        </tr>
+        ${details.effectuePar ? `<tr>
+          <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#64748b;">Opération réalisée par</td>
+          <td align="right" style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${details.effectuePar}</td>
+        </tr>` : ""}
+      </table>
+
+      <p>
+        Cette opération a restitué la base de données à l'état de la sauvegarde sélectionnée.
+        Les données enregistrées postérieurement à cette sauvegarde ne sont plus disponibles.
+        Nous vous prions d'en tenir compte dans vos activités et de vérifier la cohérence
+        des informations que vous utilisez.
+      </p>
+
+      <p>
+        Pour toute question, veuillez contacter l'administrateur du système.
+      </p>
+      `,
+    ),
+  );
 
 export const sendMfaCodeEmail = (to, nom, code) =>
   sendMail(

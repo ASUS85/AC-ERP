@@ -16,6 +16,7 @@ import dashboardRoutes from "./dashboard/dashboard.routes.js";
 import rapportsRoutes from "./rapports/rapports.routes.js";
 import iaRoutes from "./ia/ia.routes.js";
 import parametresRoutes from "./parametres/parametres.routes.js";
+import backupRoutes from "./backup/backup.routes.js";
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use("/dashboard", dashboardRoutes);
 router.use("/rapports", rapportsRoutes);
 router.use("/ia", iaRoutes);
 router.use("/parametres", parametresRoutes);
+router.use("/backup", backupRoutes);
 
 export default router;

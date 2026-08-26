@@ -18,6 +18,33 @@ export const authRepository = {
   updateUser(id, data) {
     return prisma.utilisateur.update({ where: { id }, data, include: userInclude });
   },
+  createSession(data) {
+    return prisma.session.create({ data });
+  },
+  findSession(id) {
+    return prisma.session.findUnique({ where: { id } });
+  },
+  touchSession(id) {
+    return prisma.session.update({ where: { id }, data: { lastSeenAt: new Date() } });
+  },
+  deleteSession(id) {
+    return prisma.session.delete({ where: { id } });
+  },
+  deleteSessionsByUser(userId) {
+    return prisma.session.deleteMany({ where: { userId } });
+  },
+  deleteOtherSessions(userId, sessionId) {
+    return prisma.session.deleteMany({
+      where: { userId, id: { not: sessionId } },
+    });
+  },
+  listSessions(userId) {
+    return prisma.session.findMany({
+      where: { userId },
+      select: { id: true, createdAt: true, lastSeenAt: true, userAgent: true, ipAddress: true },
+      orderBy: { lastSeenAt: "desc" },
+    });
+  },
   createRefreshToken(data) {
     return prisma.refreshToken.create({ data });
   },
@@ -31,19 +58,6 @@ export const authRepository = {
     return prisma.refreshToken.updateMany({
       where: { idUtilisateur, isRevoked: false },
       data: { isRevoked: true },
-    });
-  },
-  revokeOtherRefreshTokens(idUtilisateur, currentToken) {
-    return prisma.refreshToken.updateMany({
-      where: { idUtilisateur, isRevoked: false, ...(currentToken ? { token: { not: currentToken } } : {}) },
-      data: { isRevoked: true },
-    });
-  },
-  listRefreshTokens(idUtilisateur) {
-    return prisma.refreshToken.findMany({
-      where: { idUtilisateur, isRevoked: false, expiresAt: { gt: new Date() } },
-      select: { id: true, createdAt: true, expiresAt: true },
-      orderBy: { createdAt: "desc" },
     });
   },
   createPasswordResetToken(data) {
