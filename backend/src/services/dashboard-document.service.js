@@ -56,7 +56,9 @@ function buildSimplePdf(lines) {
   pdf += `xref\n0 6\n0000000000 65535 f \n${offsets
     .slice(1)
     .map((offset) => `${String(offset).padStart(10, "0")} 00000 n `)
-    .join("\n")}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+    .join(
+      "\n",
+    )}\ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
   return Buffer.from(pdf);
 }
 
@@ -101,56 +103,64 @@ function buildSimpleLines(data, entreprise = {}) {
 export function buildDashboardHtml(data, entreprise = {}) {
   const currency = entreprise.devise || "XAF";
   const global = data.globalStats || {};
+
   const rows = (data.recentSales || [])
     .map(
       (sale) => `
         <tr>
-          <td>${escapeHtml(sale.ref)}</td>
-          <td>${escapeHtml(sale.client)}</td>
-          <td>${escapeHtml(sale.date)}</td>
-          <td class="num">${money(sale.montant, currency)}</td>
-          <td>${escapeHtml(sale.statut)}</td>
+          <td><span class="font-mono">${escapeHtml(sale.ref)}</span></td>
+          <td class="font-medium">${escapeHtml(sale.client)}</td>
+          <td class="muted-text">${escapeHtml(sale.date)}</td>
+          <td class="num font-semibold">${money(sale.montant, currency)}</td>
+          <td><span class="badge">${escapeHtml(sale.statut)}</span></td>
         </tr>
       `,
     )
     .join("");
+
   const topProducts = (data.topProducts || [])
     .map(
       (product, index) => `
         <tr>
-          <td>${index + 1}</td>
-          <td>${escapeHtml(product.nom)}</td>
-          <td class="num">${Number(product.ventes || 0).toLocaleString("fr-FR")}</td>
+          <td class="rank">${index + 1}</td>
+          <td class="font-medium">${escapeHtml(product.nom)}</td>
+          <td class="num font-semibold">${Number(product.ventes || 0).toLocaleString("fr-FR")}</td>
         </tr>
       `,
     )
     .join("");
+
   const monthly = (data.salesTrend || [])
     .map(
       (month) => `
         <tr>
-          <td>${escapeHtml(month.mois)}</td>
-          <td class="num">${money(month.ventes, currency)}</td>
-          <td class="num">${money(month.achats, currency)}</td>
+          <td class="font-medium">${escapeHtml(month.mois)}</td>
+          <td class="num text-success">${money(month.ventes, currency)}</td>
+          <td class="num text-danger">${money(month.achats, currency)}</td>
         </tr>
       `,
     )
     .join("");
+
   const kpis = (data.kpis || [])
     .map(
       (kpi) => `
-        <div class="metric">
-          <span>${escapeHtml(kpi.label)}</span>
-          <strong>${escapeHtml(kpi.value)}</strong>
-          <small>${escapeHtml([kpi.delta, kpi.sub].filter(Boolean).join(" - "))}</small>
+        <div class="metric-card">
+          <span class="metric-label">${escapeHtml(kpi.label)}</span>
+          <strong class="metric-value">${escapeHtml(kpi.value)}</strong>
+          <small class="metric-sub">${escapeHtml([kpi.delta, kpi.sub].filter(Boolean).join(" • "))}</small>
         </div>
       `,
     )
     .join("");
+
   const alerts = (data.alerts || [])
     .map(
       (alert) => `
-        <li><strong>${escapeHtml(alert.title)}</strong> - ${escapeHtml(alert.text)}</li>
+        <li class="alert-item">
+          <strong>${escapeHtml(alert.title)}</strong>
+          <span>${escapeHtml(alert.text)}</span>
+        </li>
       `,
     )
     .join("");
@@ -159,88 +169,236 @@ export function buildDashboardHtml(data, entreprise = {}) {
   <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <title>Rapport dashboard</title>
+    <title>Rapport Dashboard</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
       * { box-sizing: border-box; }
-      body { color: #111827; font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 28px; }
-      h1 { font-size: 24px; margin: 0 0 6px; text-transform: uppercase; }
-      h2 { border-bottom: 1px solid #d1d5db; font-size: 12px; margin: 18px 0 8px; padding-bottom: 5px; text-transform: uppercase; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #d1d5db; padding: 7px; vertical-align: top; }
-      th { background: #f3f4f6; text-align: left; }
-      .header { align-items: flex-start; display: flex; justify-content: space-between; gap: 24px; }
-      .muted { color: #4b5563; }
-      .box { border: 1px solid #d1d5db; padding: 10px; }
-      .metrics { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); margin-top: 16px; }
-      .metric { border: 1px solid #d1d5db; padding: 10px; }
-      .metric span, .metric small { color: #4b5563; display: block; }
-      .metric strong { display: block; font-size: 16px; margin: 4px 0; }
-      .grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+      body {
+        color: #1e293b;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+        background-color: #ffffff;
+      }
+
+      /* Typographie & Utilitaires */
+      h1 { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0; letter-spacing: -0.02em; }
+      h2 { 
+        font-size: 12px; 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        letter-spacing: 0.05em; 
+        color: #475569; 
+        border-bottom: 2px solid #e2e8f0; 
+        margin: 24px 0 12px 0; 
+        padding-bottom: 6px; 
+      }
+      .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #334155; }
+      .font-medium { font-weight: 500; }
+      .font-semibold { font-weight: 600; }
+      .muted-text { color: #64748b; }
+      .text-success { color: #16a34a; }
+      .text-danger { color: #dc2626; }
+
+      /* En-tête */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .company-card {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 10px 14px;
+        text-align: right;
+      }
+      .company-card strong { color: #0f172a; font-size: 12px; }
+
+      /* Cartes Métriques / KPIs */
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .metric-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #2563eb;
+        border-radius: 6px;
+        padding: 10px 12px;
+      }
+      .metric-label { font-size: 10px; font-weight: 500; color: #64748b; text-transform: uppercase; }
+      .metric-value { display: block; font-size: 18px; font-weight: 700; color: #0f172a; margin: 4px 0; }
+      .metric-sub { font-size: 9.5px; color: #64748b; }
+
+      /* Grille de synthèse globale */
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .summary-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 10px;
+        color: #64748b;
+      }
+      .summary-item strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-top: 2px;
+      }
+
+      /* Layout Grille pour Sections Secondaires */
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      /* Tableaux */
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 4px;
+      }
+      th {
+        background-color: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 8px 10px;
+        text-align: left;
+        border-top: 1px solid #cbd5e1;
+        border-bottom: 1px solid #cbd5e1;
+      }
+      td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+      }
+      tr:nth-child(even) td { background-color: #f8fafc; }
       .num { text-align: right; white-space: nowrap; }
-      .summary { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); }
-      .summary div { border: 1px solid #d1d5db; padding: 9px; }
-      .summary strong { display: block; font-size: 13px; margin-top: 3px; }
-      .footer { border-top: 1px solid #d1d5db; color: #6b7280; font-size: 10px; margin-top: 22px; padding-top: 8px; text-align: center; }
+      .rank { width: 24px; color: #94a3b8; font-weight: 600; }
+
+      /* Badges & Alertes */
+      .badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 9px;
+        font-weight: 600;
+        background-color: #e2e8f0;
+        color: #334155;
+      }
+      .alert-box {
+        background-color: #fff8f8;
+        border: 1px solid #fee2e2;
+        border-radius: 6px;
+        padding: 10px 14px;
+      }
+      .alert-list { list-style: none; padding: 0; margin: 0; }
+      .alert-item { padding: 4px 0; border-bottom: 1px dashed #fca5a5; }
+      .alert-item:last-child { border-bottom: none; }
+      .alert-item strong { color: #991b1b; }
+
+      /* Pied de page */
+      .footer {
+        border-top: 1px solid #e2e8f0;
+        color: #94a3b8;
+        font-size: 9px;
+        margin-top: 32px;
+        padding-top: 12px;
+        text-align: center;
+      }
+
+      /* Gestion de l'impression PDF */
+      @media print {
+        body { padding: 0; }
+        .section-block, table, .metrics, .summary { page-break-inside: avoid; }
+      }
     </style>
   </head>
   <body>
     <div class="header">
       <div>
         <h1>Tableau de bord</h1>
-        <div class="muted">Rapport dynamique genere depuis les donnees de l'ERP</div>
+        <div class="muted-text">Rapport dynamique généré depuis les données de l'ERP</div>
       </div>
-      <div class="box">
+      <div class="company-card">
         <strong>${escapeHtml(entreprise.raisonSociale || "AC ERP")}</strong><br />
-        Genere le ${date()}<br />
-        Exercice : ${escapeHtml(global.annee || new Date().getFullYear())}
+        <span class="muted-text">Généré le ${date()}</span><br />
+        <span class="muted-text">Exercice : ${escapeHtml(global.annee || new Date().getFullYear())}</span>
       </div>
     </div>
 
     <div class="metrics">${kpis}</div>
 
-    <h2>Statistiques globales</h2>
-    <div class="summary">
-      <div>Ventes<strong>${money(global.totalVentes, currency)}</strong></div>
-      <div>Achats<strong>${money(global.totalAchats, currency)}</strong></div>
-      <div>Marge brute<strong>${money(global.margeBrute, currency)}</strong></div>
-      <div>Marge %<strong>${percent(global.margeBrutePourcentage)}</strong></div>
-      <div>Panier moyen<strong>${money(global.panierMoyen, currency)}</strong></div>
-      <div>Paiements recus<strong>${money(global.paiementsRecus, currency)}</strong></div>
-      <div>Valeur stock<strong>${money(global.valeurStock, currency)}</strong></div>
-      <div>Factures a suivre<strong>${Number(global.facturesImpayees || 0)}</strong></div>
-      <div>Clients actifs<strong>${Number(global.clientsActifs || 0)}</strong></div>
-      <div>Produits actifs<strong>${Number(global.produitsActifs || 0)}</strong></div>
-      <div>Produits sous seuil<strong>${Number(global.produitsSousSeuil || 0)}</strong></div>
-      <div>Fournisseurs actifs<strong>${Number(global.fournisseursActifs || 0)}</strong></div>
+    <div class="section-block">
+      <h2>Statistiques globales</h2>
+      <div class="summary">
+        <div class="summary-item">Ventes<strong>${money(global.totalVentes, currency)}</strong></div>
+        <div class="summary-item">Achats<strong>${money(global.totalAchats, currency)}</strong></div>
+        <div class="summary-item">Marge brute<strong>${money(global.margeBrute, currency)}</strong></div>
+        <div class="summary-item">Marge %<strong>${percent(global.margeBrutePourcentage)}</strong></div>
+        <div class="summary-item">Panier moyen<strong>${money(global.panierMoyen, currency)}</strong></div>
+        <div class="summary-item">Paiements reçus<strong>${money(global.paiementsRecus, currency)}</strong></div>
+        <div class="summary-item">Valeur stock<strong>${money(global.valeurStock, currency)}</strong></div>
+        <div class="summary-item">Factures à suivre<strong>${Number(global.facturesImpayees || 0)}</strong></div>
+        <div class="summary-item">Clients actifs<strong>${Number(global.clientsActifs || 0)}</strong></div>
+        <div class="summary-item">Produits actifs<strong>${Number(global.produitsActifs || 0)}</strong></div>
+        <div class="summary-item">Produits sous seuil<strong>${Number(global.produitsSousSeuil || 0)}</strong></div>
+        <div class="summary-item">Fournisseurs actifs<strong>${Number(global.fournisseursActifs || 0)}</strong></div>
+      </div>
     </div>
 
-    <h2>Evolution ventes et achats</h2>
-    <table>
-      <thead><tr><th>Mois</th><th class="num">Ventes</th><th class="num">Achats</th></tr></thead>
-      <tbody>${monthly}</tbody>
-    </table>
+    <div class="section-block">
+      <h2>Évolution ventes et achats</h2>
+      <table>
+        <thead><tr><th>Mois</th><th class="num">Ventes</th><th class="num">Achats</th></tr></thead>
+        <tbody>${monthly}</tbody>
+      </table>
+    </div>
 
-    <div class="grid">
+    <div class="grid section-block">
       <div>
         <h2>Top produits</h2>
         <table>
-          <thead><tr><th>#</th><th>Produit</th><th class="num">Unites vendues</th></tr></thead>
+          <thead><tr><th class="rank">#</th><th>Produit</th><th class="num">Unités vendues</th></tr></thead>
           <tbody>${topProducts}</tbody>
         </table>
       </div>
       <div>
         <h2>Alertes</h2>
-        <div class="box"><ul>${alerts || "<li>Aucune alerte active</li>"}</ul></div>
+        <div class="alert-box">
+          <ul class="alert-list">${alerts || "<li class='alert-item'>Aucune alerte active</li>"}</ul>
+        </div>
       </div>
     </div>
 
-    <h2>Dernieres ventes</h2>
-    <table>
-      <thead><tr><th>Reference</th><th>Client</th><th>Date</th><th class="num">Montant</th><th>Statut</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="section-block">
+      <h2>Dernières ventes</h2>
+      <table>
+        <thead><tr><th>Référence</th><th>Client</th><th>Date</th><th class="num">Montant</th><th>Statut</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
 
-    <div class="footer">Rapport genere automatiquement par AC ERP.</div>
+    <div class="footer">Rapport généré automatiquement par AC ERP.</div>
   </body>
   </html>`;
 }
@@ -250,9 +408,9 @@ export async function buildDashboardPdf(data, entreprise) {
     const { buffer } = await renderPdfDocument({
       html: buildDashboardHtml(data, entreprise),
       pdfOptions: {
-      format: "A4",
-      printBackground: true,
-      margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
+        format: "A4",
+        printBackground: true,
+        margin: { top: "12mm", right: "10mm", bottom: "12mm", left: "10mm" },
       },
     });
     return buffer;

@@ -15,7 +15,7 @@ export async function maintenanceGuard(req, _res, next) {
     const token = (req.headers.authorization || "").split(" ")[1];
     const payload = token ? verifyAccessToken(token) : null;
     const user = payload?.userId ? await prisma.utilisateur.findUnique({ where: { id: payload.userId }, include: { role: true } }) : null;
-    if (user?.role?.nomRole === "SUPER_ADMIN") return next();
+    if (user?.role?.nomRole === "SUPER_ADMIN" || "ADMIN") return next();
     return next(new ApiError(503, "MAINTENANCE_MODE", "Le systeme est en maintenance. Les modifications sont temporairement bloquees"));
   } catch (error) {
     return next(error);

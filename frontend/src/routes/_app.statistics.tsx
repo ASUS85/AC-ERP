@@ -37,7 +37,7 @@ import {
   EMPTY_DASHBOARD_OVERVIEW,
   useDashboardStore,
 } from "@/stores/dashboard.store";
-
+import { getLast12CompletedMonths } from "@/components/helper/getlast12Monts";
 export const Route = createFileRoute("/_app/statistics")({
   head: () => ({ meta: [{ title: "Statistiques — AC ERP" }] }),
   component: StatsPage,
@@ -205,6 +205,11 @@ function StatsPage() {
     [salesTrend],
   );
 
+  const monthlyDataCompleted = useMemo(
+    () => getLast12CompletedMonths(monthlyData, "mois"),
+    [monthlyData],
+  );
+
   const financeStructure = useMemo(
     () => [
       { name: "CA", value: stats?.totalVentes ?? 0 },
@@ -271,7 +276,10 @@ function StatsPage() {
         >
           <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData} margin={{ left: -10, right: 8 }}>
+              <AreaChart
+                data={monthlyDataCompleted}
+                margin={{ left: -10, right: 8 }}
+              >
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={grid}
@@ -356,7 +364,10 @@ function StatsPage() {
         >
           <ChartFrame loading={loading} className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ left: -10, right: 8 }}>
+              <BarChart
+                data={monthlyDataCompleted}
+                margin={{ left: -10, right: 8 }}
+              >
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke={grid}
@@ -400,7 +411,7 @@ function StatsPage() {
           <ChartFrame loading={loading} className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={monthlyData}
+                data={monthlyDataCompleted}
                 margin={{ left: -10, right: 8 }}
               >
                 <CartesianGrid

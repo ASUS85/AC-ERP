@@ -1049,7 +1049,7 @@ function SettingsPage() {
   const fetchSysteme = useSettingsStore((state) => state.fetchSysteme);
   const setCachedEntreprise = useSettingsStore((state) => state.setEntreprise);
   const setCachedSysteme = useSettingsStore((state) => state.setSysteme);
-  const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN";
+  const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN" || "ADMIN";
   // L'API /backup exige la permission users:supprimer (super admin)
   const canManageBackups = hasPermission("users", "supprimer");
 

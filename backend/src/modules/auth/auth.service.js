@@ -3,8 +3,15 @@ import crypto from "node:crypto";
 import dayjs from "dayjs";
 import { ApiError } from "../../utils/response.util.js";
 import { BCRYPT_ROUNDS } from "../../config/constants.js";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../services/jwt.service.js";
-import { sendMfaCodeEmail, sendPasswordResetEmail } from "../../services/email.service.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../../services/jwt.service.js";
+import {
+  sendMfaCodeEmail,
+  sendPasswordResetEmail,
+} from "../../services/email.service.js";
 import { authRepository } from "./auth.repository.js";
 
 const mfaChallenges = new Map();
@@ -13,7 +20,11 @@ const MFA_RESEND_DELAY_MS = 30 * 1000;
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 
 function permissionsFromUser(user) {
-  return user.role?.permissions?.map(({ permission }) => `${permission.module}:${permission.action}`) || [];
+  return (
+    user.role?.permissions?.map(
+      ({ permission }) => `${permission.module}:${permission.action}`,
+    ) || []
+  );
 }
 
 function publicUser(user) {
@@ -53,7 +64,11 @@ function passwordResetLink(token) {
 
 function validateNewPassword(password) {
   if (!password || String(password).length < 8) {
-    throw new ApiError(400, "PASSWORD_TOO_SHORT", "Le nouveau mot de passe doit contenir au moins 8 caracteres");
+    throw new ApiError(
+      400,
+      "PASSWORD_TOO_SHORT",
+      "Le nouveau mot de passe doit contenir au moins 8 caracteres",
+    );
   }
 }
 
@@ -85,7 +100,11 @@ async function createMfaChallenge(user, meta = {}) {
     meta,
   });
 
-  await sendMfaCodeEmail(user.email, user.prenom || user.nom || "Utilisateur", code);
+  await sendMfaCodeEmail(
+    user.email,
+    user.prenom || user.nom || "Utilisateur",
+    code,
+  );
 
   return {
     mfaRequired: true,
@@ -110,7 +129,10 @@ async function issueSession(user, meta = {}) {
     permissions: permissionsFromUser(user),
   };
   const accessToken = generateAccessToken(payload);
-  const refreshToken = generateRefreshToken({ userId: user.id, sessionId: session.id });
+  const refreshToken = generateRefreshToken({
+    userId: user.id,
+    sessionId: session.id,
+  });
   await authRepository.createRefreshToken({
     token: refreshToken,
     idUtilisateur: user.id,
@@ -123,10 +145,20 @@ async function issueSession(user, meta = {}) {
 export const authService = {
   async login({ email, password }, req) {
     const user = await authRepository.findUserByEmail(email);
-    if (!user) throw new ApiError(401, "INVALID_CREDENTIALS", "Email ou mot de passe invalide");
-    if (user.statut !== "ACTIF") throw new ApiError(403, "ACCOUNT_DISABLED", "Compte inactif ou bloque");
+    if (!user)
+      throw new ApiError(
+        401,
+        "INVALID_CREDENTIALS",
+        "Email ou mot de passe invalide",
+      );
+    if (user.statut !== "ACTIF")
+      throw new ApiError(403, "ACCOUNT_DISABLED", "Compte inactif ou bloque");
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new ApiError(423, "ACCOUNT_LOCKED", "Compte temporairement verrouille");
+      throw new ApiError(
+        423,
+        "ACCOUNT_LOCKED",
+        "Compte temporairement verrouille",
+      );
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
@@ -134,58 +166,90 @@ export const authService = {
       const failedAttempts = user.failedAttempts + 1;
       await authRepository.updateUser(user.id, {
         failedAttempts,
-        lockedUntil: failedAttempts >= 5 ? dayjs().add(15, "minute").toDate() : null,
+        lockedUntil:
+          failedAttempts >= 5 ? dayjs().add(15, "minute").toDate() : null,
       });
-      throw new ApiError(401, "INVALID_CREDENTIALS", "Email ou mot de passe invalide");
+      throw new ApiError(
+        401,
+        "INVALID_CREDENTIALS",
+        "Email ou mot de passe invalide",
+      );
     }
 
-    await authRepository.updateUser(user.id, { failedAttempts: 0, lockedUntil: null });
+    await authRepository.updateUser(user.id, {
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
     return createMfaChallenge(user, requestSessionMeta(req));
   },
   async verifyMfa({ mfaToken, code }) {
     const challenge = mfaChallenges.get(mfaToken);
-    if (!challenge) throw new ApiError(401, "MFA_INVALID", "Code de verification invalide ou expire");
+    if (!challenge)
+      throw new ApiError(
+        401,
+        "MFA_INVALID",
+        "Code de verification invalide ou expire",
+      );
     if (challenge.expiresAt < Date.now()) {
       mfaChallenges.delete(mfaToken);
       throw new ApiError(401, "MFA_EXPIRED", "Code de verification expire");
     }
     if (challenge.attempts >= 5) {
       mfaChallenges.delete(mfaToken);
-      throw new ApiError(429, "MFA_ATTEMPTS_EXCEEDED", "Trop de tentatives de verification");
+      throw new ApiError(
+        429,
+        "MFA_ATTEMPTS_EXCEEDED",
+        "Trop de tentatives de verification",
+      );
     }
-    if (!/^\d{6}$/.test(String(code)) || hashCode(String(code)) !== challenge.codeHash) {
+    if (
+      !/^\d{6}$/.test(String(code)) ||
+      hashCode(String(code)) !== challenge.codeHash
+    ) {
       challenge.attempts += 1;
       throw new ApiError(400, "MFA_INVALID", "Code de verification invalide");
     }
 
     mfaChallenges.delete(mfaToken);
     const user = await authRepository.findUserById(challenge.userId);
-    if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+    if (!user || user.statut !== "ACTIF")
+      throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
     return issueSession(user, challenge.meta);
   },
   async resendMfa({ mfaToken }) {
     const challenge = mfaChallenges.get(mfaToken);
-    if (!challenge) throw new ApiError(401, "MFA_INVALID", "Session MFA invalide ou expiree");
+    if (!challenge)
+      throw new ApiError(401, "MFA_INVALID", "Session MFA invalide ou expiree");
     if (challenge.expiresAt < Date.now()) {
       mfaChallenges.delete(mfaToken);
       throw new ApiError(401, "MFA_EXPIRED", "Code de verification expire");
     }
     const now = Date.now();
     if (challenge.resendAfter > now) {
-      throw new ApiError(429, "MFA_RESEND_TOO_SOON", "Veuillez patienter avant de renvoyer le code", {
-        retryAfter: Math.ceil((challenge.resendAfter - now) / 1000),
-      });
+      throw new ApiError(
+        429,
+        "MFA_RESEND_TOO_SOON",
+        "Veuillez patienter avant de renvoyer le code",
+        {
+          retryAfter: Math.ceil((challenge.resendAfter - now) / 1000),
+        },
+      );
     }
 
     const user = await authRepository.findUserById(challenge.userId);
-    if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+    if (!user || user.statut !== "ACTIF")
+      throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
 
     const code = generateMfaCode();
     challenge.codeHash = hashCode(code);
     challenge.resendAfter = now + MFA_RESEND_DELAY_MS;
     challenge.expiresAt = now + MFA_CODE_TTL_MS;
     challenge.attempts = 0;
-    await sendMfaCodeEmail(user.email, user.prenom || user.nom || "Utilisateur", code);
+    await sendMfaCodeEmail(
+      user.email,
+      user.prenom || user.nom || "Utilisateur",
+      code,
+    );
 
     return {
       mfaRequired: true,
@@ -215,24 +279,44 @@ export const authService = {
       expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
     });
 
-    await sendPasswordResetEmail(user.email, user.prenom || user.nom || "Utilisateur", passwordResetLink(token));
+    await sendPasswordResetEmail(
+      user.email,
+      user.prenom || user.nom || "Utilisateur",
+      passwordResetLink(token),
+    );
 
     return { emailSent: true };
   },
   async resetPassword({ token, nouveauPassword }) {
-    if (!token) throw new ApiError(400, "RESET_TOKEN_REQUIRED", "Lien de reinitialisation invalide");
+    if (!token)
+      throw new ApiError(
+        400,
+        "RESET_TOKEN_REQUIRED",
+        "Lien de reinitialisation invalide",
+      );
     validateNewPassword(nouveauPassword);
 
-    const resetToken = await authRepository.findPasswordResetToken(hashToken(String(token)));
+    const resetToken = await authRepository.findPasswordResetToken(
+      hashToken(String(token)),
+    );
     if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
-      throw new ApiError(400, "RESET_TOKEN_INVALID", "Lien de reinitialisation invalide ou expire");
+      throw new ApiError(
+        400,
+        "RESET_TOKEN_INVALID",
+        "Lien de reinitialisation invalide ou expire",
+      );
     }
 
     const user = resetToken.utilisateur;
-    if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+    if (!user || user.statut !== "ACTIF")
+      throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
 
     const passwordHash = await bcrypt.hash(nouveauPassword, BCRYPT_ROUNDS);
-    await authRepository.updateUser(user.id, { passwordHash, failedAttempts: 0, lockedUntil: null });
+    await authRepository.updateUser(user.id, {
+      passwordHash,
+      failedAttempts: 0,
+      lockedUntil: null,
+    });
     await authRepository.markPasswordResetTokenUsed(resetToken.id);
     await authRepository.revokeRefreshTokensByUser(user.id);
     await authRepository.deleteSessionsByUser(user.id);
@@ -242,17 +326,20 @@ export const authService = {
   async logout(refreshToken) {
     if (!refreshToken) return { revoked: false };
     const existing = await authRepository.findRefreshToken(refreshToken);
-    if (existing && !existing.isRevoked) await authRepository.revokeRefreshToken(refreshToken);
+    if (existing && !existing.isRevoked)
+      await authRepository.revokeRefreshToken(refreshToken);
     try {
       const payload = verifyRefreshToken(refreshToken);
-      if (payload.sessionId) await authRepository.deleteSession(payload.sessionId);
+      if (payload.sessionId)
+        await authRepository.deleteSession(payload.sessionId);
     } catch {
       // Le refresh token peut deja etre invalide ou expire; la deconnexion reste idempotente.
     }
     return { revoked: true };
   },
   async refresh(refreshToken) {
-    if (!refreshToken) throw new ApiError(401, "UNAUTHORIZED", "Refresh token requis");
+    if (!refreshToken)
+      throw new ApiError(401, "UNAUTHORIZED", "Refresh token requis");
     const stored = await authRepository.findRefreshToken(refreshToken);
     if (!stored || stored.isRevoked || stored.expiresAt < new Date()) {
       throw new ApiError(401, "UNAUTHORIZED", "Refresh token invalide");
@@ -266,15 +353,35 @@ export const authService = {
       throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
     }
     const user = await authRepository.findUserById(payload.userId);
-    if (!user || user.statut !== "ACTIF") throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
-    await authRepository.touchSession(payload.sessionId);
+    if (!user || user.statut !== "ACTIF")
+      throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
+
+    await authRepository.revokeRefreshToken(refreshToken);
+
+    const newRefreshToken = generateRefreshToken({
+      userId: user.id,
+      sessionId: payload.sessionId,
+    });
+
+    await authRepository.createRefreshToken({
+      token: newRefreshToken,
+      idUtilisateur: user.id,
+      expiresAt: refreshExpiry(),
+    });
+
     const accessToken = generateAccessToken({
       userId: user.id,
       sessionId: payload.sessionId,
       roleId: user.idRole,
       permissions: permissionsFromUser(user),
     });
-    return { accessToken };
+
+    await authRepository.touchSession(payload.sessionId);
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+    };
   },
   async me(userId) {
     const user = await authRepository.findUserById(userId);
@@ -285,12 +392,26 @@ export const authService = {
     const user = await authRepository.findUserById(userId);
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
     const fields = ["nom", "prenom", "email", "telephone", "avatar"];
-    const data = Object.fromEntries(fields.filter((field) => body[field] !== undefined).map((field) => [field, typeof body[field] === "string" ? body[field].trim() : body[field]]));
-    if (!data.nom && body.nom !== undefined) throw new ApiError(400, "NAME_REQUIRED", "Le nom est requis");
-    if (!data.prenom && body.prenom !== undefined) throw new ApiError(400, "FIRST_NAME_REQUIRED", "Le prenom est requis");
+    const data = Object.fromEntries(
+      fields
+        .filter((field) => body[field] !== undefined)
+        .map((field) => [
+          field,
+          typeof body[field] === "string" ? body[field].trim() : body[field],
+        ]),
+    );
+    if (!data.nom && body.nom !== undefined)
+      throw new ApiError(400, "NAME_REQUIRED", "Le nom est requis");
+    if (!data.prenom && body.prenom !== undefined)
+      throw new ApiError(400, "FIRST_NAME_REQUIRED", "Le prenom est requis");
     if (data.email) {
       const existing = await authRepository.findUserByEmail(data.email);
-      if (existing && existing.id !== userId) throw new ApiError(409, "EMAIL_EXISTS", "Cette adresse e-mail est deja utilisee");
+      if (existing && existing.id !== userId)
+        throw new ApiError(
+          409,
+          "EMAIL_EXISTS",
+          "Cette adresse e-mail est deja utilisee",
+        );
     }
     return publicUser(await authRepository.updateUser(userId, data));
   },
@@ -298,7 +419,8 @@ export const authService = {
     return authRepository.listSessions(userId);
   },
   async revokeOtherSessions(userId, sessionId) {
-    if (!sessionId) throw new ApiError(401, "UNAUTHORIZED", "Session courante invalide");
+    if (!sessionId)
+      throw new ApiError(401, "UNAUTHORIZED", "Session courante invalide");
     const result = await authRepository.deleteOtherSessions(userId, sessionId);
     return { revoked: result.count };
   },
@@ -307,7 +429,12 @@ export const authService = {
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
     validateNewPassword(nouveauPassword);
     const valid = await bcrypt.compare(ancienPassword, user.passwordHash);
-    if (!valid) throw new ApiError(400, "INVALID_PASSWORD", "Ancien mot de passe incorrect");
+    if (!valid)
+      throw new ApiError(
+        400,
+        "INVALID_PASSWORD",
+        "Ancien mot de passe incorrect",
+      );
     const passwordHash = await bcrypt.hash(nouveauPassword, BCRYPT_ROUNDS);
     await authRepository.updateUser(userId, { passwordHash });
     return { changed: true };

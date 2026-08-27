@@ -39,7 +39,7 @@ app.get("/health", (_req, res) => {
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    version: process.env.API_VERSION || "v1",
+    version: process.env.API_VERSION,
   });
 });
 

@@ -2,10 +2,29 @@ import { ApiError } from "../../utils/response.util.js";
 import { authRepository } from "../auth/auth.repository.js";
 import { parametresRepository } from "./parametres.repository.js";
 
-const companyFields = ["raisonSociale", "numeroFiscal", "adresse", "telephone", "email", "devise", "fuseauHoraire", "logo", "lienPlateformeEchange"];
-const systemFields = ["notificationsEmail", "alertesIa", "facturationAutomatique"];
+const companyFields = [
+  "raisonSociale",
+  "numeroFiscal",
+  "adresse",
+  "telephone",
+  "email",
+  "devise",
+  "fuseauHoraire",
+  "logo",
+  "lienPlateformeEchange",
+];
+const systemFields = [
+  "notificationsEmail",
+  "alertesIa",
+  "facturationAutomatique",
+];
 
-const pick = (source, fields) => Object.fromEntries(fields.filter((field) => source[field] !== undefined).map((field) => [field, source[field]]));
+const pick = (source, fields) =>
+  Object.fromEntries(
+    fields
+      .filter((field) => source[field] !== undefined)
+      .map((field) => [field, source[field]]),
+  );
 
 async function roleName(userId) {
   const user = await authRepository.findUserById(userId);
@@ -14,14 +33,23 @@ async function roleName(userId) {
 
 export const parametresService = {
   entreprise: () => parametresRepository.entreprise(),
-  updateEntreprise: (body) => parametresRepository.updateEntreprise(pick(body, companyFields)),
+  updateEntreprise: (body) =>
+    parametresRepository.updateEntreprise(pick(body, companyFields)),
   systeme: () => parametresRepository.systeme(),
-  updateSysteme: (body) => parametresRepository.updateSysteme(pick(body, systemFields)),
+  updateSysteme: (body) =>
+    parametresRepository.updateSysteme(pick(body, systemFields)),
   async maintenance(userId, active) {
-    if (await roleName(userId) !== "SUPER_ADMIN") {
-      throw new ApiError(403, "SUPER_ADMIN_REQUIRED", "Seul le super administrateur peut gerer le mode maintenance");
+    const role = await roleName(userId);
+    if (role !== "SUPER_ADMIN" && role !== "ADMIN") {
+      throw new ApiError(
+        403,
+        "ADMIN_REQUIRED",
+        "Seul l'administrateur peut gérer le mode maintenance",
+      );
     }
-    return parametresRepository.updateSysteme({ modeMaintenance: Boolean(active) });
+    return parametresRepository.updateSysteme({
+      modeMaintenance: Boolean(active),
+    });
   },
   journal(query) {
     const where = {};
