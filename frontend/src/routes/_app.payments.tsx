@@ -105,22 +105,30 @@ function PaymentsPage() {
       {
         key: "client",
         header: "Tiers",
-        render: (p) => p.facture?.client?.nom || p.utilisateur?.nom || "-",
+        render: (p) =>
+          p.facture?.typeFacture === "ACHAT"
+            ? p.facture?.fournisseur?.raisonSociale || "Fournisseur"
+            : p.facture?.client?.nom || p.utilisateur?.nom || "-",
       },
       {
         key: "modePaiement",
         header: "Méthode",
-        render: (p) => p.modePaiement,
+        render: (p) => p.modePaiement || "En attente",
       },
       {
         key: "montant",
         header: "Montant",
         align: "right",
-        render: (p) => (
-          <span className="font-medium text-success">
-            + {fmtCurrency(Number(p.montant))}
-          </span>
-        ),
+        render: (p) =>
+          p.facture?.typeFacture === "ACHAT" ? (
+            <span className="font-medium text-destructive">
+              - {fmtCurrency(Number(p.montant))}
+            </span>
+          ) : (
+            <span className="font-medium text-success">
+              + {fmtCurrency(Number(p.montant))}
+            </span>
+          ),
       },
       {
         key: "datePaiement",
@@ -260,16 +268,28 @@ function PaymentsPage() {
       >
         {selectedPayment ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-1">
                 <p className="text-sm font-medium text-muted-foreground mb-1">
-                  Montant Encaissé
+                  {selectedPayment.facture?.typeFacture === "ACHAT"
+                    ? "Montant Décaissé"
+                    : "Montant Encaissé"}
                 </p>
-                <p className="text-3xl font-bold text-success">
+                <p
+                  className={cn(
+                    "text-3xl font-bold",
+                    selectedPayment.facture?.typeFacture === "ACHAT"
+                      ? "text-destructive"
+                      : "text-success",
+                  )}
+                >
+                  {selectedPayment.facture?.typeFacture === "ACHAT"
+                    ? "- "
+                    : "+ "}
                   {fmtCurrency(Number(selectedPayment.montant))}
                 </p>
               </div>
-              <div className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-2 flex flex-col justify-center">
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm md:col-span-1 flex flex-col justify-center">
                 <p className="text-sm font-medium text-muted-foreground mb-1">
                   Réf. de transaction / Notes
                 </p>
@@ -293,7 +313,7 @@ function PaymentsPage() {
                       Méthode de paiement :
                     </span>
                     <span className="font-semibold uppercase text-primary bg-primary/10 px-2 py-0.5 rounded-md">
-                      {selectedPayment.modePaiement}
+                      {selectedPayment.modePaiement || "En attente"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-border/50">
@@ -321,11 +341,16 @@ function PaymentsPage() {
                 <div className="grid gap-2 text-sm">
                   <div className="flex flex-col gap-1 py-1 border-b border-border/50 pb-2">
                     <span className="text-muted-foreground text-xs uppercase">
-                      Client concerné
+                      {selectedPayment.facture?.typeFacture === "ACHAT"
+                        ? "Fournisseur concerné"
+                        : "Client concerné"}
                     </span>
                     <span className="font-medium">
-                      {selectedPayment.facture?.client?.nom ||
-                        "Client occasionnel"}
+                      {selectedPayment.facture?.typeFacture === "ACHAT"
+                        ? selectedPayment.facture?.fournisseur?.raisonSociale ||
+                          "Fournisseur"
+                        : selectedPayment.facture?.client?.nom ||
+                          "Client occasionnel"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1 py-1 border-b border-border/50 pb-2">

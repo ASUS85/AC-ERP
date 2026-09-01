@@ -255,8 +255,10 @@ function SuppliersPage() {
             <Truck className="h-4 w-4" />
           </span>
           <div>
-            <p className="font-medium text-foreground">{s.raisonSociale}</p>
-            <p className="text-xs text-muted-foreground">{s.email}</p>
+            <p className="truncate font-medium text-foreground">
+              {s.raisonSociale}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">{s.email}</p>
           </div>
         </div>
       ),

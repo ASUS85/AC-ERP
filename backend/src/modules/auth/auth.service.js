@@ -134,7 +134,7 @@ async function issueSession(user, meta = {}) {
     sessionId: session.id,
   });
   await authRepository.createRefreshToken({
-    token: refreshToken,
+    token: hashToken(refreshToken),
     idUtilisateur: user.id,
     expiresAt: refreshExpiry(),
   });
@@ -325,9 +325,11 @@ export const authService = {
   },
   async logout(refreshToken) {
     if (!refreshToken) return { revoked: false };
-    const existing = await authRepository.findRefreshToken(refreshToken);
+    const existing = await authRepository.findRefreshToken(
+      hashToken(refreshToken),
+    );
     if (existing && !existing.isRevoked)
-      await authRepository.revokeRefreshToken(refreshToken);
+      await authRepository.revokeRefreshToken(hashToken(refreshToken));
     try {
       const payload = verifyRefreshToken(refreshToken);
       if (payload.sessionId)
@@ -340,7 +342,9 @@ export const authService = {
   async refresh(refreshToken) {
     if (!refreshToken)
       throw new ApiError(401, "UNAUTHORIZED", "Refresh token requis");
-    const stored = await authRepository.findRefreshToken(refreshToken);
+    const stored = await authRepository.findRefreshToken(
+      hashToken(refreshToken),
+    );
     if (!stored || stored.isRevoked || stored.expiresAt < new Date()) {
       throw new ApiError(401, "UNAUTHORIZED", "Refresh token invalide");
     }
@@ -356,7 +360,7 @@ export const authService = {
     if (!user || user.statut !== "ACTIF")
       throw new ApiError(401, "UNAUTHORIZED", "Utilisateur invalide");
 
-    await authRepository.revokeRefreshToken(refreshToken);
+    await authRepository.revokeRefreshToken(hashToken(refreshToken));
 
     const newRefreshToken = generateRefreshToken({
       userId: user.id,
@@ -364,7 +368,7 @@ export const authService = {
     });
 
     await authRepository.createRefreshToken({
-      token: newRefreshToken,
+      token: hashToken(newRefreshToken),
       idUtilisateur: user.id,
       expiresAt: refreshExpiry(),
     });

@@ -326,9 +326,9 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                   <span className="block max-w-36 truncate text-sm font-medium">
                     {getDisplayName(user)}
                   </span>
-                  <span className="block max-w-36 truncate text-[11px] text-muted-foreground">
+                  {/* <span className="block max-w-36 truncate text-[11px] text-muted-foreground">
                     {getRoleName(user)}
-                  </span>
+                  </span> */}
                 </span>
                 <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
               </Button>

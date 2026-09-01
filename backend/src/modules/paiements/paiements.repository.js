@@ -7,9 +7,16 @@ const defaultInclude = {
     select: {
       id:            true,
       numeroFacture: true,
+      typeFacture:   true,
       totalTtc:      true,
       montantPaye:   true,
       statut:        true,
+      client: {
+        select: { nom: true },
+      },
+      fournisseur: {
+        select: { raisonSociale: true },
+      },
     },
   },
   utilisateur: {

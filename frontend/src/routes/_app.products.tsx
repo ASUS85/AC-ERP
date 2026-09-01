@@ -18,6 +18,7 @@ import {
   StatCard,
 } from "@/components/erp/widgets";
 import { DataTable, type Column } from "@/components/erp/DataTable";
+import { useAuth } from "@/hooks/useAuth";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
@@ -112,6 +113,11 @@ const responseData = <T,>(response: any): T[] =>
   Array.isArray(response?.data) ? response.data : [];
 
 function ProductsPage() {
+  const { hasPermission } = useAuth();
+  const canCreate = hasPermission("produits", "creer");
+  const canEdit = hasPermission("produits", "modifier");
+  const canDelete = hasPermission("produits", "supprimer");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [meta, setMeta] = useState<ApiMeta>({
@@ -412,7 +418,9 @@ function ProductsPage() {
             <p className="truncate font-medium text-foreground">
               {product.designation}
             </p>
-            <p className="text-xs text-muted-foreground">{product.reference}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {product.reference}
+            </p>
           </div>
         </div>
       ),
@@ -522,7 +530,7 @@ function ProductsPage() {
         <div className="mb-4">
           <Toolbar
             placeholder="Rechercher un produit…"
-            addLabel="Ajouter un produit"
+            addLabel={canCreate ? "Ajouter un produit" : undefined}
             searchValue={search}
             onSearchChange={setSearch}
             filterOptions={filterOptions}
@@ -530,7 +538,7 @@ function ProductsPage() {
             onFilterChange={setCategoryFilter}
             filterPlaceholder="Toutes les catégories"
             filterSearchPlaceholder="Rechercher une catégorie…"
-            onAdd={openCreateModal}
+            onAdd={canCreate ? openCreateModal : undefined}
           />
         </div>
         {loading ? (
@@ -542,18 +550,27 @@ function ProductsPage() {
             columns={cols}
             rows={products}
             rowKey={(product) => product.id}
+            withActions={canEdit || canDelete}
             rowActions={(product) => [
-              {
-                label: "Modifier",
-                icon: <Pencil className="h-4 w-4" />,
-                onClick: () => openEditModal(product),
-              },
-              {
-                label: "Supprimer",
-                icon: <Trash2 className="h-4 w-4" />,
-                destructive: true,
-                onClick: () => openDeleteModal(product),
-              },
+              ...(canEdit
+                ? [
+                    {
+                      label: "Modifier",
+                      icon: <Pencil className="h-4 w-4" />,
+                      onClick: () => openEditModal(product),
+                    },
+                  ]
+                : []),
+              ...(canDelete
+                ? [
+                    {
+                      label: "Supprimer",
+                      icon: <Trash2 className="h-4 w-4" />,
+                      destructive: true,
+                      onClick: () => openDeleteModal(product),
+                    },
+                  ]
+                : []),
             ]}
           />
         )}

@@ -304,34 +304,23 @@ function LoginPage() {
             className="h-80 w-80"
           />
         </div>
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <img
-              src={logo}
-              alt="Logo AC ERP"
-              width={10}
-              height={10}
-              className="h-10 w-10"
-            />
-            <span className="font-display text-lg font-bold">AC ERP</span>
-          </div>
-
+        <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card/50 p-6 shadow-xl backdrop-blur-sm md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           {step === "credentials" && (
             <>
-              <h1 className="text-2xl font-bold text-foreground text-center">
-                Bienvenue
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground text-center">
-                Accédez à votre espace de gestion.
-              </p>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Bienvenue
+                </h1>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Accédez à votre espace de gestion.
+                </p>
+              </div>
 
               <form onSubmit={submit} className="mt-8 space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Adresse e-mail</Label>
-
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
                     <Input
                       id="email"
                       name="email"
@@ -340,7 +329,6 @@ function LoginPage() {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
-
                         if (errors.email) {
                           setErrors((prev) => ({
                             ...prev,
@@ -348,18 +336,20 @@ function LoginPage() {
                           }));
                         }
                       }}
-                      className={`h-11 pl-9 ${
+                      className={`h-11 pl-9 transition-colors ${
                         errors.email
-                          ? "border-red-500 focus-visible:ring-red-500"
+                          ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }`}
                     />
                   </div>
-
                   {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email}</p>
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.email}
+                    </p>
                   )}
                 </div>
+
                 <div className="space-y-1.5">
                   <Label htmlFor="password">Mot de passe</Label>
                   <div className="relative">
@@ -372,7 +362,6 @@ function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
-
                         if (errors.password) {
                           setErrors((prev) => ({
                             ...prev,
@@ -380,16 +369,16 @@ function LoginPage() {
                           }));
                         }
                       }}
-                      className={`h-11 px-9 ${
+                      className={`h-11 px-9 transition-colors ${
                         errors.password
-                          ? "border-red-500 focus-visible:ring-red-500"
+                          ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShow((s) => !s)}
-                      className="absolute right-3 top-[22px] -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                       aria-label={show ? "Masquer" : "Afficher"}
                     >
                       {show ? (
@@ -399,35 +388,33 @@ function LoginPage() {
                       )}
                     </button>
                   </div>
-
                   {errors.password && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="text-xs font-medium text-destructive">
                       {errors.password}
                     </p>
                   )}
                 </div>
-                <div className="flex items-center justify-between">
-                  {/* <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox defaultChecked /> Se souvenir de moi
-                  </label> */}
+
+                <div className="flex items-center justify-end">
                   <button
                     type="button"
                     onClick={handleForgotPassword}
                     disabled={isSubmitting}
-                    className="text-sm font-medium text-primary hover:underline disabled:pointer-events-none disabled:opacity-60"
+                    className="text-xs font-medium text-primary transition-colors hover:underline disabled:pointer-events-none disabled:opacity-60"
                   >
                     Mot de passe oublié ?
                   </button>
                 </div>
+
                 <Button
                   type="submit"
-                  className="h-11 w-full text-base"
+                  className="h-11 w-full text-base font-medium shadow-sm transition-all hover:shadow"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Vérification
+                      Vérification...
                     </>
                   ) : (
                     "Se connecter"
@@ -438,30 +425,30 @@ function LoginPage() {
           )}
 
           {step === "resetSent" && (
-            <div className="mt-2">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={backToCredentials}
-                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" /> Retour à la connexion
               </button>
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                 <MailCheck className="h-6 w-6" />
-              </span>
-              <h1 className="text-2xl font-bold text-foreground">
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Vérifiez votre email
               </h1>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Si un compte AC ERP correspond à{" "}
-                <span className="font-medium text-foreground">{email}</span>, un
-                message vient d'être envoyé avec un lien pour modifier votre mot
-                de passe.
+                <span className="font-semibold text-foreground">{email}</span>,
+                un message vient d'être envoyé avec un lien pour modifier votre
+                mot de passe.
               </p>
               <Button
                 type="button"
                 variant="outline"
-                className="mt-8 h-11 w-full"
+                className="mt-8 h-11 w-full font-medium"
                 onClick={backToCredentials}
               >
                 Revenir au formulaire
@@ -470,15 +457,15 @@ function LoginPage() {
           )}
 
           {step === "method" && (
-            <div className="mt-2">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={resetMfa}
-                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" /> Modifier les identifiants
               </button>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Double authentification
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
@@ -488,23 +475,23 @@ function LoginPage() {
               <button
                 type="button"
                 onClick={() => setStep("code")}
-                className="mt-8 flex w-full items-center gap-4 rounded-lg border border-primary/30 bg-primary/5 p-4 text-left transition-colors hover:bg-primary/10"
+                className="mt-6 flex w-full items-center gap-4 rounded-xl border border-primary/20 bg-primary/5 p-4 text-left transition-all hover:bg-primary/10 hover:border-primary/40"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
                   <MailCheck className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-medium text-foreground">
+                  <span className="block font-medium text-foreground text-sm">
                     Code par email
                   </span>
-                  <span className="block truncate text-sm text-muted-foreground">
+                  <span className="block truncate text-xs text-muted-foreground">
                     {maskedEmail}
                   </span>
                 </span>
               </button>
 
               <Button
-                className="mt-5 h-11 w-full"
+                className="mt-6 h-11 w-full font-medium"
                 onClick={() => setStep("code")}
               >
                 Continuer
@@ -513,26 +500,29 @@ function LoginPage() {
           )}
 
           {step === "code" && (
-            <div className="mt-2">
+            <div className="pt-1">
               <button
                 type="button"
                 onClick={() => setStep("method")}
-                className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4" /> Choisir une autre méthode
               </button>
-              <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-primary/10 text-primary">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
                 <KeyRound className="h-6 w-6" />
-              </span>
-              <h1 className="text-2xl font-bold text-foreground">
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">
                 Saisir le code
               </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                Entrez les 6 chiffres envoyés à {maskedEmail}. Le code expire
-                après 10 minutes.
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Entrez les 6 chiffres envoyés à{" "}
+                <span className="font-medium text-foreground">
+                  {maskedEmail}
+                </span>
+                . Le code expire après 10 minutes.
               </p>
 
-              <form onSubmit={submitMfa} className="mt-8 space-y-5">
+              <form onSubmit={submitMfa} className="mt-6 space-y-6">
                 <InputOTP
                   maxLength={6}
                   value={code}
@@ -544,7 +534,7 @@ function LoginPage() {
                       <InputOTPSlot
                         key={index}
                         index={index}
-                        className="h-12 w-11 rounded-lg border text-lg"
+                        className="h-12 w-11 rounded-lg border border-input text-lg font-semibold transition-colors focus-within:border-primary"
                       />
                     ))}
                   </InputOTPGroup>
@@ -552,13 +542,13 @@ function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="h-11 w-full text-base flex items-center justify-center"
+                  className="h-11 w-full text-base font-medium flex items-center justify-center shadow-sm"
                   disabled={isSubmitting || code.length !== 6}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Validation
+                      Validation...
                     </>
                   ) : (
                     "Valider le code"
@@ -566,12 +556,12 @@ function LoginPage() {
                 </Button>
               </form>
 
-              <div className="mt-5 text-center text-sm text-muted-foreground">
+              <div className="mt-6 text-center text-xs text-muted-foreground">
                 <button
                   type="button"
                   onClick={handleResend}
                   disabled={isSubmitting || resendCountdown > 0}
-                  className="font-medium text-primary disabled:text-muted-foreground"
+                  className="font-medium text-primary transition-colors hover:underline disabled:text-muted-foreground disabled:no-underline"
                 >
                   {resendCountdown > 0
                     ? `Renvoyer le code dans ${resendCountdown}s`
@@ -580,18 +570,6 @@ function LoginPage() {
               </div>
             </div>
           )}
-
-          {/*<p className="mt-6 text-center text-sm text-muted-foreground">
-            Pas encore de compte ?{" "}
-            <a href="#" className="font-medium text-primary hover:underline">
-              Contactez votre administrateur
-            </a>
-          </p>
-           <p className="mt-8 text-center text-xs text-muted-foreground">
-            <Link to="/" className="hover:underline">
-              Accéder à la démo →
-            </Link>
-          </p> */}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Loader2,
   CheckCircle2,
+  Package,
   XCircle,
   AlertCircle,
   Eye,
@@ -44,7 +45,7 @@ import {
   normalizeNumberInput,
 } from "@/lib/number-input";
 import { useProductsStore } from "@/stores/products.store";
-
+import { resolveMediaUrl } from "@/lib/avatar";
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "Stocks — AC ERP" }] }),
   component: InventoryPage,
@@ -194,6 +195,11 @@ function InventoryPage() {
     Array<{ id: string; label: string }>
   >([]);
   const fetchProducts = useProductsStore((state) => state.fetchList);
+
+  //Fonction Utilitaire
+  function truncate(text) {
+    return text.length > 15 ? text.slice(0, 15) + "..." : text;
+  }
 
   // ── Chargement ──
   const loadAll = useCallback(
@@ -526,9 +532,29 @@ function InventoryPage() {
       header: "Produit",
       align: "left",
       render: (s) => (
-        <div>
-          <p className="font-medium text-foreground">{s.produit.designation}</p>
-          <p className="text-xs text-muted-foreground">{s.produit.reference}</p>
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+            {s.produit.photo ? (
+              <img
+                src={resolveMediaUrl(s.produit.photo)}
+                alt={s.produit.designation}
+                className="h-full w-full rounded-lg object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <Package className="h-4 w-4" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">
+              {s.produit.designation}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {s.produit.reference}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -575,16 +601,38 @@ function InventoryPage() {
     {
       key: "produit",
       header: "Produit",
+      align: "left",
       render: (m) => (
-        <div>
-          <p className="font-medium text-foreground">{m.produit.designation}</p>
-          <p className="text-xs text-muted-foreground">{m.produit.reference}</p>
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+            {m.produit.photo ? (
+              <img
+                src={resolveMediaUrl(m.produit.photo)}
+                alt={m.produit.designation}
+                className="h-full w-full rounded-lg object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLElement).style.display = "none";
+                }}
+              />
+            ) : (
+              <Package className="h-4 w-4" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-foreground">
+              {m.produit.designation}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {m.produit.reference}
+            </p>
+          </div>
         </div>
       ),
     },
     {
       key: "typeMouvement",
       header: "Type",
+      align: "right",
       render: (m) => (
         <span className={cn("font-medium", typeStyle[m.typeMouvement] || "")}>
           {typeLabels[m.typeMouvement] || m.typeMouvement}
@@ -751,7 +799,9 @@ function InventoryPage() {
                   toast.success("Inventaire cree");
                   await loadAll();
                 } catch {
-                  toast.error("Erreur lors de la creation");
+                  toast.warning(
+                    "Impossible de créer l'inventaire. Veillez terminer l'inventaire en cours et verifier votre connexion internet",
+                  );
                 }
               }}
             >

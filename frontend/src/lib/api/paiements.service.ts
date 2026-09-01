@@ -17,16 +17,20 @@ export type CreatePaiementPayload = {
 
 export type PaiementApi = {
   id: string;
-  reference: string;
+  reference: string | null;
   montant: number | string;
-  modePaiement: string;
+  modePaiement: string | null;
   datePaiement: string;
   notes?: string | null;
   facture?: {
     id: string;
     numeroFacture: string;
+    typeFacture?: "VENTE" | "ACHAT" | string;
     client?: {
       nom: string;
+    };
+    fournisseur?: {
+      raisonSociale: string;
     };
   };
   utilisateur?: {

@@ -288,6 +288,8 @@ function PurchasesPage() {
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [confirmationChecked, setConfirmationChecked] = useState(false);
 
+  const [addPaymentSubmitting, setAddPaymentSubmitting] = useState(false);
+
   const [generalForm, setGeneralForm] = useState<WizardGeneralForm>({
     idFournisseur: "",
     entrepot: "",

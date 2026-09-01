@@ -25,6 +25,11 @@ export const paiementsService = {
           { notes: { contains: query.search.trim() } },
           { facture: { numeroFacture: { contains: query.search.trim() } } },
           { facture: { client: { nom: { contains: query.search.trim() } } } },
+          {
+            facture: {
+              fournisseur: { raisonSociale: { contains: query.search.trim() } },
+            },
+          },
           { utilisateur: { nom: { contains: query.search.trim() } } },
         ],
       }
@@ -59,15 +64,85 @@ export const paiementsService = {
       ...dateFilter,
     };
 
-    const [data, total] = await Promise.all([
-      paiementsRepository.findMany({
-        where,
-        skip: offset,
-        take: limit,
-        orderBy: { createdAt: query.sort === "asc" ? "asc" : "desc" },
-      }),
-      paiementsRepository.count(where),
-    ]);
+    const orderDirection = query.sort === "asc" ? "asc" : "desc";
+
+    // Paiements réellement enregistrés (encaissements ventes, décaissements achats déjà réglés)
+    const paiementsReels = await paiementsRepository.findMany({
+      where,
+      orderBy: { datePaiement: orderDirection },
+    });
+
+    // Factures d'achat sans paiement enregistré : affichées comme sorties (décaissement)
+    // en attente, pour que le module reflète aussi les achats sans casser la logique existante.
+    let paiementsAchatSynthetiques = [];
+    if (!query.modePaiement) {
+      const factureAchatWhere = {
+        typeFacture: "ACHAT",
+        statut: { not: "ANNULEE" },
+        paiements: { none: {} },
+        ...(query.idFacture ? { id: query.idFacture } : {}),
+      };
+
+      if (query.search?.trim()) {
+        factureAchatWhere.OR = [
+          { numeroFacture: { contains: query.search.trim() } },
+          {
+            fournisseur: {
+              raisonSociale: { contains: query.search.trim() },
+            },
+          },
+        ];
+      }
+
+      if (dateFilter.createdAt) {
+        factureAchatWhere.createdAt = dateFilter.createdAt;
+      }
+
+      const facturesAchatSansPaiement = await prisma.facture.findMany({
+        where: factureAchatWhere,
+        select: {
+          id: true,
+          numeroFacture: true,
+          typeFacture: true,
+          totalTtc: true,
+          montantPaye: true,
+          statut: true,
+          createdAt: true,
+          fournisseur: { select: { raisonSociale: true } },
+          utilisateur: { select: { id: true, nom: true, prenom: true } },
+        },
+      });
+
+      paiementsAchatSynthetiques = facturesAchatSansPaiement.map((facture) => ({
+        id: `facture-achat-${facture.id}`,
+        reference: null,
+        montant: facture.totalTtc,
+        modePaiement: null,
+        datePaiement: facture.createdAt,
+        notes: "Facture d'achat en attente de règlement",
+        facture: {
+          id: facture.id,
+          numeroFacture: facture.numeroFacture,
+          typeFacture: facture.typeFacture,
+          totalTtc: facture.totalTtc,
+          montantPaye: facture.montantPaye,
+          statut: facture.statut,
+          fournisseur: facture.fournisseur,
+        },
+        utilisateur: facture.utilisateur,
+      }));
+    }
+
+    const combined = [...paiementsReels, ...paiementsAchatSynthetiques].sort(
+      (a, b) => {
+        const diff =
+          new Date(a.datePaiement).getTime() - new Date(b.datePaiement).getTime();
+        return orderDirection === "asc" ? diff : -diff;
+      },
+    );
+
+    const total = combined.length;
+    const data = combined.slice(offset, offset + limit);
 
     return { data, meta: buildMeta(total, page, limit) };
   },

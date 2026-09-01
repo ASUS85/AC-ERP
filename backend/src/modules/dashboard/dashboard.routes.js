@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth.middleware.js";
+import { authorize } from "../../middlewares/rbac.middleware.js";
 import { dashboardController } from "./dashboard.controller.js";
 
 const router = Router();
 router.use(authenticate);
+router.use(authorize("dashboard:lire"));
 router.get("/overview", dashboardController.overview);
 router.get("/kpis", dashboardController.kpis);
 router.get("/evolution-ventes", dashboardController.evolutionVentes);

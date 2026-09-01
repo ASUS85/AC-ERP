@@ -71,10 +71,14 @@ api.interceptors.response.use(
           { refreshToken },
         );
         const accessToken = response.data?.data?.accessToken;
+        const newRefreshToken = response.data?.data?.refreshToken;
         if (!accessToken) {
           throw new Error("Access token missing from refresh response");
         }
         localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, accessToken);
+        if (newRefreshToken) {
+          localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, newRefreshToken);
+        }
         original.headers.Authorization = `Bearer ${accessToken}`;
         return api(original);
       } catch (refreshError) {
