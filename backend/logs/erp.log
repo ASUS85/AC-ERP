@@ -5809,3 +5809,22 @@ Unknown argument `token`. Available options are marked with ?. {"stack":"PrismaC
 2026-09-04T15:16:20.931Z info: Serveur demarre port 3000
 2026-09-04T15:18:18.347Z info: Socket connecte zy_W1TjoAXMTngY8AAAC
 2026-09-04T15:34:29.561Z info: Socket deconnecte zy_W1TjoAXMTngY8AAAC
+2026-09-04T15:39:26.572Z info: Base de donnees connectee
+2026-09-04T15:39:27.208Z info: CRON backup planifié (chaque nuit à 2h00)
+2026-09-04T15:39:27.224Z info: Serveur demarre port 3000
+2026-09-04T16:00:00.825Z info: Socket connecte 1x-fQ5xj5BWktmFPAAAC
+2026-09-04T16:18:16.894Z info: Socket deconnecte 1x-fQ5xj5BWktmFPAAAC
+2026-09-04T17:35:09.807Z info: Base de donnees connectee
+2026-09-04T17:35:10.047Z info: CRON backup planifié (chaque nuit à 2h00)
+2026-09-04T17:35:10.057Z info: Serveur demarre port 3000
+2026-09-04T17:41:54.432Z info: Socket connecte fv6F2RX3oJ0LBsx1AAAC
+2026-09-04T17:41:56.499Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:56.782Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:56.817Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:56.916Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:57.229Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:57.281Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:57.309Z error: Session invalide {"stack":"ApiError: Session invalide\n    at authenticate (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/middlewares/auth.middleware.js:26:13)","code":"UNAUTHORIZED"}
+2026-09-04T17:41:58.345Z info: Socket deconnecte fv6F2RX3oJ0LBsx1AAAC
+2026-09-04T17:42:18.309Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/modules/auth/auth.service.js:172:13)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/modules/auth/auth.controller.js:9:9)","code":"INVALID_CREDENTIALS"}
+2026-09-04T17:43:30.385Z info: Arret du serveur

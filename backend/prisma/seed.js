@@ -291,9 +291,9 @@ async function main() {
   const defaultUserHash = await bcrypt.hash(defaultUserPassword, 12);
   const usersData = [
     {
-      nom: "Martin",
-      prenom: "Sophie",
-      email: "s.martin@acerp.fr",
+      nom: "Armando",
+      prenom: "Christiano",
+      email: "armandchristian41@gmail.com",
       role: "ADMIN",
       telephone: "+237690000001",
     },
