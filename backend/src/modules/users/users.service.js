@@ -26,18 +26,104 @@ function buildUserErrors(data) {
   return errors;
 }
 
+async function resolveConnectedRole(userOrContext) {
+  const user = userOrContext?.user || userOrContext;
+  if (!user) return null;
+  if (user.role?.nomRole) return user.role;
+  if (user.nomRole) return user;
+
+  const roleId = user.roleId || user.idRole || user.role?.id;
+  if (roleId) {
+    const role = await usersRepository.findRoleById(roleId);
+    if (role) return role;
+  }
+
+  const userId = user.id || user.userId;
+  if (userId) {
+    const dbUser = await usersRepository.findById(userId);
+    if (dbUser?.role) return dbUser.role;
+  }
+
+  return null;
+}
+
+function canAccessUser(connectedRole, targetUser) {
+  if (!targetUser) return false;
+  const targetRoleNom = targetUser.role?.nomRole;
+  const targetIsSystem = targetUser.role?.isSystemRole;
+
+  if (connectedRole?.nomRole === "SUPER_ADMIN") {
+    return true;
+  }
+
+  if (connectedRole?.nomRole === "ADMIN") {
+    return targetRoleNom !== "SUPER_ADMIN";
+  }
+
+  return (
+    !targetIsSystem &&
+    targetRoleNom !== "SUPER_ADMIN" &&
+    targetRoleNom !== "ADMIN"
+  );
+}
+
+function canAssignRole(connectedRole, targetRole) {
+  if (!targetRole) return false;
+  const targetRoleNom = targetRole.nomRole;
+  const targetIsSystem = targetRole.isSystemRole;
+
+  if (connectedRole?.nomRole === "SUPER_ADMIN") {
+    return true;
+  }
+
+  if (connectedRole?.nomRole === "ADMIN") {
+    return targetRoleNom !== "SUPER_ADMIN";
+  }
+
+  return (
+    !targetIsSystem &&
+    targetRoleNom !== "SUPER_ADMIN" &&
+    targetRoleNom !== "ADMIN"
+  );
+}
+
 export const usersService = {
-  async list(query) {
+  async list(query, currentUser) {
     const { page, limit, offset } = getPagination(query);
-    const where = query.search
-      ? {
-          OR: [
-            { nom: { contains: query.search } },
-            { prenom: { contains: query.search } },
-            { email: { contains: query.search } },
-          ],
-        }
-      : {};
+    const connectedRole = await resolveConnectedRole(currentUser);
+
+    const conditions = [];
+
+    if (query.search) {
+      conditions.push({
+        OR: [
+          { nom: { contains: query.search } },
+          { prenom: { contains: query.search } },
+          { email: { contains: query.search } },
+        ],
+      });
+    }
+
+    if (connectedRole?.nomRole === "SUPER_ADMIN") {
+    } else if (connectedRole?.nomRole === "ADMIN") {
+      conditions.push({
+        role: { nomRole: { not: "SUPER_ADMIN" } },
+      });
+    } else {
+      conditions.push({
+        role: {
+          isSystemRole: false,
+          nomRole: { notIn: ["SUPER_ADMIN", "ADMIN"] },
+        },
+      });
+    }
+
+    const where =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]
+          : { AND: conditions };
 
     const [data, total] = await Promise.all([
       usersRepository.findMany({
@@ -50,12 +136,20 @@ export const usersService = {
     ]);
     return { data, meta: buildMeta(total, page, limit) };
   },
-  async getById(id) {
+  async getById(id, currentUser) {
     const user = await usersRepository.findById(id);
     if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+
+    if (currentUser) {
+      const connectedRole = await resolveConnectedRole(currentUser);
+      if (!canAccessUser(connectedRole, user)) {
+        throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+      }
+    }
+
     return user;
   },
-  async create(data) {
+  async create(data, currentUser) {
     const errors = buildUserErrors(data);
     if (Object.keys(errors).length) {
       throw new ApiError(
@@ -84,7 +178,19 @@ export const usersService = {
         "INVALID_ROLE",
         "Le rôle sélectionné est introuvable",
       );
-    if (role.isSystemRole) {
+
+    if (currentUser) {
+      const connectedRole = await resolveConnectedRole(currentUser);
+      if (!canAssignRole(connectedRole, role)) {
+        throw new ApiError(
+          403,
+          "FORBIDDEN",
+          "Vous n'avez pas l'autorisation d'assigner ce rôle",
+        );
+      }
+    }
+
+    if (role.nomRole === "SUPER_ADMIN") {
       const existingSystemAdmin = await prisma.utilisateur.count({
         where: { idRole: role.id },
       });
@@ -138,8 +244,8 @@ export const usersService = {
       throw error;
     }
   },
-  async update(id, data) {
-    await this.getById(id);
+  async update(id, data, currentUser) {
+    await this.getById(id, currentUser);
     const errors = buildUserErrors(data);
     if (Object.keys(errors).length) {
       throw new ApiError(
@@ -169,7 +275,19 @@ export const usersService = {
         "INVALID_ROLE",
         "Le rôle sélectionné est introuvable",
       );
-    if (role.isSystemRole) {
+
+    if (currentUser) {
+      const connectedRole = await resolveConnectedRole(currentUser);
+      if (!canAssignRole(connectedRole, role)) {
+        throw new ApiError(
+          403,
+          "FORBIDDEN",
+          "Vous n'avez pas l'autorisation d'assigner ce rôle",
+        );
+      }
+    }
+
+    if (role.nomRole === "SUPER_ADMIN") {
       const existingSystemAdmin = await prisma.utilisateur.count({
         where: { idRole: role.id, id: { not: id } },
       });
@@ -193,12 +311,12 @@ export const usersService = {
 
     return usersRepository.update(id, payload);
   },
-  async remove(id) {
-    await this.getById(id);
+  async remove(id, currentUser) {
+    await this.getById(id, currentUser);
     return usersRepository.update(id, { statut: "INACTIF" });
   },
-  async debloquer(id) {
-    await this.getById(id);
+  async debloquer(id, currentUser) {
+    await this.getById(id, currentUser);
     return usersRepository.update(id, {
       failedAttempts: 0,
       lockedUntil: null,

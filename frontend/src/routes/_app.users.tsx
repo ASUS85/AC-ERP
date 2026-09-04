@@ -30,6 +30,7 @@ import {
   updateUser,
   type UserPayload,
 } from "@/lib/api/users.service";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const Route = createFileRoute("/_app/users")({
   head: () => ({ meta: [{ title: "Utilisateurs — AC ERP" }] }),
@@ -79,6 +80,9 @@ function UsersPage() {
     statut: "ACTIF",
   });
 
+  const currentUser = useAuthStore((state) => state.user);
+  const currentUserRole = currentUser?.role?.nomRole;
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -87,13 +91,16 @@ function UsersPage() {
         getRoles(),
       ]);
       const usersData = Array.isArray(usersResponse?.data)
-        ? usersResponse.data.filter(
-            (user: UserRow) => !user?.role?.isSystemRole,
-          )
+        ? usersResponse.data
         : [];
-      const rolesData = Array.isArray(rolesResponse?.data)
-        ? rolesResponse.data.filter((role: any) => !role?.isSystemRole)
+      const allRoles = Array.isArray(rolesResponse?.data)
+        ? rolesResponse.data
         : [];
+      const rolesData = allRoles.filter((role: any) => {
+        if (currentUserRole === "SUPER_ADMIN") return true;
+        if (currentUserRole === "ADMIN") return role?.nomRole !== "SUPER_ADMIN";
+        return !role?.isSystemRole && role?.nomRole !== "SUPER_ADMIN" && role?.nomRole !== "ADMIN";
+      });
       setRows(usersData);
       setRoles(rolesData);
     } catch {
@@ -105,7 +112,7 @@ function UsersPage() {
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [currentUserRole]);
 
   const openCreateModal = () => {
     setEditingUser(null);
@@ -209,7 +216,6 @@ function UsersPage() {
   const filteredUsers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     return rows.filter((user) => {
-      if (user.role?.isSystemRole) return false;
       const matchesStatus =
         statusFilter === "all" || user.statut === statusFilter;
       const matchesSearch =
