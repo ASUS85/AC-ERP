@@ -100,11 +100,20 @@ async function createMfaChallenge(user, meta = {}) {
     meta,
   });
 
-  await sendMfaCodeEmail(
-    user.email,
-    user.prenom || user.nom || "Utilisateur",
-    code,
-  );
+  try {
+    await sendMfaCodeEmail(
+      user.email,
+      user.prenom || user.nom || "Utilisateur",
+      code,
+    );
+  } catch {
+    mfaChallenges.delete(mfaToken);
+    throw new ApiError(
+      503,
+      "EMAIL_SERVICE_UNAVAILABLE",
+      "Le service email est momentanement indisponible",
+    );
+  }
 
   return {
     mfaRequired: true,
