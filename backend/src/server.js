@@ -11,7 +11,7 @@ async function bootstrap() {
   await connectDB();
   logger.info("Base de donnees connectee");
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     logger.info(`Serveur demarre port ${PORT}`);
   });
 

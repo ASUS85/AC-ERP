@@ -1,0 +1,1 @@
+import{E as n,F as o,m as u,g as i}from"./index-SvFHVsjt.js";function h(){const{auth:s}=n({from:o.id}),t=s?.user??u();if(!t)throw new Error("useAuth must be used within an authenticated context.");return{user:t,isAuthenticated:!!t,hasPermission:(e,r)=>i(t,e,r)}}export{h as u};

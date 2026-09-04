@@ -12,6 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:format": "prisma format",
     "prisma:studio": "prisma studio",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "dev": "nodemon src/server.js",

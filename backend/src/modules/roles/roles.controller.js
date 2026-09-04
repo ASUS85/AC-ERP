@@ -4,7 +4,7 @@ import { rolesService } from "./roles.service.js";
 export const rolesController = {
   async list(req, res, next) {
     try {
-      const r = await rolesService.list(req.query);
+      const r = await rolesService.list(req.query, req.user);
       return sendSuccess(res, r.data, "Roles recuperes", r.meta);
     } catch (e) {
       next(e);
@@ -14,7 +14,7 @@ export const rolesController = {
     try {
       return sendSuccess(
         res,
-        await rolesService.getById(req.params.id),
+        await rolesService.getById(req.params.id, req.user),
         "Role recupere",
       );
     } catch (e) {
@@ -25,7 +25,7 @@ export const rolesController = {
     try {
       return sendSuccess(
         res,
-        await rolesService.create(req.body),
+        await rolesService.create(req.body, req.user),
         "Role cree",
         null,
         201,
@@ -38,7 +38,7 @@ export const rolesController = {
     try {
       return sendSuccess(
         res,
-        await rolesService.update(req.params.id, req.body),
+        await rolesService.update(req.params.id, req.body, req.user),
         "Role mis a jour",
       );
     } catch (e) {
@@ -49,7 +49,7 @@ export const rolesController = {
     try {
       return sendSuccess(
         res,
-        await rolesService.remove(req.params.id),
+        await rolesService.remove(req.params.id, req.user),
         "Role supprime",
       );
     } catch (e) {
@@ -71,7 +71,7 @@ export const rolesController = {
     try {
       return sendSuccess(
         res,
-        await rolesService.getPermissions(req.params.id),
+        await rolesService.getPermissions(req.params.id, req.user),
         "Permissions recuperees",
       );
     } catch (e) {
@@ -85,6 +85,7 @@ export const rolesController = {
         await rolesService.setPermissions(
           req.params.id,
           req.body.permissionIds,
+          req.user,
         ),
         "Permissions mises a jour",
       );

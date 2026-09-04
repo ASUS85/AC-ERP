@@ -224,15 +224,13 @@ export function useNotifications() {
       };
     }
 
-    socket = io(
-      (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(
-        "/api/v1",
-        "",
-      ),
-      {
-        auth: { token, userId: user?.id },
-      },
-    );
+    const apiUrl =
+      import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    const apiOrigin = apiUrl.replace(/\/api\/v\d+\/?$/, "").replace(/\/$/, "");
+
+    socket = io(apiOrigin, {
+      auth: { token, userId: user?.id },
+    });
 
     socket.on("notification", (notification: Notification) => {
       setNotifications((current) => {

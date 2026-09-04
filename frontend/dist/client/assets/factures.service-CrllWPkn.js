@@ -1,0 +1,1 @@
+import{o as t}from"./index-SvFHVsjt.js";const a=e=>t.get("/factures",{params:e}),r=e=>t.get(`/factures/${e}`),o=e=>t.get(`/factures/${e}/pdf`,{responseType:"blob"}),c=e=>t.post(`/factures/${e}/envoyer`);export{r as a,o as b,c as e,a as g};

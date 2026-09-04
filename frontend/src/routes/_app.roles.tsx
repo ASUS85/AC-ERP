@@ -118,7 +118,7 @@ function RolesPage() {
         getPermissions(),
       ]);
       const rolesData = Array.isArray(rolesResponse?.data)
-        ? rolesResponse.data.filter((role: RoleItem) => !role?.isSystemRole)
+        ? rolesResponse.data
         : [];
       const permissionsData = Array.isArray(permissionsResponse?.data)
         ? permissionsResponse.data
@@ -414,14 +414,16 @@ function RolesPage() {
                   >
                     <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier rôle
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => openDeleteModal(selectedRole)}
-                  >
-                    <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Supprimer
-                  </Button>
+                  {!selectedRole.isSystemRole && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => openDeleteModal(selectedRole)}
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Supprimer
+                    </Button>
+                  )}
                   <Button
                     onClick={() => void handleSavePermissions()}
                     disabled={savingPermissions}
