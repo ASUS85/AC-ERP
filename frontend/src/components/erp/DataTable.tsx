@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Loader2, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import sorryImage from "@/assets/sorry.svg";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -211,7 +212,7 @@ export function DataTable<T extends Record<string, any>>({
               <td colSpan={columns.length + (rowActions ? 1 : 0)}>
                 <div className="flex flex-col items-center justify-center py-6 text-center">
                   <img
-                    src="/src/assets/sorry.svg"
+                    src={sorryImage}
                     alt="Aucun élément"
                     className="mb-3 w-28 opacity-90"
                   />

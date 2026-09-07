@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import sorryImage from "@/assets/sorry.svg";
 import {
   User,
   Building2,
@@ -1799,7 +1800,7 @@ function SettingsPage() {
                 {audits.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <img
-                      src="/src/assets/sorry.svg"
+                      src={sorryImage}
                       alt="Aucune activité"
                       className="mb-3 w-28 opacity-90"
                     />

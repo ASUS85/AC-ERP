@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import sorryImage from "@/assets/sorry.svg";
 import {
   AlertTriangle,
   FileWarning,
@@ -226,7 +227,7 @@ function NotificationsPage() {
           {!loading && visibleItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <img
-                src="/src/assets/sorry.svg"
+                src={sorryImage}
                 alt="Aucun élément"
                 className="mb-3 w-28 opacity-80"
               />

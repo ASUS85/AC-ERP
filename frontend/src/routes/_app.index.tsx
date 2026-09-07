@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import sorryImage from "@/assets/sorry.svg";
 import {
   Area,
   AreaChart,
@@ -610,7 +611,7 @@ function Dashboard() {
                     >
                       <div className="flex flex-col items-center justify-center text-center">
                         <img
-                          src="/src/assets/sorry.svg"
+                          src={sorryImage}
                           alt="Aucun élément"
                           className="mb-3 w-24 opacity-80"
                         />
