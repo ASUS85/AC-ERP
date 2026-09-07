@@ -1,33 +1,33 @@
-import { Resend } from "resend";
-
+import { BrevoClient } from "@getbrevo/brevo";
 import logger from "../utils/logger.js";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const brevo = new BrevoClient({
+  apiKey: process.env.BREVO_API_KEY,
+});
 
 export async function sendMail(to, subject, html, options = {}) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "AC ERP <onboarding@resend.dev>",
-      to: [to],
+    const response = await brevo.transactionalEmails.sendTransacEmail({
+      sender: {
+        email: process.env.EMAIL_FROM,
+        name: process.env.EMAIL_FROM_NAME || "AC ERP",
+      },
+      to: [
+        {
+          email: to,
+        },
+      ],
       subject,
-      html,
+      htmlContent: html,
       ...options,
     });
 
-    if (error) {
-      logger.error("Echec envoi email", {
-        code: error.name,
-        message: error.message,
-      });
-
-      throw error;
-    }
-
-    return data;
+    return response;
   } catch (error) {
     logger.error("Echec envoi email", {
-      code: error.code || error.name,
-      message: error.message,
+      to,
+      subject,
+      error: error?.message || error,
     });
 
     throw error;
