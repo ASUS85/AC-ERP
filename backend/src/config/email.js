@@ -1,36 +1,35 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
+
 import logger from "../utils/logger.js";
 
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: Number(process.env.SMTP_PORT || 587) === 465,
-  auth:
-    process.env.SMTP_USER && process.env.SMTP_PASS
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-      : undefined,
-  connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 10000),
-  greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
-  socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 15000),
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendMail(to, subject, html, options = {}) {
   try {
-    return await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || "AC ERP <onboarding@resend.dev>",
+      to: [to],
       subject,
       html,
       ...options,
     });
+
+    if (error) {
+      logger.error("Echec envoi email", {
+        code: error.name,
+        message: error.message,
+      });
+
+      throw error;
+    }
+
+    return data;
   } catch (error) {
     logger.error("Echec envoi email", {
-      host: process.env.SMTP_HOST || null,
-      port: Number(process.env.SMTP_PORT || 587),
-      code: error.code,
-      command: error.command,
-      responseCode: error.responseCode,
+      code: error.code || error.name,
+      message: error.message,
     });
+
     throw error;
   }
 }
