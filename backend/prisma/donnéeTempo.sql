@@ -436,9 +436,9 @@ SET @inv1_id = UUID();
 INSERT INTO inventaires (id, id_utilisateur_createur, statut, date_debut, date_fin, created_at) VALUES
 (@inv1_id, @user_id, 'VALIDE', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 3 DAY);
 
-INSERT INTO lignes_inventaire (id, id_inventaire, id_produit, stock_theorique, stock_reel) VALUES
-(UUID(), @inv1_id, @prod_papier, 25, 24),
-(UUID(), @inv1_id, @prod_switch, 25, 26);
+INSERT INTO lignes_inventaire (id, id_inventaire, id_produit, stock_theorique, stock_reel, ecart) VALUES
+(UUID(), @inv1_id, @prod_papier, 25, 24, -1),
+(UUID(), @inv1_id, @prod_switch, 25, 26, 1);
 
 -- MOUVEMENTS D'AJUSTEMENT
 UPDATE stocks SET stock_actuel = 24, updated_at = NOW() WHERE id_produit = @prod_papier;

@@ -71,6 +71,7 @@ function LoginPage() {
     email: "",
     password: "",
   });
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     if (resendCountdown <= 0) return;
@@ -102,6 +103,7 @@ function LoginPage() {
     }
 
     setErrors(newErrors);
+    setLoginError("");
 
     if (hasError) {
       return;
@@ -127,9 +129,18 @@ function LoginPage() {
 
       completeLogin(result as { user?: AuthUserLike } | undefined);
     } catch (error: any) {
-      toast.error("Connexion impossible", {
-        description: error.message || "Verifier vos identifiants.",
-      });
+      const code = error?.code;
+      const message =
+        code === "INVALID_CREDENTIALS"
+          ? "Email ou mot de passe incorrect."
+          : error?.message || "La connexion est impossible pour le moment.";
+      setLoginError(message);
+      if (code === "INVALID_CREDENTIALS") {
+        setErrors((prev) => ({
+          ...prev,
+          password: "Vérifiez votre mot de passe",
+        }));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -329,6 +340,7 @@ function LoginPage() {
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
+                        setLoginError("");
                         if (errors.email) {
                           setErrors((prev) => ({
                             ...prev,
@@ -341,6 +353,7 @@ function LoginPage() {
                           ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }`}
+                      aria-invalid={Boolean(errors.email || loginError)}
                     />
                   </div>
                   {errors.email && (
@@ -362,6 +375,7 @@ function LoginPage() {
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
+                        setLoginError("");
                         if (errors.password) {
                           setErrors((prev) => ({
                             ...prev,
@@ -374,6 +388,7 @@ function LoginPage() {
                           ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }`}
+                      aria-invalid={Boolean(errors.password || loginError)}
                     />
                     <button
                       type="button"
@@ -405,6 +420,15 @@ function LoginPage() {
                     Mot de passe oublié ?
                   </button>
                 </div>
+
+                {loginError && (
+                  <p
+                    role="alert"
+                    className="text-center text-sm font-medium text-destructive"
+                  >
+                    {loginError}
+                  </p>
+                )}
 
                 <Button
                   type="submit"
