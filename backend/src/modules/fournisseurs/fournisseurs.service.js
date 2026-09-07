@@ -1,7 +1,10 @@
 import { createCrudService } from "../_shared/service.factory.js";
 import { fournisseursRepository } from "./fournisseurs.repository.js";
+import { parametresRepository } from "../parametres/parametres.repository.js";
+import { sendPartnershipWelcomeEmail } from "../../services/email.service.js";
+import logger from "../../utils/logger.js";
 
-export const fournisseursService = createCrudService(fournisseursRepository, {
+const crudService = createCrudService(fournisseursRepository, {
   buildWhere: (query) => ({
     ...(query.search
       ? {
@@ -22,3 +25,29 @@ export const fournisseursService = createCrudService(fournisseursRepository, {
       `FOUR-${String((await fournisseursRepository.countAll()) + 1).padStart(4, "0")}`,
   }),
 });
+
+export const fournisseursService = {
+  ...crudService,
+  async create(data, context = {}) {
+    const fournisseur = await crudService.create(data, context);
+
+    if (fournisseur.email) {
+      try {
+        const entreprise = await parametresRepository.entreprise();
+        await sendPartnershipWelcomeEmail(
+          fournisseur.email,
+          fournisseur.raisonSociale,
+          entreprise.raisonSociale,
+          "fournisseur",
+        );
+      } catch (error) {
+        logger.error("Echec email de bienvenue fournisseur", {
+          fournisseurId: fournisseur.id,
+          code: error.code,
+        });
+      }
+    }
+
+    return fournisseur;
+  },
+};

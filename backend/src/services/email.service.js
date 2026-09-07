@@ -101,7 +101,31 @@ const layout = (title, body) => `
 </html>
 `;
 
-export const sendWelcomeEmail = (to, nom, motDePasseTemp, lienPlateformeEchange) =>
+export const sendPartnershipWelcomeEmail = (
+  to,
+  contactName,
+  companyName,
+  type,
+) =>
+  sendMail(
+    to,
+    `Bienvenue dans le partenariat avec ${companyName}`,
+    layout(
+      `Bienvenue chez ${companyName}`,
+      `<p>Bonjour <strong>${contactName || "Madame, Monsieur"}</strong>,</p>
+      <p>Nous vous remercions d'être entré(e) en partenariat avec <strong>${companyName}</strong>.</p>
+      <p>Votre ${type === "fournisseur" ? "référencement comme fournisseur" : "compte client"} a bien été créé dans notre système.</p>
+      <p>Nos équipes restent à votre disposition pour construire une relation professionnelle durable.</p>
+      <p>Cordialement,<br /><strong>${companyName}</strong></p>`,
+    ),
+  );
+
+export const sendWelcomeEmail = (
+  to,
+  nom,
+  motDePasseTemp,
+  lienPlateformeEchange,
+) =>
   sendMail(
     to,
     "Bienvenue sur AC ERP",
@@ -368,10 +392,14 @@ export const sendRestoreNotificationEmail = (to, nom, details) =>
           <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#64748b;">Heure de la sauvegarde</td>
           <td align="right" style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${details.heure}</td>
         </tr>
-        ${details.effectuePar ? `<tr>
+        ${
+          details.effectuePar
+            ? `<tr>
           <td style="padding:10px;border-bottom:1px solid #e5e7eb;color:#64748b;">Opération réalisée par</td>
           <td align="right" style="padding:10px;border-bottom:1px solid #e5e7eb;font-weight:600;">${details.effectuePar}</td>
-        </tr>` : ""}
+        </tr>`
+            : ""
+        }
       </table>
 
       <p>

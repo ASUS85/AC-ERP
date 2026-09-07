@@ -3,6 +3,8 @@ import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { clientsRepository } from "./clients.repository.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
 import { buildClientsPdf } from "../../services/client-document.service.js";
+import { sendPartnershipWelcomeEmail } from "../../services/email.service.js";
+import logger from "../../utils/logger.js";
 
 export const clientsService = {
   async list(query) {
@@ -83,10 +85,29 @@ export const clientsService = {
       data.codeClient ||
       `CLI-${String((await clientsRepository.countAll()) + 1).padStart(4, "0")}`;
 
-    return clientsRepository.create({
+    const client = await clientsRepository.create({
       ...data,
       codeClient,
     });
+
+    if (client.email) {
+      try {
+        const entreprise = await parametresRepository.entreprise();
+        await sendPartnershipWelcomeEmail(
+          client.email,
+          client.nom,
+          entreprise.raisonSociale,
+          "client",
+        );
+      } catch (error) {
+        logger.error("Echec email de bienvenue client", {
+          clientId: client.id,
+          code: error.code,
+        });
+      }
+    }
+
+    return client;
   },
 
   async update(id, data) {

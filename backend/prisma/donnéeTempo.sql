@@ -31,10 +31,8 @@ TRUNCATE TABLE fournisseurs;
 TRUNCATE TABLE clients;
 TRUNCATE TABLE produits;
 TRUNCATE TABLE categories;
-TRUNCATE TABLE role_permissions;
-TRUNCATE TABLE permissions;
-TRUNCATE TABLE roles;
-TRUNCATE TABLE utilisateurs;
+-- Les roles, permissions et utilisateurs sont deja crees par prisma/seed.js.
+-- Ils ne doivent pas etre supprimes lors de l'import des donnees metier.
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ==========================================================
@@ -157,7 +155,7 @@ INSERT INTO fournisseurs (id, code_fournisseur, raison_sociale, email, telephone
 (UUID(), 'FRS-0009', 'Cablexpert', 'info@cablexpert.cm', '+237 677000009', '66 Rue des Cables', 'Douala', 'Cameroun', 7, 'Paiement 30 jours', 'ACTIF', NOW()),
 (UUID(), 'FRS-0010', 'NetEquip', 'ventes@netequip.cm', '+237 677000010', '99 Rue du Reseau', 'Yaounde', 'Cameroun', 6, 'Paiement 30 jours', 'ACTIF', NOW());
 
-INSERT INTO permissions (id, module, action, description) VALUES
+INSERT IGNORE INTO permissions (id, module, action, description) VALUES
 -- Tableau de bord
 (UUID(), 'dashboard', 'lire', 'Voir le tableau de bord'),
 -- Produits & categories
@@ -242,7 +240,7 @@ INSERT INTO permissions (id, module, action, description) VALUES
 -- ==========================================================
 -- 6. ROLES
 -- ==========================================================
-INSERT INTO roles (id, nom_role, description, is_system_role, created_at) VALUES
+INSERT IGNORE INTO roles (id, nom_role, description, is_system_role, created_at) VALUES
 (UUID(), 'SUPER_ADMIN', 'Accès total à toutes les fonctionnalités, y compris la configuration système.', true, NOW()),
 (UUID(), 'ADMIN', 'Administrateur fonctionnel, gère les utilisateurs et les droits.', false, NOW()),
 (UUID(), 'GESTIONNAIRE', 'Gère les opérations commerciales, achats, ventes et stocks.', false, NOW()),
@@ -265,11 +263,11 @@ SET @password_hash = '$2a$12$I5n/FX/JTYp8HzetN7w.4uFaA9QMZGDoD5QVGN0etdbs3gerYjN
 
 -- Utilisateur SUPER_ADMIN (principal pour les opérations du script)
 SET @user_id = UUID();
-INSERT INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
+INSERT IGNORE INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
 (@user_id, 'Admin', 'Super', 'armandchristian85@gmail.com', @password_hash, @role_super_admin_id, 'ACTIF', NOW(), NOW());
 
 -- Autres utilisateurs
-INSERT INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
+INSERT IGNORE INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut, created_at, updated_at) VALUES
 (UUID(), 'Ministrator', 'Ad', 'admin@ac-erp.com', @password_hash, @role_admin_id, 'ACTIF', NOW(), NOW()),
 (UUID(), 'Dupont', 'Jean', 'jean.dupont@ac-erp.com', @password_hash, @role_gestionnaire_id, 'ACTIF', NOW(), NOW()),
 (UUID(), 'Martin', 'Sophie', 'sophie.martin@ac-erp.com', @password_hash, @role_gestionnaire_id, 'ACTIF', NOW(), NOW()),
@@ -277,6 +275,10 @@ INSERT INTO utilisateurs (id, nom, prenom, email, password_hash, id_role, statut
 (UUID(), 'Petit', 'Alice', 'alice.petit@ac-erp.com', @password_hash, @role_commercial_id, 'ACTIF', NOW(), NOW()),
 (UUID(), 'Leroy', 'Paul', 'paul.leroy@ac-erp.com', @password_hash, @role_magasinier_id, 'ACTIF', NOW(), NOW()),
 (UUID(), 'Moreau', 'Juliette', 'juliette.moreau@ac-erp.com', @password_hash, @role_magasinier_id, 'ACTIF', NOW(), NOW());
+
+-- Reutiliser le compte cree par seed.js pour les cles etrangeres ci-dessous.
+SELECT id INTO @user_id FROM utilisateurs
+WHERE email = 'armandchristian85@gmail.com' LIMIT 1;
 
 -- ==========================================================
 -- 8. RECUPERATION DES IDs (Produits, Clients, Fournisseurs)
@@ -476,24 +478,24 @@ SELECT id INTO @role_commercial FROM roles WHERE nom_role = 'COMMERCIAL';
 SELECT id INTO @role_magasinier FROM roles WHERE nom_role = 'MAGASINIER';
 
 -- 1. SUPER_ADMIN et ADMIN recoivent toutes les permissions
-INSERT INTO role_permissions (id_role, id_permission)
+INSERT IGNORE INTO role_permissions (id_role, id_permission)
 SELECT r.id, p.id FROM roles r, permissions p WHERE r.nom_role IN ('SUPER_ADMIN', 'ADMIN');
 
 -- 2. Le GESTIONNAIRE a presque tout, sauf la gestion des utilisateurs/rôles et de l'IA.
-INSERT INTO role_permissions (id_role, id_permission)
+INSERT IGNORE INTO role_permissions (id_role, id_permission)
 SELECT @role_gestionnaire, p.id
 FROM permissions p
 WHERE p.module NOT IN ('users', 'roles', 'permissions', 'ia');
 
 -- 3. Le COMMERCIAL gère le cycle de vente et la consultation utile du catalogue.
-INSERT INTO role_permissions (id_role, id_permission)
+INSERT IGNORE INTO role_permissions (id_role, id_permission)
 SELECT @role_commercial, p.id
 FROM permissions p
 WHERE (p.module IN ('clients', 'ventes', 'factures') AND p.action IN ('creer', 'lire', 'modifier', 'valider', 'livrer', 'avoir', 'envoyer'))
    OR (p.module IN ('produits', 'stocks', 'dashboard', 'rapports') AND p.action = 'lire');
 
 -- 4. Le MAGASINIER gère les stocks, les achats et les réceptions.
-INSERT INTO role_permissions (id_role, id_permission)
+INSERT IGNORE INTO role_permissions (id_role, id_permission)
 SELECT @role_magasinier, p.id
 FROM permissions p
 WHERE (p.module IN ('stocks', 'mouvements_stock', 'inventaires', 'receptions', 'achats') AND p.action IN ('creer', 'lire', 'modifier', 'ajuster', 'inventaire', 'valider', 'receptionner'))
