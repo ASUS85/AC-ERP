@@ -47,6 +47,7 @@ function AppLayout() {
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isClientAuthenticated, setIsClientAuthenticated] = useState(false);
+  const [contentRefreshKey, setContentRefreshKey] = useState(0);
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -103,13 +104,17 @@ function AppLayout() {
         <SidebarNav
           collapsed={sidebarCollapsed}
           onToggleCollapsed={toggleSidebarCollapsed}
+          onRefresh={() => setContentRefreshKey((key) => key + 1)}
         />
       </aside>
 
       {/* Mobile drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-64 border-0 p-0">
-          <SidebarNav onNavigate={() => setOpen(false)} />
+          <SidebarNav
+            onNavigate={() => setOpen(false)}
+            onRefresh={() => setContentRefreshKey((key) => key + 1)}
+          />
         </SheetContent>
       </Sheet>
 
@@ -121,7 +126,7 @@ function AppLayout() {
       >
         <Topbar onMenu={() => setOpen(true)} />
         <main className="main-scrollbar relative flex-1 p-4 md:p-3 lg:p-4">
-          <Outlet />
+          <Outlet key={`${pathname}:${contentRefreshKey}`} />
           <GlobalLoaderSlot target="main" />
         </main>
       </div>

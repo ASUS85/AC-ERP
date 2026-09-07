@@ -27,10 +27,12 @@ function initials(user: AuthUserLike | null) {
 
 export function SidebarNav({
   onNavigate,
+  onRefresh,
   collapsed = false,
   onToggleCollapsed,
 }: {
   onNavigate?: () => void;
+  onRefresh?: () => void;
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
 }) {
@@ -142,7 +144,13 @@ export function SidebarNav({
                   const link = (
                     <Link
                       to={item.url}
-                      onClick={onNavigate}
+                      onClick={(event) => {
+                        onNavigate?.();
+                        if (active) {
+                          event.preventDefault();
+                          onRefresh?.();
+                        }
+                      }}
                       className={cn(
                         "group flex items-center py-2 text-sm font-medium transition-all",
                         collapsed ? "justify-center px-2" : "gap-3 px-3",
