@@ -120,10 +120,6 @@ function LoginPage() {
         setResendCountdown(result.resendAfter || 30);
         setStep("method");
 
-        toast.success("Identifiants validés", {
-          description: "Choisissez votre méthode de vérification.",
-        });
-
         return;
       }
 
@@ -140,6 +136,8 @@ function LoginPage() {
           ...prev,
           password: "Vérifiez votre mot de passe",
         }));
+      } else {
+        toast.error("Erreur système", { description: message });
       }
     } finally {
       setIsSubmitting(false);
@@ -165,9 +163,6 @@ function LoginPage() {
         ? search.redirect
         : getDefaultRedirect(session?.user);
 
-    toast.success("Connexion réussie", {
-      description: "Bienvenue sur AC ERP.",
-    });
     router.invalidate();
     navigate({ to: redirectTarget, replace: true });
   };
@@ -200,9 +195,6 @@ function LoginPage() {
       const result = await resendMfa(mfaToken);
       setResendCountdown(result.resendAfter || 30);
       setCode("");
-      toast.success("Code renvoyé", {
-        description: `Un nouveau code a été envoyé à ${maskedEmail}.`,
-      });
     } catch (error: any) {
       const retryAfter = error.details?.retryAfter;
       if (retryAfter) setResendCountdown(retryAfter);
@@ -224,10 +216,6 @@ function LoginPage() {
     try {
       await forgotPassword(email.trim());
       setStep("resetSent");
-      toast.success("Email envoyé", {
-        description:
-          "Consultez votre boîte mail pour modifier votre mot de passe.",
-      });
     } catch (error: any) {
       toast.error("Envoi impossible", {
         description: error.message || "Veuillez réessayer plus tard.",
@@ -424,7 +412,7 @@ function LoginPage() {
                 {loginError && (
                   <p
                     role="alert"
-                    className="text-center text-sm font-medium text-destructive"
+                    className="text-start text-sm font-medium text-destructive"
                   >
                     {loginError}
                   </p>
