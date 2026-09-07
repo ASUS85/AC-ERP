@@ -2,6 +2,7 @@ import {
   createFileRoute,
   Outlet,
   redirect,
+  useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -51,6 +52,7 @@ function AppLayout() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
@@ -63,6 +65,22 @@ function AppLayout() {
     }
     setIsClientAuthenticated(true);
   }, []);
+
+  useEffect(() => {
+    const refreshAccess = () => {
+      void useAuthStore
+        .getState()
+        .fetchProfile(true)
+        .catch(() => {
+          clearAuthSession();
+          navigate({ to: "/login" });
+        });
+    };
+
+    window.addEventListener("user-access-updated", refreshAccess);
+    return () =>
+      window.removeEventListener("user-access-updated", refreshAccess);
+  }, [navigate]);
 
   useEffect(() => {
     useSettingsStore

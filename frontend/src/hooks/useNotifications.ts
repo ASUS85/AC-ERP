@@ -232,6 +232,12 @@ export function useNotifications() {
       auth: { token, userId: user?.id },
     });
 
+    socket.on("user-access-updated", (access) => {
+      window.dispatchEvent(
+        new CustomEvent("user-access-updated", { detail: access }),
+      );
+    });
+
     socket.on("notification", (notification: Notification) => {
       setNotifications((current) => {
         if (current.some((item) => item.id === notification.id)) return current;

@@ -9,6 +9,7 @@ import { sendWelcomeEmail } from "../../services/email.service.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
 import { usersRepository } from "./users.repository.js";
 import logger from "../../utils/logger.js";
+import { emitToUser } from "../../services/socket.service.js";
 
 function normalizeUserPayload(data) {
   const { motDePasseTemp, passwordHash, ...rest } = data || {};
@@ -58,7 +59,7 @@ function canAccessUser(connectedRole, targetUser) {
   }
 
   if (connectedRole?.nomRole === "ADMIN") {
-    return targetRoleNom !== "SUPER_ADMIN";
+    return targetRoleNom !== "SUPER_ADMIN" && targetRoleNom !== "ADMIN";
   }
 
   return (
@@ -78,7 +79,7 @@ function canAssignRole(connectedRole, targetRole) {
   }
 
   if (connectedRole?.nomRole === "ADMIN") {
-    return targetRoleNom !== "SUPER_ADMIN";
+    return targetRoleNom !== "SUPER_ADMIN" && targetRoleNom !== "ADMIN";
   }
 
   return (
@@ -93,7 +94,7 @@ export const usersService = {
     const { page, limit, offset } = getPagination(query);
     const connectedRole = await resolveConnectedRole(currentUser);
 
-    const conditions = [];
+    const conditions = [{ isActive: true }];
 
     if (query.search) {
       conditions.push({
@@ -108,7 +109,7 @@ export const usersService = {
     if (connectedRole?.nomRole === "SUPER_ADMIN") {
     } else if (connectedRole?.nomRole === "ADMIN") {
       conditions.push({
-        role: { nomRole: { not: "SUPER_ADMIN" } },
+        role: { nomRole: { notIn: ["SUPER_ADMIN", "ADMIN"] } },
       });
     } else {
       conditions.push({
@@ -139,7 +140,9 @@ export const usersService = {
   },
   async getById(id, currentUser) {
     const user = await usersRepository.findById(id);
-    if (!user) throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+    if (!user || !user.isActive) {
+      throw new ApiError(404, "NOT_FOUND", "Utilisateur introuvable");
+    }
 
     if (currentUser) {
       const connectedRole = await resolveConnectedRole(currentUser);
@@ -315,18 +318,40 @@ export const usersService = {
       statut: data.statut || "ACTIF",
     };
 
-    return usersRepository.update(id, payload);
+    const updated = await usersRepository.update(id, payload);
+    emitToUser(id, "user-access-updated", {
+      statut: updated.statut,
+      isActive: updated.isActive,
+      permissionsChanged: data.idRole !== undefined,
+    });
+    return updated;
   },
   async remove(id, currentUser) {
     await this.getById(id, currentUser);
-    return usersRepository.update(id, { statut: "INACTIF" });
+    const updated = await usersRepository.update(id, {
+      statut: "INACTIF",
+      isActive: false,
+    });
+    emitToUser(id, "user-access-updated", {
+      statut: updated.statut,
+      isActive: updated.isActive,
+      permissionsChanged: false,
+    });
+    return updated;
   },
   async debloquer(id, currentUser) {
     await this.getById(id, currentUser);
-    return usersRepository.update(id, {
+    const updated = await usersRepository.update(id, {
       failedAttempts: 0,
       lockedUntil: null,
       statut: "ACTIF",
+      isActive: true,
     });
+    emitToUser(id, "user-access-updated", {
+      statut: updated.statut,
+      isActive: updated.isActive,
+      permissionsChanged: false,
+    });
+    return updated;
   },
 };

@@ -8,7 +8,11 @@ export async function authenticate(req, _res, next) {
     const header = req.headers.authorization || "";
     const [scheme, token] = header.split(" ");
     if (scheme !== "Bearer" || !token) {
-      throw new ApiError(401, "UNAUTHORIZED", "Token d'authentification requis");
+      throw new ApiError(
+        401,
+        "UNAUTHORIZED",
+        "Token d'authentification requis",
+      );
     }
 
     const payload = verifyAccessToken(token);
@@ -26,12 +30,40 @@ export async function authenticate(req, _res, next) {
       throw new ApiError(401, "UNAUTHORIZED", "Session invalide");
     }
 
+    const user = await prisma.utilisateur.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        statut: true,
+        isActive: true,
+        idRole: true,
+        role: {
+          select: {
+            permissions: {
+              select: {
+                permission: { select: { module: true, action: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user || user.statut !== "ACTIF" || !user.isActive) {
+      throw new ApiError(401, "ACCOUNT_DISABLED", "Compte inactif ou bloque");
+    }
+
+    const permissions =
+      user.role?.permissions?.map(
+        ({ permission }) => `${permission.module}:${permission.action}`,
+      ) || [];
+
     req.user = {
       id: userId,
       userId,
       sessionId: session.id,
-      roleId: payload.roleId,
-      permissions: payload.permissions || [],
+      roleId: user.idRole,
+      permissions,
     };
     next();
   } catch (error) {
@@ -39,6 +71,10 @@ export async function authenticate(req, _res, next) {
       next(new ApiError(401, "TOKEN_EXPIRED", "Token expire"));
       return;
     }
-    next(error instanceof ApiError ? error : new ApiError(401, "UNAUTHORIZED", "Token invalide"));
+    next(
+      error instanceof ApiError
+        ? error
+        : new ApiError(401, "UNAUTHORIZED", "Token invalide"),
+    );
   }
 }

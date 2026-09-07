@@ -196,7 +196,6 @@ function ProductsPage() {
     setRefreshing(true);
     try {
       await loadProducts(true);
-      toast.success("Catalogue actualisé");
     } finally {
       setRefreshing(false);
     }
@@ -365,7 +364,6 @@ function ProductsPage() {
         return;
       }
       setField("photo", uploadedPhoto);
-      toast.success("Image importée");
     } catch {
       toast.error("Import image impossible");
     } finally {

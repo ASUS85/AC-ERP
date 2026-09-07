@@ -1183,7 +1183,6 @@ function PurchasesPage() {
   const duplicateOrder = async (orderId: string) => {
     try {
       await dupliquerBonCommandeFournisseur(orderId);
-      toast.success("Bon de commande duplique en brouillon");
       await loadRows();
     } catch (error: unknown) {
       const maybeMessage =

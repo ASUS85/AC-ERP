@@ -1,4 +1,5 @@
 import { createCrudService } from "../_shared/service.factory.js";
+import { ApiError } from "../../utils/response.util.js";
 import { fournisseursRepository } from "./fournisseurs.repository.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
 import { sendPartnershipWelcomeEmail } from "../../services/email.service.js";
@@ -6,6 +7,7 @@ import logger from "../../utils/logger.js";
 
 const crudService = createCrudService(fournisseursRepository, {
   buildWhere: (query) => ({
+    isActive: true,
     ...(query.search
       ? {
           OR: [
@@ -28,6 +30,13 @@ const crudService = createCrudService(fournisseursRepository, {
 
 export const fournisseursService = {
   ...crudService,
+  async getById(id) {
+    const fournisseur = await fournisseursRepository.findById(id);
+    if (!fournisseur) {
+      throw new ApiError(404, "NOT_FOUND", "Fournisseur introuvable");
+    }
+    return fournisseur;
+  },
   async create(data, context = {}) {
     const fournisseur = await crudService.create(data, context);
 

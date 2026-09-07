@@ -284,7 +284,6 @@ function SalesPage() {
     try {
       await loadProducts(true);
       await loadClients(true);
-      toast.success("Catalogue actualisé");
     } finally {
       setRefreshing(false);
     }

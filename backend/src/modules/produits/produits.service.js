@@ -9,6 +9,7 @@ export const produitsService = {
   async list(query) {
     const { page, limit, offset } = getPagination(query);
     const where = {
+      isActive: true,
       ...(query.search
         ? {
             OR: [

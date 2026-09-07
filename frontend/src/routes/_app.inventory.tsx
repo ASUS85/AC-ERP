@@ -288,7 +288,6 @@ function InventoryPage() {
     setRefreshing(true);
     try {
       await loadAll(true);
-      toast.success("Stocks actualisés");
     } finally {
       setRefreshing(false);
     }

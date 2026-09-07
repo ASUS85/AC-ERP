@@ -275,9 +275,19 @@ function RolesPage() {
     if (!selectedRoleId) return;
     setSavingPermissions(true);
     try {
-      await updateRolePermissions(selectedRoleId, permissionIds);
+      const response = await updateRolePermissions(
+        selectedRoleId,
+        permissionIds,
+      );
+      const updatedRole = response?.data as RoleItem | undefined;
+      if (updatedRole) {
+        setRoles((current) =>
+          current.map((role) =>
+            role.id === updatedRole.id ? updatedRole : role,
+          ),
+        );
+      }
       toast.success("Permissions mises à jour avec succès");
-      await loadData();
     } catch (error: unknown) {
       const apiError = toApiError(error);
       toast.error(apiError.message || "Échec de la sauvegarde");

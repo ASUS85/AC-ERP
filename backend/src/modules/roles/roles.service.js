@@ -2,6 +2,7 @@ import prisma from "../../config/database.js";
 import { ApiError } from "../../utils/response.util.js";
 import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { rolesRepository } from "./roles.repository.js";
+import { emitToUser } from "../../services/socket.service.js";
 
 async function resolveConnectedRole(userOrContext) {
   const user = userOrContext?.user || userOrContext;
@@ -43,7 +44,11 @@ function canAccessRole(connectedRole, targetRole) {
   }
 
   // Les autres rôles : ne doivent jamais voir SUPER_ADMIN ni ADMIN (rôles système)
-  return !targetIsSystem && targetRoleNom !== "SUPER_ADMIN" && targetRoleNom !== "ADMIN";
+  return (
+    !targetIsSystem &&
+    targetRoleNom !== "SUPER_ADMIN" &&
+    targetRoleNom !== "ADMIN"
+  );
 }
 
 export const rolesService = {
@@ -51,7 +56,7 @@ export const rolesService = {
     const { page, limit, offset } = getPagination(query);
     const connectedRole = await resolveConnectedRole(currentUser);
 
-    const conditions = [];
+    const conditions = [{ isActive: true }];
 
     if (query.search) {
       conditions.push({
@@ -78,8 +83,8 @@ export const rolesService = {
       conditions.length === 0
         ? {}
         : conditions.length === 1
-        ? conditions[0]
-        : { AND: conditions };
+          ? conditions[0]
+          : { AND: conditions };
 
     const [data, total] = await Promise.all([
       rolesRepository.findMany({
@@ -94,7 +99,9 @@ export const rolesService = {
   },
   async getById(id, currentUser) {
     const role = await rolesRepository.findById(id);
-    if (!role) throw new ApiError(404, "NOT_FOUND", "Role introuvable");
+    if (!role || !role.isActive) {
+      throw new ApiError(404, "NOT_FOUND", "Role introuvable");
+    }
 
     if (currentUser) {
       const connectedRole = await resolveConnectedRole(currentUser);
@@ -107,9 +114,14 @@ export const rolesService = {
   },
   async create(data, currentUser) {
     if (!data?.nomRole?.trim()) {
-      throw new ApiError(400, "VALIDATION_ERROR", "Le nom du rôle est obligatoire", {
-        nomRole: "Le nom du rôle est obligatoire",
-      });
+      throw new ApiError(
+        400,
+        "VALIDATION_ERROR",
+        "Le nom du rôle est obligatoire",
+        {
+          nomRole: "Le nom du rôle est obligatoire",
+        },
+      );
     }
 
     const roleName = String(data.nomRole).trim().toUpperCase();
@@ -134,7 +146,7 @@ export const rolesService = {
       }
     }
 
-    return rolesRepository.create(data);
+    return rolesRepository.create({ ...data, isActive: true });
   },
   async update(id, data, currentUser) {
     await this.getById(id, currentUser);
@@ -142,7 +154,10 @@ export const rolesService = {
     if (currentUser) {
       const connectedRole = await resolveConnectedRole(currentUser);
       if (connectedRole?.nomRole !== "SUPER_ADMIN") {
-        if (data.nomRole && String(data.nomRole).trim().toUpperCase() === "SUPER_ADMIN") {
+        if (
+          data.nomRole &&
+          String(data.nomRole).trim().toUpperCase() === "SUPER_ADMIN"
+        ) {
           throw new ApiError(
             403,
             "FORBIDDEN",
@@ -162,7 +177,7 @@ export const rolesService = {
         "SYSTEM_ROLE",
         "Impossible de supprimer un role systeme",
       );
-    return rolesRepository.delete(id);
+    return rolesRepository.update(id, { isActive: false });
   },
   async listPermissions() {
     return rolesRepository.listPermissions();
@@ -173,6 +188,18 @@ export const rolesService = {
   async setPermissions(id, permissionIds, currentUser) {
     await this.getById(id, currentUser);
     await rolesRepository.replacePermissions(id, permissionIds || []);
-    return this.getById(id, currentUser);
+    const role = await this.getById(id, currentUser);
+    const users = await prisma.utilisateur.findMany({
+      where: { idRole: id, isActive: true },
+      select: { id: true },
+    });
+    users.forEach((user) =>
+      emitToUser(user.id, "user-access-updated", {
+        statut: "ACTIF",
+        isActive: true,
+        permissionsChanged: true,
+      }),
+    );
+    return role;
   },
 };

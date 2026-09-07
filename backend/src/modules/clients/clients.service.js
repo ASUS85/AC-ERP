@@ -11,6 +11,7 @@ export const clientsService = {
     const { page, limit, offset } = getPagination(query);
 
     const where = {
+      isActive: true,
       // Exclure les clients archivés par défaut
       statut: {
         not: "ARCHIVE",

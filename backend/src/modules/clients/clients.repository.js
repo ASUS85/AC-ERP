@@ -26,7 +26,7 @@ export const clientsRepository = {
 
   findById(id) {
     return prisma.client.findUnique({
-      where: { id },
+      where: { id, isActive: true },
       include: {
         devis: true,
         bonsCommandeClients: true,

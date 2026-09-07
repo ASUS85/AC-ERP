@@ -161,6 +161,7 @@ model Role {
   nomRole      String           @unique(map: "uk_roles_nom") @map("nom_role") @db.VarChar(100)
   description  String?          @db.Text
   isSystemRole Boolean          @default(false) @map("is_system_role")
+  isActive     Boolean          @default(true) @map("is_active")
   createdAt    DateTime         @default(now()) @map("created_at")
   permissions  RolePermission[]
   utilisateurs Utilisateur[]
@@ -198,6 +199,7 @@ model Utilisateur {
   telephone                String?                  @db.VarChar(20)
   avatar                   String?                  @db.VarChar(500)
   statut                   StatutUtilisateur        @default(ACTIF)
+  isActive                 Boolean                  @default(true) @map("is_active")
   failedAttempts           Int                      @default(0) @map("failed_attempts") @db.TinyInt
   lockedUntil              DateTime?                @map("locked_until")
   idRole                   String                   @map("id_role") @db.Char(36)
@@ -320,6 +322,7 @@ model Categorie {
   icone             String?      @db.VarChar(100)
   idCategorieParent String?      @map("id_categorie_parent") @db.Char(36)
   statut            StatutSimple @default(ACTIF)
+  isActive          Boolean      @default(true) @map("is_active")
   createdAt         DateTime     @default(now()) @map("created_at")
   parent            Categorie?   @relation("CategorieParent", fields: [idCategorieParent], references: [id], onDelete: Restrict, map: "fk_categorie_parent")
   enfants           Categorie[]  @relation("CategorieParent")
@@ -341,6 +344,7 @@ model Produit {
   photo              String?              @db.VarChar(500)
   idCategorie        String               @map("id_categorie") @db.Char(36)
   statut             StatutProduit        @default(ACTIF)
+  isActive           Boolean              @default(true) @map("is_active")
   createdAt          DateTime             @default(now()) @map("created_at")
   updatedAt          DateTime             @updatedAt @map("updated_at")
   categorie          Categorie            @relation(fields: [idCategorie], references: [id], onDelete: Restrict, map: "fk_produit_categorie")
@@ -376,6 +380,7 @@ model Client {
   modePaiementDefaut  ModePaiement        @default(ESPECES) @map("mode_paiement_defaut")
   delaiPaiement       Int                 @default(30) @map("delai_paiement")
   statut              StatutUtilisateur   @default(ACTIF)
+  isActive            Boolean             @default(true) @map("is_active")
   createdAt           DateTime            @default(now()) @map("created_at")
   devis               Devis[]
   bonsCommandeClients BonCommandeClient[]
@@ -397,6 +402,7 @@ model Fournisseur {
   delaiLivraisonMoyen      Int                      @default(7) @map("delai_livraison_moyen")
   conditionsPaiement       String?                  @map("conditions_paiement") @db.Text
   statut                   StatutSimple             @default(ACTIF)
+  isActive                 Boolean                  @default(true) @map("is_active")
   createdAt                DateTime                 @default(now()) @map("created_at")
   produits                 ProduitFournisseur[]
   bonsCommandeFournisseurs BonCommandeFournisseur[]

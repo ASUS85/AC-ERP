@@ -27,11 +27,17 @@ export const rolesRepository = {
     });
   },
   replacePermissions(idRole, permissionIds) {
-    return prisma.$transaction([
-      prisma.rolePermission.deleteMany({ where: { idRole } }),
-      ...permissionIds.map((idPermission) =>
-        prisma.rolePermission.create({ data: { idRole, idPermission } }),
-      ),
-    ]);
+    return prisma.$transaction(async (tx) => {
+      await tx.rolePermission.deleteMany({ where: { idRole } });
+      if (permissionIds.length > 0) {
+        await tx.rolePermission.createMany({
+          data: permissionIds.map((idPermission) => ({
+            idRole,
+            idPermission,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    });
   },
 };

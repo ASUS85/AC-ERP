@@ -10,7 +10,10 @@ export const produitsRepository = {
     return prisma.produit.count({ where });
   },
   findById(id) {
-    return prisma.produit.findUnique({ where: { id }, include });
+    return prisma.produit.findUnique({
+      where: { id, isActive: true },
+      include,
+    });
   },
   createWithStock(data, stockInitial, userId) {
     return prisma.$transaction(async (tx) => {
