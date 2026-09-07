@@ -321,7 +321,7 @@ SELECT UUID(), id, 25, 0, NOW() FROM produits;
 
 -- On cree un mouvement d'entree initiale pour chaque produit.
 INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, id_utilisateur, created_at)
-SELECT UUID(), p.id, 'ENTREE_INITIALE', 25, 0, 25, 'Stock de départ', @user_id, NOW() FROM produits p;
+SELECT UUID(), p.id, 'ENTREE_ACHAT', 25, 0, 25, 'Stock de départ', @user_id, NOW() FROM produits p;
 
 -- ==========================================================
 -- 11. FLUX DE VENTE COMPLET (Devis -> Commande -> Livraison -> Facture -> Paiement)
