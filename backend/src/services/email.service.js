@@ -125,22 +125,25 @@ export const sendWelcomeEmail = (
   nom,
   motDePasseTemp,
   lienPlateformeEchange,
+  companyName = "AC ERP",
 ) =>
   sendMail(
     to,
-    "Bienvenue sur AC ERP",
+    `Bienvenue sur ${companyName}`,
     layout(
-      "Bienvenue dans AC ERP",
+      `Bienvenue dans ${companyName}`,
       `
       <p>Bonjour <strong>${nom}</strong>,</p>
 
       <p>
-        Votre compte a été créé avec succès.
+        Votre compte a été créé avec succès dans <strong>${companyName}</strong>.
       </p>
 
       <p>
-        Mot de passe temporaire :
+        Voici vos identifiants de connexion :
       </p>
+
+      <p><strong>Adresse email :</strong> ${to}</p>
 
       <div style="
         background:#f8fafc;
@@ -179,6 +182,8 @@ export const sendWelcomeEmail = (
       `
           : ""
       }
+
+      <p>Cordialement,<br /><strong>${companyName}</strong></p>
       `,
     ),
   );

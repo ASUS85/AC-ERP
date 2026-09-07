@@ -8,6 +8,7 @@ import { buildMeta, getPagination } from "../../utils/pagination.util.js";
 import { sendWelcomeEmail } from "../../services/email.service.js";
 import { parametresRepository } from "../parametres/parametres.repository.js";
 import { usersRepository } from "./users.repository.js";
+import logger from "../../utils/logger.js";
 
 function normalizeUserPayload(data) {
   const { motDePasseTemp, passwordHash, ...rest } = data || {};
@@ -217,18 +218,23 @@ export const usersService = {
 
     try {
       const user = await usersRepository.create(payload);
-      // Inclut le lien vers la plateforme d'échange (paramètres entreprise)
-      parametresRepository
-        .entreprise()
-        .then((entreprise) =>
-          sendWelcomeEmail(
-            user.email,
-            user.nom,
-            motDePasseTemp,
-            entreprise?.lienPlateformeEchange || null,
-          ),
-        )
-        .catch(() => {});
+      try {
+        const entreprise = await parametresRepository.entreprise();
+        await sendWelcomeEmail(
+          user.email,
+          `${user.prenom} ${user.nom}`.trim(),
+          motDePasseTemp,
+          entreprise?.lienPlateformeEchange || null,
+          entreprise?.raisonSociale || "AC ERP",
+        );
+      } catch (error) {
+        logger.error("Echec email de bienvenue utilisateur", {
+          userId: user.id,
+          email: user.email,
+          code: error.code || error.name,
+          message: error.message,
+        });
+      }
       return user;
     } catch (error) {
       if (
