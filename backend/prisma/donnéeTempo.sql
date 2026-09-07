@@ -316,8 +316,8 @@ INSERT INTO produit_fournisseurs (id_produit, id_fournisseur, prix_achat_fournis
 -- ==========================================================
 -- Pour chaque produit, on cree une ligne de stock avec une quantite initiale.
 -- Note: TRUNCATE TABLE a deja vide les tables stocks et mouvements_stock.
-INSERT INTO stocks (id, id_produit, stock_actuel, stock_reserve, created_at, updated_at)
-SELECT UUID(), id, 25, 0, NOW(), NOW() FROM produits;
+INSERT INTO stocks (id, id_produit, stock_actuel, stock_reserve, updated_at)
+SELECT UUID(), id, 25, 0, NOW() FROM produits;
 
 -- On cree un mouvement d'entree initiale pour chaque produit.
 INSERT INTO mouvements_stock (id, id_produit, type_mouvement, quantite, stock_avant, stock_apres, motif, id_utilisateur, created_at)
