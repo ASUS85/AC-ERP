@@ -366,7 +366,7 @@ async function buildReportHtml(type, periode, data, narrative) {
   return template.replace(/<body>[\s\S]*<\/body>/i, `<body>${body}</body>`);
 }
 
-async function buildForecasts() {
+export async function buildForecasts() {
   const since = new Date();
   since.setMonth(since.getMonth() - 6, 1);
   const invoices = await prisma.facture.findMany({
@@ -459,6 +459,7 @@ async function buildForecasts() {
     );
   }
   const produitsRisque = [];
+  const nouvellesAlertes = [];
   for (const stock of stocks) {
     if (stock.stockActuel > stock.produit.stockMinimum * 1.5) continue;
     const vitesseEcoulement =
@@ -490,6 +491,7 @@ async function buildForecasts() {
           ),
           statut: joursAvantRupture <= 7 ? "CRITIQUE" : "VIGILANCE",
         });
+        nouvellesAlertes.push(produitRisque);
       }
     }
   }
@@ -506,6 +508,7 @@ async function buildForecasts() {
   return {
     previsionsMensuelles,
     produitsRisque,
+    nouvellesAlertes,
     recommandations,
     fiabilite: 85,
     caPrevu: previsionsMensuelles[0]?.montantPrevu || 0,
