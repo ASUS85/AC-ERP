@@ -1,18 +1,17 @@
-import { execFile, spawn } from "node:child_process";
-import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createGzip, createGunzip } from "node:zlib";
-import { createReadStream, createWriteStream, existsSync } from "node:fs";
+import { createReadStream, createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
+import mysqldump from "mysqldump";
 import logger from "../utils/logger.js";
 import { ApiError } from "../utils/response.util.js";
 import prisma from "../config/database.js";
 import { parametresRepository } from "../modules/parametres/parametres.repository.js";
 import { sendRestoreNotificationEmail } from "./email.service.js";
 
-const execFileAsync = promisify(execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Dossier de stockage des backups
@@ -33,13 +32,6 @@ function parseDatabaseUrl(url) {
     port: parsed.port || "3306",
     database: decodeURIComponent(parsed.pathname.replace(/^\/+/, "")),
   };
-}
-
-function resolveMysqldumpPath() {
-  if (process.env.MYSQLDUMP_PATH) return process.env.MYSQLDUMP_PATH;
-  const wampPath = "C:\\wamp64\\bin\\mysql\\mysql8.4.7\\bin\\mysqldump.exe";
-  if (process.platform === "win32" && existsSync(wampPath)) return wampPath;
-  return "mysqldump";
 }
 
 function resolveMysqlPath() {
@@ -116,29 +108,16 @@ export const backupService = {
     const sqlPath = path.join(BACKUP_DIR, filename);
     const gzPath = `${sqlPath}.gz`;
 
-    const mysqldump = resolveMysqldumpPath();
-    const args = [
-      "-u",
-      db.user,
-      "-h",
-      db.host,
-      "-P",
-      db.port,
-      "--single-transaction",
-      "--routines",
-      "--triggers",
-      "--add-drop-table",
-      `--result-file=${sqlPath}`,
-      db.database,
-    ];
-
-    await execFileAsync(mysqldump, args, {
-      windowsHide: true,
-      maxBuffer: 1024 * 1024 * 20,
-      env: {
-        ...process.env,
-        MYSQL_PWD: db.password,
+    await mysqldump({
+      connection: {
+        host: db.host,
+        port: Number(db.port),
+        user: db.user,
+        password: db.password,
+        database: db.database,
       },
+      dumpToFile: sqlPath,
+      compressFile: false,
     });
 
     // Compresser le fichier SQL en .gz
@@ -279,7 +258,9 @@ export const backupService = {
 
     const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) {
-      logger.error(`Notifications restauration échouées : ${failed}/${results.length}`);
+      logger.error(
+        `Notifications restauration échouées : ${failed}/${results.length}`,
+      );
     }
     logger.info(
       `Notifications restauration envoyées : ${results.length - failed}/${results.length}`,
