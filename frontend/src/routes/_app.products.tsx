@@ -275,6 +275,10 @@ function ProductsPage() {
       nextErrors.prixVenteHt = "Le prix de vente est obligatoire";
     if (Number(form.tauxTva || 0) < 0)
       nextErrors.tauxTva = "La TVA doit être positive";
+    if (Number(form.tauxTva || 0) > 100)
+      nextErrors.tauxTva = "La TVA ne doit pas dépasser 100 %";
+    if (Number(form.tauxTva || 0) > 100)
+      nextErrors.tauxTva = "La TVA ne doit pas dépasser 100 %";
     if (Number(form.stockMinimum || 0) < 0)
       nextErrors.stockMinimum = "Le stock minimum doit être positif";
     if (Number(form.stockMinimum) <= 0)

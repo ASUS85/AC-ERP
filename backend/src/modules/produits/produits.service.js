@@ -39,6 +39,13 @@ export const produitsService = {
   },
   async create(data, context) {
     const { stockInitial = 0, ...payload } = data;
+    if (Number(payload.tauxTva) < 0 || Number(payload.tauxTva) > 100) {
+      throw new ApiError(
+        400,
+        "INVALID_TVA",
+        "La TVA doit etre comprise entre 0 et 100",
+      );
+    }
     const reference = payload.reference || (await generateSKU());
     return produitsRepository.createWithStock(
       { ...payload, reference },
@@ -48,6 +55,16 @@ export const produitsService = {
   },
   async update(id, data) {
     await this.getById(id);
+    if (
+      data.tauxTva !== undefined &&
+      (Number(data.tauxTva) < 0 || Number(data.tauxTva) > 100)
+    ) {
+      throw new ApiError(
+        400,
+        "INVALID_TVA",
+        "La TVA doit etre comprise entre 0 et 100",
+      );
+    }
     return produitsRepository.update(id, data);
   },
   async remove(id) {
@@ -58,7 +75,10 @@ export const produitsService = {
         "STOCK_NOT_EMPTY",
         "Impossible d'archiver un produit avec stock",
       );
-    return produitsRepository.update(id, { statut: "ARCHIVE" });
+    return produitsRepository.update(id, {
+      statut: "ARCHIVE",
+      isActive: false,
+    });
   },
 
   async exportPdf(query = {}) {

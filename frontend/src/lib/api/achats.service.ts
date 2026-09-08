@@ -31,11 +31,17 @@ export const creerFactureAchatDepuisBcf = (
 ) => api.post(`/achats/bons-commande/${id}/facture`, data || {});
 export const importerFactureFournisseurBcf = (
   id: string,
-  payload: { file: File; decision: "VALIDER" | "REJETER" },
+  payload: {
+    file: File;
+    decision: "VALIDER" | "REJETER";
+    modePaiement?: string;
+  },
 ) => {
   const formData = new FormData();
   formData.append("file", payload.file);
   formData.append("decision", payload.decision);
+  if (payload.modePaiement)
+    formData.append("modePaiement", payload.modePaiement);
   return api.post(`/achats/bons-commande/${id}/factures-importees`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });

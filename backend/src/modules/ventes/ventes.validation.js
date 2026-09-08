@@ -13,10 +13,15 @@ const paymentModeSchema = z.enum([
 const venteLigneSchema = z.object({
   idProduit: z.string().uuid("idProduit invalide"),
   quantite: z.number().positive("La quantite doit etre superieure a 0"),
-  remise: z.number().min(0, "La remise ne peut pas etre negative").optional(),
+  remise: z
+    .number()
+    .min(0, "La remise ne peut pas etre negative")
+    .max(100, "La remise ne peut pas depasser 100")
+    .optional(),
   tauxTva: z
     .number()
     .min(0, "Le taux de TVA ne peut pas etre negatif")
+    .max(100, "Le taux de TVA ne peut pas depasser 100")
     .optional(),
 });
 

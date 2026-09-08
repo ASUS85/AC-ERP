@@ -43,6 +43,14 @@ const ALLOWED_TRANSITIONS = {
 };
 
 const ALLOWED_IMPORT_DECISIONS = new Set(["VALIDER", "REJETER"]);
+const VALID_PAYMENT_MODES = new Set([
+  "ESPECES",
+  "CHEQUE",
+  "VIREMENT",
+  "MOBILE_MONEY",
+  "CARTE",
+  "COMPENSATION",
+]);
 
 function parseImportMetadata(mentionsLegales = "") {
   const lines = String(mentionsLegales)
@@ -488,22 +496,38 @@ export const achatsService = {
     const defaultEcheance = new Date(now);
     defaultEcheance.setDate(defaultEcheance.getDate() + 30);
 
-    const createdInvoice = await achatsRepository.createFactureAchat({
-      numeroFacture: await generateNumeroFacture(),
-      typeFacture: "ACHAT",
-      idFournisseur: bonCommande.idFournisseur,
-      idUtilisateur: ctx.user.userId,
-      dateEcheance: data?.dateEcheance
-        ? new Date(data.dateEcheance)
-        : defaultEcheance,
-      totalHt,
-      totalTva,
-      totalTtc,
-      mentionsLegales:
-        data?.mentionsLegales ||
-        `Facture generee depuis ${bonCommande.numeroBcf}`,
-      lignes: { create: lignesFacture },
-    });
+    const modePaiement = data?.modePaiement;
+    if (!VALID_PAYMENT_MODES.has(modePaiement)) {
+      throw new ApiError(
+        400,
+        "INVALID_PAYMENT_MODE",
+        "Le moyen de paiement est obligatoire et invalide",
+      );
+    }
+
+    const createdInvoice = await achatsRepository.createFactureAchat(
+      {
+        numeroFacture: await generateNumeroFacture(),
+        typeFacture: "ACHAT",
+        idFournisseur: bonCommande.idFournisseur,
+        idUtilisateur: ctx.user.userId,
+        dateEcheance: data?.dateEcheance
+          ? new Date(data.dateEcheance)
+          : defaultEcheance,
+        totalHt,
+        totalTva,
+        totalTtc,
+        mentionsLegales:
+          data?.mentionsLegales ||
+          `Facture generee depuis ${bonCommande.numeroBcf}`,
+        lignes: { create: lignesFacture },
+      },
+      {
+        idUtilisateur: ctx.user.userId,
+        montant: totalTtc,
+        modePaiement,
+      },
+    );
 
     emitter.emit("achat.bcf.crud", {
       action: "CREATE_INVOICE_ACHAT",
@@ -544,6 +568,15 @@ export const achatsService = {
       );
     }
 
+    const modePaiement = String(body?.modePaiement || "").toUpperCase();
+    if (decision === "VALIDER" && !VALID_PAYMENT_MODES.has(modePaiement)) {
+      throw new ApiError(
+        400,
+        "INVALID_PAYMENT_MODE",
+        "Le moyen de paiement est obligatoire et invalide",
+      );
+    }
+
     const lignesImportees =
       decision === "VALIDER" ? buildImportedInvoiceLines(bonCommande) : [];
 
@@ -581,21 +614,30 @@ export const achatsService = {
       `Fichier taille: ${Number(file.size || 0)}`,
     ].join("\n");
 
-    const createdInvoice = await achatsRepository.createFactureAchat({
-      numeroFacture: await generateNumeroFacture(),
-      typeFacture: "ACHAT",
-      idFournisseur: bonCommande.idFournisseur,
-      idUtilisateur: ctx.user.userId,
-      dateEcheance: defaultEcheance,
-      statut: decision === "VALIDER" ? "EMISE" : "ANNULEE",
-      totalHt,
-      totalTva,
-      totalTtc,
-      mentionsLegales,
-      ...(lignesImportees.length > 0
-        ? { lignes: { create: lignesImportees } }
-        : {}),
-    });
+    const createdInvoice = await achatsRepository.createFactureAchat(
+      {
+        numeroFacture: await generateNumeroFacture(),
+        typeFacture: "ACHAT",
+        idFournisseur: bonCommande.idFournisseur,
+        idUtilisateur: ctx.user.userId,
+        dateEcheance: defaultEcheance,
+        statut: decision === "VALIDER" ? "EMISE" : "ANNULEE",
+        totalHt,
+        totalTva,
+        totalTtc,
+        mentionsLegales,
+        ...(lignesImportees.length > 0
+          ? { lignes: { create: lignesImportees } }
+          : {}),
+      },
+      decision === "VALIDER"
+        ? {
+            idUtilisateur: ctx.user.userId,
+            montant: totalTtc,
+            modePaiement,
+          }
+        : undefined,
+    );
 
     emitter.emit("achat.bcf.crud", {
       action: "IMPORT_SUPPLIER_INVOICE",

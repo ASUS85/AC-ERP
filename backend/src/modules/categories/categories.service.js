@@ -34,6 +34,18 @@ export const categoriesService = {
     },
     softDeleteData: { isActive: false, statut: "INACTIF" },
   }),
+  async remove(id) {
+    const category = await this.getById(id);
+    const children = await categoriesRepository.countChildren(category.id);
+    if (children) {
+      throw new ApiError(
+        400,
+        "CATEGORY_HAS_CHILDREN",
+        "Impossible d'archiver cette categorie : elle contient des sous-categories",
+      );
+    }
+    return categoriesRepository.archiveWithProducts(id);
+  },
   arbre() {
     return categoriesRepository.findTree();
   },

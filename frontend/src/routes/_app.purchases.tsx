@@ -26,6 +26,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { fmtCurrency } from "@/lib/erp-data";
 import { cn } from "@/lib/utils";
@@ -199,6 +206,7 @@ type InvoiceFormErrors = Partial<
     | "montantHt"
     | "tva"
     | "ttc"
+    | "modePaiement"
     | "remise"
     | "transport"
     | "file",
@@ -364,6 +372,7 @@ function PurchasesPage() {
     ttc: "",
     remise: "",
     transport: "",
+    modePaiement: "",
     observations: "",
   });
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
@@ -412,8 +421,16 @@ function PurchasesPage() {
     if (!invoiceForm.ttc || toNumber(invoiceForm.ttc, 0) < 0) {
       nextErrors.ttc = "TTC invalide";
     }
+    if (!invoiceForm.modePaiement) {
+      nextErrors.modePaiement = "Le moyen de paiement est obligatoire";
+    }
     if (invoiceForm.remise && toNumber(invoiceForm.remise, 0) < 0) {
       nextErrors.remise = "La valeur doit etre positive";
+    } else if (toNumber(invoiceForm.remise, 0) > 100) {
+      nextErrors.remise = "La remise ne doit pas dépasser 100 %";
+    }
+    if (toNumber(invoiceForm.tva, 0) > 100) {
+      nextErrors.tva = "La TVA ne doit pas dépasser 100 %";
     }
     if (invoiceForm.transport && toNumber(invoiceForm.transport, 0) < 0) {
       nextErrors.transport = "La valeur doit etre positive";
@@ -1298,6 +1315,7 @@ function PurchasesPage() {
       const response = (await importerFactureFournisseurBcf(importOrder.id, {
         file: importFile,
         decision,
+        modePaiement: invoiceForm.modePaiement,
       })) as { data?: { numeroFacture?: string } };
 
       const numero = response?.data?.numeroFacture;
@@ -3032,6 +3050,11 @@ function PurchasesPage() {
                         }))
                       }
                     />
+                    {invoiceFormErrors.remise && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.remise}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="invoice-transport">Transport</Label>
@@ -3073,6 +3096,45 @@ function PurchasesPage() {
                     {invoiceFormErrors.ttc && (
                       <p className="text-xs text-destructive">
                         {invoiceFormErrors.ttc}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="invoice-payment-mode">
+                      Moyen de paiement
+                    </Label>
+                    <Select
+                      value={invoiceForm.modePaiement}
+                      onValueChange={(modePaiement) =>
+                        setInvoiceForm((prev) => ({ ...prev, modePaiement }))
+                      }
+                    >
+                      <SelectTrigger
+                        id="invoice-payment-mode"
+                        className={cn(
+                          invoiceFormErrors.modePaiement
+                            ? "border-destructive focus:ring-destructive"
+                            : "",
+                        )}
+                      >
+                        <SelectValue placeholder="Sélectionner un moyen de paiement" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ESPECES">Espèces</SelectItem>
+                        <SelectItem value="CHEQUE">Chèque</SelectItem>
+                        <SelectItem value="VIREMENT">Virement</SelectItem>
+                        <SelectItem value="MOBILE_MONEY">
+                          Mobile Money
+                        </SelectItem>
+                        <SelectItem value="CARTE">Carte</SelectItem>
+                        <SelectItem value="COMPENSATION">
+                          Compensation
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {invoiceFormErrors.modePaiement && (
+                      <p className="text-xs text-destructive">
+                        {invoiceFormErrors.modePaiement}
                       </p>
                     )}
                   </div>

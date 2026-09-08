@@ -61,14 +61,37 @@ export const achatsRepository = {
       include: { lignes: true },
     });
   },
-  createFactureAchat(data) {
-    return prisma.facture.create({
-      data,
-      include: {
-        fournisseur: true,
-        lignes: true,
-        paiements: true,
-      },
+  createFactureAchat(data, paiement) {
+    return prisma.$transaction(async (tx) => {
+      const facture = await tx.facture.create({
+        data: {
+          ...data,
+          ...(paiement
+            ? {
+                statut: "SOLDEE",
+                montantPaye: data.totalTtc,
+              }
+            : {}),
+        },
+      });
+
+      if (paiement) {
+        await tx.paiement.create({
+          data: {
+            idFacture: facture.id,
+            idUtilisateur: paiement.idUtilisateur,
+            montant: paiement.montant,
+            modePaiement: paiement.modePaiement,
+            datePaiement: paiement.datePaiement || new Date(),
+            notes: paiement.notes || null,
+          },
+        });
+      }
+
+      return tx.facture.findUnique({
+        where: { id: facture.id },
+        include: { fournisseur: true, lignes: true, paiements: true },
+      });
     });
   },
   facturesImporteesBcf(idBcf) {
