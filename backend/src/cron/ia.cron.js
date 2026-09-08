@@ -8,7 +8,7 @@ import logger from "../utils/logger.js";
 
 export function startIaCron() {
   cron.schedule(
-    "30 2 * * *",
+    "0 16 * * *",
     async () => {
       try {
         const result = await buildForecasts();
@@ -30,5 +30,5 @@ export function startIaCron() {
     },
     { timezone: "Africa/Douala" },
   );
-  logger.info("CRON IA planifie (previsions et alertes chaque nuit a 2h30)");
+  logger.info("CRON IA planifie (previsions et alertes chaque jour a 16h)");
 }
