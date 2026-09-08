@@ -345,7 +345,7 @@ function ProductsPage() {
     try {
       await archiveProduit(pendingDeleteProduct.id);
       invalidateProducts();
-      toast.success("Produit archivé");
+      toast.success("Produit supprimé");
       setDeleteModalOpen(false);
       setPendingDeleteProduct(null);
       await loadProducts();
