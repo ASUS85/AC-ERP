@@ -1,11 +1,11 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createGzip, createGunzip } from "node:zlib";
+import { gunzip, createGzip } from "node:zlib";
 import { createReadStream, createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
 import mysqldump from "mysqldump";
+import mysql from "mysql2/promise";
 import logger from "../utils/logger.js";
 import { ApiError } from "../utils/response.util.js";
 import prisma from "../config/database.js";
@@ -34,13 +34,6 @@ function parseDatabaseUrl(url) {
   };
 }
 
-function resolveMysqlPath() {
-  if (process.env.MYSQL_PATH) return process.env.MYSQL_PATH;
-  const wampPath = "C:\\wamp64\\bin\\mysql\\mysql8.4.7\\bin\\mysql.exe";
-  if (process.platform === "win32" && existsSync(wampPath)) return wampPath;
-  return "mysql";
-}
-
 // Verrou : empêche le lancement de plusieurs restaurations simultanées
 let restoreInProgress = false;
 
@@ -55,38 +48,28 @@ async function assertMaintenanceMode() {
   }
 }
 
-// Importe un dump .sql.gz directement dans MySQL via stdin (sans fichier temporaire)
-function runMysqlImport(db, gzPath) {
-  return new Promise((resolve, reject) => {
-    const args = ["-u", db.user, "-h", db.host, "-P", db.port, db.database];
-    const child = spawn(resolveMysqlPath(), args, {
-      windowsHide: true,
-      env: { ...process.env, MYSQL_PWD: db.password },
+// Importe un dump .sql.gz via mysql2, sans dépendre d'un binaire système.
+async function runMysqlImport(db, gzPath) {
+  const compressed = await fs.readFile(gzPath);
+  const sql = await new Promise((resolve, reject) => {
+    gunzip(compressed, (error, result) => {
+      if (error) reject(error);
+      else resolve(result.toString("utf8"));
     });
-
-    let stderr = "";
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-      if (stderr.length > 2000) stderr = stderr.slice(0, 2000);
-    });
-    child.on("error", reject);
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      // Journal complet côté serveur uniquement ; message public générique
-      logger.error(`Restauration échouée (code ${code}) : ${stderr}`);
-      reject(new Error(`Échec de l'import MySQL (code ${code})`));
-    });
-
-    pipeline(createReadStream(gzPath), createGunzip(), child.stdin).catch(
-      (err) => {
-        child.kill();
-        reject(err);
-      },
-    );
   });
+  const connection = await mysql.createConnection({
+    host: db.host,
+    port: Number(db.port),
+    user: db.user,
+    password: db.password,
+    database: db.database,
+    multipleStatements: true,
+  });
+  try {
+    await connection.query(sql);
+  } finally {
+    await connection.end();
+  }
 }
 
 // Générer le nom du fichier de backup
