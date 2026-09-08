@@ -136,6 +136,9 @@ export const parametresRepository = {
             prenom: true,
             email: true,
             avatar: true,
+            role: {
+              select: { nomRole: true },
+            },
           },
         },
       },

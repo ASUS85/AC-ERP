@@ -51,13 +51,24 @@ export const parametresService = {
       modeMaintenance: Boolean(active),
     });
   },
-  journal(query) {
+  async journal(query, currentUser) {
     const where = {};
     if (query.dateFrom || query.dateTo) {
       where.createdAt = {};
       if (query.dateFrom) where.createdAt.gte = new Date(query.dateFrom);
       if (query.dateTo) where.createdAt.lte = new Date(query.dateTo);
     }
+
+    const role = currentUser?.userId
+      ? await roleName(currentUser.userId)
+      : null;
+    if (role === "ADMIN") {
+      where.OR = [
+        { utilisateur: null },
+        { utilisateur: { role: { nomRole: { not: "SUPER_ADMIN" } } } },
+      ];
+    }
+
     return parametresRepository.audits(where);
   },
 };
