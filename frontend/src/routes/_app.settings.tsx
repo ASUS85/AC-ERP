@@ -1040,6 +1040,7 @@ function SettingsPage() {
   const [creatingBackup, setCreatingBackup] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupInfo | null>(null);
   const [restoring, setRestoring] = useState(false);
+  const [savingCompany, setSavingCompany] = useState(false);
 
   const canManageSettings = hasPermission("users", "modifier");
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
@@ -1182,6 +1183,7 @@ function SettingsPage() {
   };
 
   const saveCompany = async () => {
+    if (savingCompany) return;
     if (!company) return;
     const newErrors: Record<string, string> = {};
     if (!company.raisonSociale.trim())
@@ -1192,6 +1194,7 @@ function SettingsPage() {
     setCompanyErrors(newErrors);
     if (Object.keys(newErrors).length) return;
 
+    setSavingCompany(true);
     try {
       const response = await updateEntreprise(company);
       const updatedCompany = unwrap(response as ApiResponse<Company>);
@@ -1202,6 +1205,8 @@ function SettingsPage() {
       toast.success("Paramètres entreprise enregistrés");
     } catch {
       toast.error("Échec de l'enregistrement");
+    } finally {
+      setSavingCompany(false);
     }
   };
 
@@ -1565,8 +1570,19 @@ function SettingsPage() {
                   />
                 </div>
               )}
-              <Button className="mt-4" onClick={saveCompany}>
-                Enregistrer
+              <Button
+                className="mt-4"
+                onClick={saveCompany}
+                disabled={savingCompany}
+              >
+                {savingCompany ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  "Enregistrer"
+                )}
               </Button>
             </SectionCard>
           </TabsContent>

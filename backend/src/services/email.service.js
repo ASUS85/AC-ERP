@@ -133,58 +133,69 @@ export const sendWelcomeEmail = (
     layout(
       `Bienvenue dans ${companyName}`,
       `
-      <p>Bonjour <strong>${nom}</strong>,</p>
+    <p>Bonjour <strong>${nom}</strong>,</p>
 
-      <p>
-        Votre compte a été créé avec succès dans <strong>${companyName}</strong>.
-      </p>
+    <p>
+      Votre compte a été créé avec succès dans <strong>${companyName}</strong>.
+    </p>
 
-      <p>
-        Voici vos identifiants de connexion :
-      </p>
+    <p>
+      Voici vos identifiants de connexion :
+    </p>
 
-      <p><strong>Adresse email :</strong> ${to}</p>
+    <p><strong>Adresse email :</strong> ${to}</p>
 
-      <div style="
-        background:#f8fafc;
-        border-left:4px solid #2563eb;
-        padding:15px;
-        margin:20px 0;
-        font-size:18px;
-        font-weight:bold;
+    <div style="
+      background:#f8fafc;
+      border-left:4px solid #2563eb;
+      padding:15px;
+      margin:20px 0;
+      font-size:18px;
+      font-weight:bold;
+    ">
+      ${motDePasseTemp}
+    </div>
+
+    <p>
+      Nous vous recommandons de modifier ce mot de passe dès votre première connexion.
+    </p>
+
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${process.env.FRONTEND_URL}" style="color:#2563eb;font-weight:600;text-decoration:none;">
+        Accéder à ${companyName}
+      </a>
+    </div>
+
+    <p>
+      Cliquez sur le bouton ci-dessus pour accéder à votre espace et commencer à utiliser la plateforme.
+    </p>
+
+    ${
+      lienPlateformeEchange
+        ? `
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${lienPlateformeEchange}" style="
+        color:#2563eb;
+        text-decoration:none;
+        font-weight:600;
       ">
-        ${motDePasseTemp}
-      </div>
+        Rejoindre la plateforme d'échange
+      </a>
+    </div>
 
-      <p>
-        Nous vous recommandons de modifier ce mot de passe dès votre première connexion.
-      </p>
-      ${
-        lienPlateformeEchange
-          ? `
-      <div style="text-align:center;margin:30px 0;">
-        <a href="${lienPlateformeEchange}" style="
-          background:#2563eb;
-          color:#ffffff;
-          text-decoration:none;
-          padding:14px 24px;
-          border-radius:8px;
-          font-weight:600;
-        ">
-          Rejoindre la plateforme d'échange
-        </a>
-      </div>
+    <p>
+      Rejoignez la plateforme d'échange de l'entreprise en cliquant sur le bouton
+      ci-dessus afin de rester informé des échanges et annonces internes.
+    </p>
+    `
+        : ""
+    }
 
-      <p>
-        Rejoignez la plateforme d'échange de l'entreprise en cliquant sur le bouton
-        ci-dessus afin de rester informé des échanges et annonces internes.
-      </p>
-      `
-          : ""
-      }
-
-      <p>Cordialement,<br /><strong>${companyName}</strong></p>
-      `,
+    <p>
+      Cordialement,<br />
+      <strong>${companyName}</strong>
+    </p>
+    `,
     ),
   );
 
