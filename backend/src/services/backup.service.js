@@ -20,6 +20,10 @@ const BACKUP_DIR = path.resolve(__dirname, "../../backups");
 // Nombre de jours de rétention
 const RETENTION_DAYS = 30;
 
+function normalizeMysqlDumpSql(sql) {
+  return sql.replace(/"([A-Za-z_][A-Za-z0-9_]*)"/g, "`$1`");
+}
+
 // Extraire les infos de connexion depuis DATABASE_URL
 // Format : mysql://user:password@host:port/database
 function parseDatabaseUrl(url) {
@@ -54,7 +58,7 @@ async function runMysqlImport(db, gzPath) {
   const sql = await new Promise((resolve, reject) => {
     gunzip(compressed, (error, result) => {
       if (error) reject(error);
-      else resolve(result.toString("utf8"));
+      else resolve(normalizeMysqlDumpSql(result.toString("utf8")));
     });
   });
   const connection = await mysql.createConnection({
@@ -66,8 +70,17 @@ async function runMysqlImport(db, gzPath) {
     multipleStatements: true,
   });
   try {
+    await connection.query("SET FOREIGN_KEY_CHECKS = 0");
+    const [tables] = await connection.query("SHOW TABLES");
+    for (const table of tables) {
+      const tableName = Object.values(table)[0];
+      if (typeof tableName !== "string") continue;
+      const escapedTableName = `\`${tableName.replace(/`/g, "``")}\``;
+      await connection.query(`TRUNCATE TABLE ${escapedTableName}`);
+    }
     await connection.query(sql);
   } finally {
+    await connection.query("SET FOREIGN_KEY_CHECKS = 1");
     await connection.end();
   }
 }
@@ -102,6 +115,9 @@ export const backupService = {
       dumpToFile: sqlPath,
       compressFile: false,
     });
+
+    const sql = await fs.readFile(sqlPath, "utf8");
+    await fs.writeFile(sqlPath, normalizeMysqlDumpSql(sql), "utf8");
 
     // Compresser le fichier SQL en .gz
     await pipeline(
