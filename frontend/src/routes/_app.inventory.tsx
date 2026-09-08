@@ -134,6 +134,7 @@ function InventoryPage() {
   const [inventaires, setInventaires] = useState<Inventaire[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [creatingInventory, setCreatingInventory] = useState(false);
   const [tab, setTab] = useState<"stocks" | "mouvements" | "inventaires">(
     "stocks",
   );
@@ -792,6 +793,8 @@ function InventoryPage() {
               size="sm"
               className="gap-1.5"
               onClick={async () => {
+                if (creatingInventory) return;
+                setCreatingInventory(true);
                 try {
                   const { default: api } = await import("@/lib/api/client");
                   await api.post("/stocks/inventaires");
@@ -801,10 +804,18 @@ function InventoryPage() {
                   toast.warning(
                     "Impossible de créer l'inventaire. Veillez terminer l'inventaire en cours et verifier votre connexion internet",
                   );
+                } finally {
+                  setCreatingInventory(false);
                 }
               }}
+              disabled={creatingInventory}
             >
-              <ClipboardList className="h-4 w-4" /> Inventaire
+              {creatingInventory ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ClipboardList className="h-4 w-4" />
+              )}
+              {creatingInventory ? "Creation..." : "Inventaire"}
             </Button>
           </>
         }
