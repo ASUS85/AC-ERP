@@ -1041,6 +1041,9 @@ function SettingsPage() {
   const [selectedBackup, setSelectedBackup] = useState<BackupInfo | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
+  const [updatingSystemField, setUpdatingSystemField] = useState<
+    keyof SystemSettings | null
+  >(null);
 
   const canManageSettings = hasPermission("users", "modifier");
   const fetchProfile = useAuthStore((state) => state.fetchProfile);
@@ -1234,7 +1237,8 @@ function SettingsPage() {
   };
 
   const toggleSystem = async (field: keyof SystemSettings, value: boolean) => {
-    if (!system) return;
+    if (!system || updatingSystemField) return;
+    setUpdatingSystemField(field);
     try {
       const response =
         field === "modeMaintenance"
@@ -1246,6 +1250,8 @@ function SettingsPage() {
       toast.success("Paramètre mis à jour");
     } catch (error: unknown) {
       toast.error(errorMessage(error, "Modification refusée"));
+    } finally {
+      setUpdatingSystemField(null);
     }
   };
 
@@ -1602,18 +1608,21 @@ function SettingsPage() {
                       label="Notifications par e-mail"
                       description="Recevoir les alertes importantes par e-mail"
                       checked={system.notificationsEmail}
+                      loading={updatingSystemField === "notificationsEmail"}
                       onChange={(v) => toggleSystem("notificationsEmail", v)}
                     />
                     <Setting
                       label="Alertes IA proactives"
                       description="Prévisions et recommandations automatiques"
                       checked={system.alertesIa}
+                      loading={updatingSystemField === "alertesIa"}
                       onChange={(v) => toggleSystem("alertesIa", v)}
                     />
                     <Setting
                       label="Facturation automatique"
                       description="Générer les factures à la validation des ventes"
                       checked={system.facturationAutomatique}
+                      loading={updatingSystemField === "facturationAutomatique"}
                       onChange={(v) =>
                         toggleSystem("facturationAutomatique", v)
                       }
@@ -1626,6 +1635,7 @@ function SettingsPage() {
                           : "Seul le super administrateur peut modifier ce réglage"
                       }
                       checked={system.modeMaintenance}
+                      loading={updatingSystemField === "modeMaintenance"}
                       disabled={!isSuperAdmin}
                       onChange={(v) => toggleSystem("modeMaintenance", v)}
                     />
@@ -2014,12 +2024,14 @@ function Setting({
   checked,
   onChange,
   disabled,
+  loading = false,
 }: {
   label: string;
   description: string;
   checked: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
+  loading?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3.5">
@@ -2027,11 +2039,21 @@ function Setting({
         <p className="text-sm font-medium text-foreground">{label}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
-      <Switch
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={onChange}
-      />
+      {loading ? (
+        <div
+          className="flex h-5 w-9 items-center justify-center"
+          aria-label="Mise à jour en cours"
+          role="status"
+        >
+          <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <Switch
+          checked={checked}
+          disabled={disabled}
+          onCheckedChange={onChange}
+        />
+      )}
     </div>
   );
 }
