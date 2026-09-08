@@ -14,7 +14,7 @@
     "prisma:studio": "prisma studio",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:push": "prisma db push",
-    "render:build": "npm ci && prisma generate && prisma db push",
+    "render:build": "if command -v mysqldump >/dev/null 2>&1; then echo 'MySQL client deja disponible'; else apt-get update && apt-get install -y --no-install-recommends default-mysql-client; fi && npm ci && prisma generate && prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"

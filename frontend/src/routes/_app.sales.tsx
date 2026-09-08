@@ -225,6 +225,7 @@ function SalesPage() {
     useState<ProductApi | null>(null);
   const [historyDetailOpen, setHistoryDetailOpen] = useState(false);
   const [historyDetailLoading, setHistoryDetailLoading] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [historyDetail, setHistoryDetail] = useState<FactureDetailsApi | null>(
     null,
   );
@@ -607,7 +608,8 @@ function SalesPage() {
   };
 
   const downloadInvoicePdf = async () => {
-    if (!createdInvoice?.id) return;
+    if (!createdInvoice?.id || downloadingInvoice) return;
+    setDownloadingInvoice(true);
     try {
       const blob = (await getFacturePdf(createdInvoice.id)) as Blob;
       const url = URL.createObjectURL(blob);
@@ -618,6 +620,8 @@ function SalesPage() {
       URL.revokeObjectURL(url);
     } catch {
       toast.error("Impossible de télécharger la facture");
+    } finally {
+      setDownloadingInvoice(false);
     }
   };
 
@@ -1345,8 +1349,14 @@ function SalesPage() {
             <Button variant="outline" onClick={() => setSuccessOpen(false)}>
               Fermer
             </Button>
-            <Button onClick={() => void downloadInvoicePdf()}>
-              Télécharger PDF
+            <Button
+              onClick={() => void downloadInvoicePdf()}
+              disabled={downloadingInvoice || !createdInvoice?.id}
+            >
+              {downloadingInvoice ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {downloadingInvoice ? "Téléchargement..." : "Télécharger PDF"}
             </Button>
           </div>
         }
