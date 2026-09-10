@@ -8,3 +8,5 @@ export const createFournisseur = (data: unknown) =>
   api.post("/fournisseurs", data);
 export const updateFournisseur = (id: string, data: unknown) =>
   api.put(`/fournisseurs/${id}`, data);
+export const deleteFournisseur = (id: string) =>
+  api.delete(`/fournisseurs/${id}`);

@@ -26,6 +26,7 @@ const crudService = createCrudService(fournisseursRepository, {
       data.codeFournisseur ||
       `FOUR-${String((await fournisseursRepository.countAll()) + 1).padStart(4, "0")}`,
   }),
+  softDeleteData: { isActive: false, statut: "INACTIF" },
 });
 
 export const fournisseursService = {

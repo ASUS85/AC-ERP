@@ -9,6 +9,7 @@ router.get("/", authorize("fournisseurs:lire"), fournisseursController.list);
 router.get("/:id", authorize("fournisseurs:lire"), fournisseursController.getById);
 router.post("/", authorize("fournisseurs:creer"), fournisseursController.create);
 router.put("/:id", authorize("fournisseurs:modifier"), fournisseursController.update);
+router.delete("/:id", authorize("fournisseurs:supprimer"), fournisseursController.remove);
 
 export default router;
 

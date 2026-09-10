@@ -8,6 +8,7 @@ import {
   Pencil,
   Search,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SectionCard, Pagination, StatCard } from "@/components/erp/widgets";
@@ -24,6 +25,7 @@ import {
   getFournisseurById,
   createFournisseur,
   updateFournisseur,
+  deleteFournisseur,
 } from "@/lib/api/fournisseurs.service";
 import {
   Select,
@@ -107,6 +109,8 @@ function SuppliersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Fournisseur | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Fournisseur | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -250,6 +254,25 @@ function SuppliersPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await deleteFournisseur(pendingDelete.id);
+      toast.success("Fournisseur désactivé");
+      setPendingDelete(null);
+      await loadFournisseurs();
+    } catch (error: unknown) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "Suppression impossible";
+      toast.error(message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const cols: Column<Fournisseur>[] = [
     {
       key: "raisonSociale",
@@ -371,9 +394,15 @@ function SuppliersPage() {
               rowKey={(s) => s.id}
               rowActions={(fournisseur) => [
                 {
-                  label: "",
+                  label: "Modifier",
                   icon: <Pencil className="h-4 w-4" />,
                   onClick: () => void openEditModal(fournisseur.id),
+                },
+                {
+                  label: "Supprimer",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  destructive: true,
+                  onClick: () => setPendingDelete(fournisseur),
                 },
               ]}
             />
@@ -417,123 +446,169 @@ function SuppliersPage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field
-            label="Raison sociale"
-            htmlFor="raisonSociale"
-            error={errors.raisonSociale}
-          >
-            <span class="ml-1 text-destructive">*</span>
-            <Input
-              id="raisonSociale"
-              value={form.raisonSociale}
-              onChange={(e) => setField("raisonSociale", e.target.value)}
-              placeholder="Nom de l'entreprise"
-            />
-          </Field>
-          <Field label="Email" htmlFor="email" error={errors.email}>
-            <span class="ml-1 text-destructive">*</span>
-            <Input
-              id="email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setField("email", e.target.value)}
-              placeholder="contact@fournisseur.com"
-            />
-          </Field>
-          <Field label="Telephone" htmlFor="telephone" error={errors.telephone}>
-            <span class="ml-1 text-destructive">*</span>
-            <Input
-              id="telephone"
-              value={form.telephone}
-              onChange={(e) => setField("telephone", e.target.value)}
-              placeholder="+237 6XX XXX XXX"
-            />
-          </Field>
-          <Field label="Ville" htmlFor="ville">
-            <Input
-              id="ville"
-              value={form.ville}
-              onChange={(e) => setField("ville", e.target.value)}
-              placeholder="Douala"
-            />
-          </Field>
-          <Field label="Pays" htmlFor="pays">
-            <Input
-              id="pays"
-              value={form.pays}
-              onChange={(e) => setField("pays", e.target.value)}
-              placeholder="Cameroun"
-            />
-          </Field>
-          <Field label="Identifiant fiscal" htmlFor="numeroFiscal">
-            <Input
-              id="numeroFiscal"
-              value={form.numeroFiscal || ""}
-              onChange={(e) => setField("numeroFiscal", e.target.value)}
-              placeholder="N° de contribuable"
-            />
-          </Field>
-          <Field label="Delai livraison (jours)" htmlFor="delaiLivraisonMoyen">
-            <Input
-              id="delaiLivraisonMoyen"
-              type="text"
-              inputMode="decimal"
-              value={formatGroupedInputNumber(
-                String(form.delaiLivraisonMoyen || ""),
-                { allowNegative: false },
-              )}
-              onChange={(e) =>
-                setField(
-                  "delaiLivraisonMoyen",
-                  Number(
-                    normalizeNumberInput(e.target.value, {
-                      allowNegative: false,
-                    }),
-                  ),
-                )
-              }
-              placeholder="Delais en jours"
-            />
-          </Field>
-          <Field label="Statut" htmlFor="statut">
-            <Select
-              value={form.statut}
-              onValueChange={(value: "ACTIF" | "INACTIF") =>
-                setField("statut", value)
-              }
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field
+              label="Raison sociale"
+              htmlFor="raisonSociale"
+              error={errors.raisonSociale}
             >
-              <SelectTrigger id="statut">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ACTIF">Actif</SelectItem>
-                <SelectItem value="INACTIF">Inactif</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Adresse" htmlFor="adresse" className="md:col-span-2">
-            <Input
-              id="adresse"
-              value={form.adresse}
-              onChange={(e) => setField("adresse", e.target.value)}
-              placeholder="Rue, quartier, immeuble..."
-            />
-          </Field>
-          <Field
-            label="Conditions de paiement"
-            htmlFor="conditionsPaiement"
-            className="md:col-span-2"
-          >
-            <Input
-              id="conditionsPaiement"
-              value={form.conditionsPaiement || ""}
-              onChange={(e) => setField("conditionsPaiement", e.target.value)}
-              placeholder="30 jours fin de mois, etc."
-            />
-          </Field>
-        </div>
+              <span class="ml-1 text-destructive">*</span>
+              <Input
+                id="raisonSociale"
+                value={form.raisonSociale}
+                onChange={(e) => setField("raisonSociale", e.target.value)}
+                placeholder="Nom de l'entreprise"
+              />
+            </Field>
+            <Field label="Email" htmlFor="email" error={errors.email}>
+              <span class="ml-1 text-destructive">*</span>
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setField("email", e.target.value)}
+                placeholder="contact@fournisseur.com"
+              />
+            </Field>
+            <Field
+              label="Telephone"
+              htmlFor="telephone"
+              error={errors.telephone}
+            >
+              <span class="ml-1 text-destructive">*</span>
+              <Input
+                id="telephone"
+                value={form.telephone}
+                onChange={(e) => setField("telephone", e.target.value)}
+                placeholder="+237 6XX XXX XXX"
+              />
+            </Field>
+            <Field label="Ville" htmlFor="ville">
+              <Input
+                id="ville"
+                value={form.ville}
+                onChange={(e) => setField("ville", e.target.value)}
+                placeholder="Douala"
+              />
+            </Field>
+            <Field label="Pays" htmlFor="pays">
+              <Input
+                id="pays"
+                value={form.pays}
+                onChange={(e) => setField("pays", e.target.value)}
+                placeholder="Cameroun"
+              />
+            </Field>
+            <Field label="Identifiant fiscal" htmlFor="numeroFiscal">
+              <Input
+                id="numeroFiscal"
+                value={form.numeroFiscal || ""}
+                onChange={(e) => setField("numeroFiscal", e.target.value)}
+                placeholder="N° de contribuable"
+              />
+            </Field>
+            <Field
+              label="Delai livraison (jours)"
+              htmlFor="delaiLivraisonMoyen"
+            >
+              <Input
+                id="delaiLivraisonMoyen"
+                type="text"
+                inputMode="decimal"
+                value={formatGroupedInputNumber(
+                  String(form.delaiLivraisonMoyen || ""),
+                  { allowNegative: false },
+                )}
+                onChange={(e) =>
+                  setField(
+                    "delaiLivraisonMoyen",
+                    Number(
+                      normalizeNumberInput(e.target.value, {
+                        allowNegative: false,
+                      }),
+                    ),
+                  )
+                }
+                placeholder="Delais en jours"
+              />
+            </Field>
+            <Field label="Statut" htmlFor="statut">
+              <Select
+                value={form.statut}
+                onValueChange={(value: "ACTIF" | "INACTIF") =>
+                  setField("statut", value)
+                }
+              >
+                <SelectTrigger id="statut">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIF">Actif</SelectItem>
+                  <SelectItem value="INACTIF">Inactif</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="Adresse" htmlFor="adresse" className="md:col-span-2">
+              <Input
+                id="adresse"
+                value={form.adresse}
+                onChange={(e) => setField("adresse", e.target.value)}
+                placeholder="Rue, quartier, immeuble..."
+              />
+            </Field>
+            <Field
+              label="Conditions de paiement"
+              htmlFor="conditionsPaiement"
+              className="md:col-span-2"
+            >
+              <Input
+                id="conditionsPaiement"
+                value={form.conditionsPaiement || ""}
+                onChange={(e) => setField("conditionsPaiement", e.target.value)}
+                placeholder="30 jours fin de mois, etc."
+              />
+            </Field>
+          </div>
         )}
+      </AppModal>
+
+      <AppModal
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setPendingDelete(null);
+        }}
+        title="Supprimer le fournisseur"
+        description="Le fournisseur ne sera plus disponible pour les nouvelles commandes."
+        size="sm"
+        footer={
+          <div className="flex justify-between gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPendingDelete(null)}
+              disabled={deleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Supprimer
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          Voulez-vous supprimer le fournisseur{" "}
+          <span className="font-semibold text-foreground">
+            {pendingDelete?.raisonSociale}
+          </span>{" "}
+          ?
+        </p>
       </AppModal>
     </>
   );
