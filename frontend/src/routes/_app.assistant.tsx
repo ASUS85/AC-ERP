@@ -292,8 +292,8 @@ function AssistantPage() {
         breadcrumb={["Intelligence", "Assistant ERP"]}
       />
       <div className="grid grid-cols-1 gap-4 lg:h-[calc(100dvh-12.5rem)] lg:grid-cols-4">
-        <aside className="hidden min-h-0 lg:block">
-          <div className="h-full overflow-y-auto rounded-sm border border-border bg-card p-3 shadow-card">
+        <aside className="min-h-0">
+          <div className="max-h-56 overflow-y-auto rounded-sm border border-border bg-card p-3 shadow-card lg:h-full lg:max-h-none">
             <Button className="w-full gap-1.5" onClick={startNewConversation}>
               <Plus className="h-4 w-4" /> Nouvelle conversation
             </Button>
@@ -463,7 +463,7 @@ function AssistantPage() {
                   )}
                   <div
                     className={cn(
-                      "max-w-[82%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      "max-w-[82%] break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                       m.role === "ai"
                         ? "bg-secondary text-foreground"
                         : "bg-primary text-primary-foreground whitespace-pre-wrap",
@@ -476,7 +476,7 @@ function AssistantPage() {
                           // Tableaux
                           table: ({ children }) => (
                             <div className="my-2 overflow-x-auto rounded-lg border border-border">
-                              <table className="w-full text-sm">
+                              <table className="w-full min-w-[560px] text-sm">
                                 {children}
                               </table>
                             </div>
