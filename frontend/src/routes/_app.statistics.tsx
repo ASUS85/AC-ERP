@@ -262,7 +262,7 @@ function StatsPage() {
         breadcrumb={["Intelligence", "Statistiques"]}
       />
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, index) => (
             <div

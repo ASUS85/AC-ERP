@@ -99,7 +99,11 @@ function UsersPage() {
       const rolesData = allRoles.filter((role: any) => {
         if (currentUserRole === "SUPER_ADMIN") return true;
         if (currentUserRole === "ADMIN") return role?.nomRole !== "SUPER_ADMIN";
-        return !role?.isSystemRole && role?.nomRole !== "SUPER_ADMIN" && role?.nomRole !== "ADMIN";
+        return (
+          !role?.isSystemRole &&
+          role?.nomRole !== "SUPER_ADMIN" &&
+          role?.nomRole !== "ADMIN"
+        );
       });
       setRows(usersData);
       setRoles(rolesData);
@@ -308,7 +312,7 @@ function UsersPage() {
           </Button>
         }
       />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
         <StatCard
           label="Utilisateurs"
           value={String(rows.length)}

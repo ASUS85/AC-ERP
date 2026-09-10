@@ -59,10 +59,14 @@ export function DataTable<T extends Record<string, any>>({
 
   const totalCols = columns.length + (withActions ? 1 : 0);
   const colWidth = `${100 / totalCols}%`;
+  const tableMinWidth = totalCols * 140;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed text-sm">
+    <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
+      <table
+        className="w-full table-fixed text-sm"
+        style={{ minWidth: `${tableMinWidth}px` }}
+      >
         <thead>
           <tr className="border-b border-border bg-primary/6 text-xs uppercase tracking-wide text-muted-foreground">
             {columns.map((c, index) => (
@@ -119,7 +123,6 @@ export function DataTable<T extends Record<string, any>>({
                     (() => {
                       const actions = rowActions(row);
                       const isBusy = isRowActionLoading?.(row) ?? false;
-                      // Actions en clair (icône + libellé) si <= 2 actions, sinon menu déroulant
                       if (
                         actions.length < 2 ||
                         (actions.length === 2 && isEditDeletePair(actions))

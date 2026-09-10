@@ -294,7 +294,7 @@ function SuppliersPage() {
         description="Coordonnées, commandes et statistiques"
         breadcrumb={["Gestion commerciale", "Fournisseurs"]}
       />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
         <StatCard
           label="Fournisseurs"
           value={String(meta.total)}

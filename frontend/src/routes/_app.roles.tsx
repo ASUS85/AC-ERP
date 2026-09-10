@@ -399,7 +399,7 @@ function RolesPage() {
 
           {/* Card Permissions (Hauteur Fixe + Scroll interne) */}
           <div className="lg:col-span-9 rounded-xl border border-border/70 bg-card p-5 shadow-sm h-[800px] flex flex-col overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between border-b border-border/50 pb-4 shrink-0 gap-3">
+            <div className="flex flex-wrap items-center justify-between border-b border-border/50 pb-2 shrink-0 gap-3">
               <div>
                 <h3 className="font-semibold text-base text-foreground flex items-center gap-2">
                   Permissions :
@@ -416,7 +416,7 @@ function RolesPage() {
               </div>
 
               {selectedRole && (
-                <div className="flex items-center gap-2">
+                <div className="grid items-center gap-2  grid-cols-2 md:grid-cols-3">
                   <Button
                     variant="outline"
                     size="sm"
