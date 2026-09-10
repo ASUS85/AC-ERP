@@ -101,7 +101,7 @@ export function AppModal({
               ) : null}
             </DialogHeader>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+          <div className="flex-1 overflow-auto px-6 py-5">{children}</div>
           {footer ? (
             <div className="border-t border-border px-6 py-4">{footer}</div>
           ) : null}
