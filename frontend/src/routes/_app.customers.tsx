@@ -317,6 +317,7 @@ function CustomersPage() {
   const [form, setForm] = useState<ClientPayload>(emptyForm);
 
   const openPreview = async () => {
+    setPreviewOpen(true);
     setPreviewLoading(true);
     // liberer l'ancienne URL si elle existe
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -330,9 +331,9 @@ function CustomersPage() {
       const blob = response as unknown as Blob;
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
-      setPreviewOpen(true);
     } catch {
       toast.error("Impossible de generer l'apercu PDF");
+      setPreviewOpen(false);
     } finally {
       setPreviewLoading(false);
     }

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, Search } from "lucide-react";
+import { Check, ChevronDown, LoaderCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Option {
@@ -17,6 +17,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   searchPlaceholder?: string;
   emptyMessage?: string;
+  loading?: boolean;
   disabled?: boolean;
   className?: string;
   portalMode?: "nearest" | "body";
@@ -29,6 +30,7 @@ export function SearchableSelect({
   placeholder = "Sélectionner...",
   searchPlaceholder = "Rechercher...",
   emptyMessage = "Aucun résultat",
+  loading = false,
   disabled,
   className,
   portalMode = "nearest",
@@ -209,15 +211,24 @@ export function SearchableSelect({
           disabled && "cursor-not-allowed opacity-50",
         )}
       >
-        <span className={cn("truncate", !selected && "text-muted-foreground")}>
-          {selected?.label ?? placeholder}
-        </span>
-        <ChevronDown
+        <span
           className={cn(
-            "ml-2 h-4 w-4 shrink-0 opacity-60 transition-transform",
-            open && "rotate-180",
+            "truncate",
+            (!selected || loading) && "text-muted-foreground",
           )}
-        />
+        >
+          {loading ? "Chargement..." : (selected?.label ?? placeholder)}
+        </span>
+        {loading ? (
+          <LoaderCircle className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-60" />
+        ) : (
+          <ChevronDown
+            className={cn(
+              "ml-2 h-4 w-4 shrink-0 opacity-60 transition-transform",
+              open && "rotate-180",
+            )}
+          />
+        )}
       </button>
 
       {/* Dropdown porté dans document.body */}
@@ -270,7 +281,12 @@ export function SearchableSelect({
               style={{ maxHeight: pos.maxHeight - 55 }}
               data-radix-scroll-lock-scrollable=""
             >
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-muted-foreground">
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Chargement...
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                   {emptyMessage}
                 </div>

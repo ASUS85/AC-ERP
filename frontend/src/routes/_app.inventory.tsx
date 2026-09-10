@@ -186,6 +186,7 @@ function InventoryPage() {
   // Modale détail inventaire
   const [invDetailOpen, setInvDetailOpen] = useState(false);
   const [invDetail, setInvDetail] = useState<Inventaire | null>(null);
+  const [invDetailLoading, setInvDetailLoading] = useState(false);
   const [invSubmitting, setInvSubmitting] = useState(false);
   const [invPendingAction, setInvPendingAction] = useState<
     "rafraichir" | "annuler" | null
@@ -341,6 +342,9 @@ function InventoryPage() {
   };
 
   const openInvDetail = async (id: string) => {
+    setInvDetailOpen(true);
+    setInvDetailLoading(true);
+    setInvDetail(null);
     try {
       const { default: api } = await import("@/lib/api/client");
       const res = await api.get(`/stocks/inventaires/${id}`);
@@ -350,9 +354,11 @@ function InventoryPage() {
         return;
       }
       setInvDetail(detail);
-      setInvDetailOpen(true);
     } catch {
       toast.error("Impossible de charger l'inventaire");
+      setInvDetailOpen(false);
+    } finally {
+      setInvDetailLoading(false);
     }
   };
 
@@ -1253,7 +1259,11 @@ function InventoryPage() {
           )
         }
       >
-        {invDetail && (
+        {invDetailLoading ? (
+          <div className="flex justify-center py-14">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : invDetail ? (
           <div className="space-y-2">
             <div className="grid grid-cols-[minmax(0,1fr)_110px_110px_80px] gap-3 px-3 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <span>Produit</span>
@@ -1310,7 +1320,7 @@ function InventoryPage() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </AppModal>
       <AppModal
         open={Boolean(invPendingAction)}

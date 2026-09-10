@@ -106,6 +106,7 @@ function SuppliersPage() {
   >([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Fournisseur | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -187,6 +188,9 @@ function SuppliersPage() {
   };
 
   const openEditModal = async (id: string) => {
+    setModalOpen(true);
+    setModalLoading(true);
+    setEditing(null);
     try {
       const response = await getFournisseurById(id);
       const f = ((response as any)?.data || {}) as Fournisseur;
@@ -204,9 +208,11 @@ function SuppliersPage() {
         statut: f.statut,
       });
       setErrors({});
-      setModalOpen(true);
     } catch {
       toast.error("Impossible de charger le fournisseur");
+      setModalOpen(false);
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -406,6 +412,11 @@ function SuppliersPage() {
           </div>
         }
       >
+        {modalLoading ? (
+          <div className="flex justify-center py-14">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
         <div className="grid gap-4 md:grid-cols-2">
           <Field
             label="Raison sociale"
@@ -522,6 +533,7 @@ function SuppliersPage() {
             />
           </Field>
         </div>
+        )}
       </AppModal>
     </>
   );

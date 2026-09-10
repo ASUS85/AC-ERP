@@ -376,6 +376,7 @@ function ProductsPage() {
   };
 
   const openPreview = async () => {
+    setPreviewOpen(true);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setPreviewLoading(true);
@@ -387,9 +388,9 @@ function ProductsPage() {
       const blob = response as unknown as Blob;
       const url = URL.createObjectURL(blob);
       setPreviewUrl(url);
-      setPreviewOpen(true);
     } catch {
       toast.error("Impossible de generer l'apercu PDF");
+      setPreviewOpen(false);
     } finally {
       setPreviewLoading(false);
     }

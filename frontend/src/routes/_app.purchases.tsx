@@ -291,6 +291,7 @@ function PurchasesPage() {
 
   const [suppliers, setSuppliers] = useState<SupplierItem[]>([]);
   const [products, setProducts] = useState<ProductItem[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createStep, setCreateStep] = useState(1);
   const [createSubmitting, setCreateSubmitting] = useState(false);
@@ -318,6 +319,7 @@ function PurchasesPage() {
   const [confirmationError, setConfirmationError] = useState("");
 
   const [receptionOpen, setReceptionOpen] = useState(false);
+  const [receptionLoading, setReceptionLoading] = useState(false);
   const [receptionStep, setReceptionStep] = useState(1);
   const [receptionSubmitting, setReceptionSubmitting] = useState(false);
   const [receptionGeneralForm, setReceptionGeneralForm] = useState({
@@ -519,6 +521,7 @@ function PurchasesPage() {
   useEffect(() => {
     if (!createOpen) return;
     const loadCatalog = async () => {
+      setCatalogLoading(true);
       try {
         const [suppliersRes, productsRes] = await Promise.all([
           getFournisseurs({ limit: 1000 }),
@@ -530,6 +533,8 @@ function PurchasesPage() {
         setProducts(Array.isArray(productsRes?.data) ? productsRes.data : []);
       } catch {
         toast.error("Impossible de charger fournisseurs et produits");
+      } finally {
+        setCatalogLoading(false);
       }
     };
     void loadCatalog();
@@ -657,9 +662,6 @@ function PurchasesPage() {
       return;
     }
 
-    if (!detailsOrder || detailsOrder.id !== selectedOrderId) {
-      await openDetailsModal(selectedOrderId);
-    }
     setImportOrder({ id: selectedOrderId, ref: row?.ref || "BCF" });
     setInvoiceWizardStep(1);
     setInvoiceWizardOpen(true);
@@ -1070,7 +1072,10 @@ function PurchasesPage() {
     });
 
   const openDetailsModal = async (orderId: string) => {
+    setDetailsOpen(true);
     setDetailsLoading(true);
+    setDetailsOrder(null);
+    setImportedInvoices([]);
     try {
       const response = (await getBonCommandeFournisseurById(orderId)) as {
         data?: BonCommandeApi;
@@ -1092,7 +1097,6 @@ function PurchasesPage() {
       setReceptionRowsSearch("");
       setReceptionRowsStatusFilter("");
       setReceptionRowsPage(1);
-      setDetailsOpen(true);
     } catch {
       toast.error("Impossible de charger le detail du bon");
     } finally {
@@ -1104,6 +1108,9 @@ function PurchasesPage() {
     const selectedOrderId = orderId || detailsOrder?.id;
     if (!selectedOrderId) return;
 
+    setReceptionOpen(true);
+    setReceptionLoading(true);
+    setReceptionOrder(null);
     try {
       const response = (await getBonCommandeFournisseurById(
         selectedOrderId,
@@ -1125,10 +1132,12 @@ function PurchasesPage() {
       setReceptionGeneralErrors({});
       setReceptionLinesError("");
       setReceptionStep(1);
-      setReceptionOpen(true);
       setDetailsOrder(order);
     } catch {
       toast.error("Impossible de charger le detail du bon");
+      setReceptionOpen(false);
+    } finally {
+      setReceptionLoading(false);
     }
   };
 
@@ -2022,6 +2031,7 @@ function PurchasesPage() {
                     setGeneralField("idFournisseur", value)
                   }
                   options={supplierOptions}
+                  loading={catalogLoading}
                   placeholder="Selectionner un fournisseur"
                   searchPlaceholder="Rechercher un fournisseur"
                   emptyMessage="Aucun fournisseur"
@@ -2279,6 +2289,7 @@ function PurchasesPage() {
                               });
                             }}
                             options={productOptions}
+                            loading={catalogLoading}
                             placeholder="Selectionner un produit"
                             searchPlaceholder="Rechercher un produit"
                             emptyMessage="Aucun produit"
@@ -2634,7 +2645,11 @@ function PurchasesPage() {
           </div>
         }
       >
-        {receptionOrder ? (
+        {receptionLoading ? (
+          <div className="flex justify-center py-14">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : receptionOrder ? (
           <div className="min-h-0 space-y-6">
             <div className="grid gap-6 md:grid-cols-[1fr_300px]">
               <div className="space-y-6">
