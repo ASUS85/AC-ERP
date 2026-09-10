@@ -80,7 +80,7 @@ function AiPage() {
         description="Anticipez ventes, stocks et risques"
         breadcrumb={["Intelligence", "Prévisions IA"]}
       />
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-4">
         <StatCard
           label="CA prévu (prochain mois)"
           value={
