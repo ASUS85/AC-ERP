@@ -92,7 +92,7 @@ export function AppModal({
           positionClasses[position],
         )}
       >
-        <div className="flex h-full min-h-0 flex-col">
+        <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
           <div className="border-b border-border px-4 py-3 sm:px-6">
             <DialogHeader className="space-y-2">
               <DialogTitle>{title}</DialogTitle>
@@ -101,7 +101,7 @@ export function AppModal({
               ) : null}
             </DialogHeader>
           </div>
-          <div className="min-h-0 flex-1 overflow-auto px-4 py-5 sm:px-6">
+          <div className="min-h-0 min-w-0 flex-1 overflow-auto px-4 py-5 sm:px-6">
             {children}
           </div>
           {footer ? (
