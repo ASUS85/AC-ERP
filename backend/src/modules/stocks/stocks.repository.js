@@ -107,6 +107,7 @@ export const stocksRepository = {
             create: stocks.map((s) => ({
               idProduit: s.idProduit,
               stockTheorique: s.stockActuel,
+              ecart: 0,
             })),
           },
         },
@@ -171,17 +172,23 @@ export const stocksRepository = {
   async enregistrerComptageInventaire(id, lignes) {
     return prisma.$transaction(async (tx) => {
       for (const ligne of lignes) {
-        const updated = await tx.ligneInventaire.updateMany({
+        const existante = await tx.ligneInventaire.findFirst({
           where: { id: ligne.id, idInventaire: id },
-          data: { stockReel: ligne.stockReel },
         });
-        if (!updated.count) {
+        if (!existante) {
           throw new ApiError(
             404,
             "INVENTORY_LINE_NOT_FOUND",
             "Ligne d'inventaire introuvable",
           );
         }
+        await tx.ligneInventaire.update({
+          where: { id: existante.id },
+          data: {
+            stockReel: ligne.stockReel,
+            ecart: ligne.stockReel - existante.stockTheorique,
+          },
+        });
       }
       return tx.inventaire.findUnique({
         where: { id },
@@ -195,7 +202,11 @@ export const stocksRepository = {
       for (const stock of stocks) {
         await tx.ligneInventaire.updateMany({
           where: { idInventaire: id, idProduit: stock.idProduit },
-          data: { stockTheorique: stock.stockActuel, stockReel: null },
+          data: {
+            stockTheorique: stock.stockActuel,
+            stockReel: null,
+            ecart: 0,
+          },
         });
       }
       return tx.inventaire.findUnique({

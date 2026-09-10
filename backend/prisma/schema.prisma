@@ -337,7 +337,7 @@ model LigneInventaire {
   idProduit      String     @map("id_produit") @db.Char(36)
   stockTheorique Int        @map("stock_theorique")
   stockReel      Int?       @map("stock_reel")
-  ecart          Int        @ignore
+  ecart          Int        @default(0)
   statut         String     @default("EN_ATTENTE") @db.VarChar(20)
   inventaire     Inventaire @relation(fields: [idInventaire], references: [id], onDelete: Cascade, map: "fk_li_inventaire")
   produit        Produit    @relation(fields: [idProduit], references: [id], map: "fk_li_produit")
