@@ -8,8 +8,16 @@ const DEFAULT_BROWSER_OPTIONS = {
   args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
 };
 
+const isRenderRuntime = () =>
+  process.env.NODE_ENV === "production" ||
+  Boolean(
+    process.env.RENDER ||
+    process.env.RENDER_SERVICE_ID ||
+    process.env.RENDER_EXTERNAL_URL,
+  );
+
 async function getProductionBrowserOptions() {
-  if (process.env.NODE_ENV !== "production") return {};
+  if (!isRenderRuntime()) return {};
 
   return {
     args: chromium.args,
