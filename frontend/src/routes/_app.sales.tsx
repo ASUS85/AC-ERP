@@ -21,6 +21,7 @@ import { SectionCard, Pagination } from "@/components/erp/widgets";
 import { DataTable, type Column } from "@/components/erp/DataTable";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 import { AppModal } from "@/components/erp/AppModal";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -226,6 +227,7 @@ function SalesPage() {
   const [historyDetailOpen, setHistoryDetailOpen] = useState(false);
   const [historyDetailLoading, setHistoryDetailLoading] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [creditLimitError, setCreditLimitError] = useState<string | null>(null);
   const [historyDetail, setHistoryDetail] = useState<FactureDetailsApi | null>(
     null,
   );
@@ -242,6 +244,7 @@ function SalesPage() {
   const fetchProducts = useProductsStore((state) => state.fetchList);
   const invalidateProducts = useProductsStore((state) => state.invalidate);
   const fetchClients = useClientsStore((state) => state.fetchList);
+  const invalidateClients = useClientsStore((state) => state.invalidate);
 
   const cols: Column<SaleRow>[] = [
     {
@@ -371,7 +374,11 @@ function SalesPage() {
 
   const totals = useMemo(() => {
     const totalHt = cart.reduce((sum, line) => sum + lineHt(line), 0);
-    const totalTtc = cart.reduce((sum, line) => sum + lineTtc(line), 0);
+    // Arrondi à l'unité : les montants FCFA n'ont pas de décimales, et cela
+    // évite les faux écarts d'arrondi flottant entre totalTtc et le champ payé.
+    const totalTtc = Math.round(
+      cart.reduce((sum, line) => sum + lineTtc(line), 0),
+    );
     return { totalHt, totalTva: totalTtc - totalHt, totalTtc };
   }, [cart]);
 
@@ -381,7 +388,7 @@ function SalesPage() {
       !paidAmount ||
       toNumber(paidAmount) === 0
     ) {
-      setPaidAmount(totals.totalTtc ? String(Math.round(totals.totalTtc)) : "");
+      setPaidAmount(totals.totalTtc ? String(totals.totalTtc) : "");
     }
   }, [clientMode, totals.totalTtc, paidAmount]);
 
@@ -493,6 +500,7 @@ function SalesPage() {
     );
 
   const validateBeforeConfirm = () => {
+    setCreditLimitError(null);
     if (cart.length === 0) {
       toast.error("Ajoutez au moins un produit au panier");
       return false;
@@ -502,7 +510,7 @@ function SalesPage() {
       return false;
     }
     const paid = toNumber(paidAmount.trim());
-    if (paid < 0 || paid > totals.totalTtc) {
+    if (paid < 0 || paid > totals.totalTtc + 0.01) {
       toast.error("Le montant payé est invalide");
       return false;
     }
@@ -516,13 +524,16 @@ function SalesPage() {
       return false;
     }
     if (clientMode === "ENREGISTRE" && selectedClient) {
-      const resteAPayer = totals.totalTtc - paid;
+      // Le montant TTC de la vente ne doit jamais dépasser le crédit
+      // disponible du client, même réglée comptant.
       if (
-        resteAPayer > 0 &&
         selectedClient.creditDisponible !== undefined &&
-        resteAPayer > selectedClient.creditDisponible
+        totals.totalTtc > selectedClient.creditDisponible
       ) {
-        toast.error("Le plafond de crédit du client est dépassé");
+        const depassement = totals.totalTtc - selectedClient.creditDisponible;
+        setCreditLimitError(
+          `Le montant de la vente (${fmtCurrency(totals.totalTtc)}) dépasse le crédit disponible du client (${fmtCurrency(selectedClient.creditDisponible)}). Dépassement de ${fmtCurrency(depassement)}.`,
+        );
         return false;
       }
     }
@@ -592,7 +603,9 @@ function SalesPage() {
       setConfirmOpen(false);
       setSuccessOpen(true);
       invalidateProducts();
-      await Promise.all([loadProducts(true), loadHistory()]);
+      invalidateClients();
+      // Le crédit disponible du client vient de changer, il faut le recharger.
+      await Promise.all([loadProducts(true), loadClients(true), loadHistory()]);
       toast.success("Vente validée", {
         description: "La facture de vente a été générée.",
       });
@@ -690,9 +703,11 @@ function SalesPage() {
       setNewPaymentRef("");
       setNewPaymentNotes("");
 
-      // Refresh details and history
+      // Refresh details, history and credit info (encours affecté par le paiement)
       void openHistoryDetail({ id: historyDetail.id } as SaleRow);
       void loadHistory();
+      invalidateClients();
+      void loadClients(true);
     } catch (error: unknown) {
       const message =
         error && typeof error === "object" && "message" in error
@@ -1105,6 +1120,13 @@ function SalesPage() {
                     </div>
                   ) : null}
                 </div>
+
+                {creditLimitError ? (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{creditLimitError}</AlertDescription>
+                  </Alert>
+                ) : null}
 
                 <Button className="mt-4 w-full" onClick={openConfirm}>
                   Valider & facturer

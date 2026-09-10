@@ -28,7 +28,7 @@ function lineAmounts(l) {
 }
 
 function totals(lignes = []) {
-  return lignes.reduce(
+  const raw = lignes.reduce(
     (a, l) => ({
       totalHt: a.totalHt + l.montantHt,
       totalTva: a.totalTva + l.montantTva,
@@ -36,6 +36,9 @@ function totals(lignes = []) {
     }),
     { totalHt: 0, totalTva: 0, totalTtc: 0 },
   );
+  // Arrondi a l'unite : le FCFA n'a pas de decimales, evite les faux ecarts
+  // flottants entre totalTtc et le montant paye envoye par le frontend.
+  return { ...raw, totalTtc: Math.round(raw.totalTtc) };
 }
 
 const CLIENT_TYPES = new Set(["ENREGISTRE", "OCCASIONNEL"]);
@@ -293,19 +296,16 @@ export const ventesService = {
         throw new ApiError(404, "CLIENT_NOT_FOUND", "Client introuvable");
       }
       const encoursActuel = await clientsRepository.getEncours(idClient);
-      const montantRestantFacture = Math.max(0, total.totalTtc - paidAmount);
-      const nouvelEncours = encoursActuel + montantRestantFacture;
       const plafondCredit = Number(client.plafondCredit || 0);
+      const creditDisponible = Math.max(0, plafondCredit - encoursActuel);
 
-      if (nouvelEncours > plafondCredit) {
-        const montantMinAPayer = Math.max(
-          0,
-          encoursActuel + total.totalTtc - plafondCredit,
-        );
+      // Le montant TTC de la vente ne doit jamais depasser le credit
+      // disponible du client, meme si la vente est reglee comptant.
+      if (total.totalTtc > creditDisponible) {
         throw new ApiError(
           400,
           "CREDIT_LIMIT_EXCEEDED",
-          `Plafond de crédit dépassé pour ce client. Plafond : ${plafondCredit.toLocaleString("fr-FR")} FCFA | Encours actuel : ${encoursActuel.toLocaleString("fr-FR")} FCFA | Montant à crédit demandé : ${montantRestantFacture.toLocaleString("fr-FR")} FCFA (Nouvel encours : ${nouvelEncours.toLocaleString("fr-FR")} FCFA). Le client doit régler au moins ${Math.ceil(montantMinAPayer).toLocaleString("fr-FR")} FCFA immédiatement pour valider cette vente.`,
+          `Plafond de crédit dépassé pour ce client. Plafond : ${plafondCredit.toLocaleString("fr-FR")} FCFA | Encours actuel : ${encoursActuel.toLocaleString("fr-FR")} FCFA | Crédit disponible : ${creditDisponible.toLocaleString("fr-FR")} FCFA | Montant de la vente : ${total.totalTtc.toLocaleString("fr-FR")} FCFA.`,
         );
       }
     }
@@ -354,8 +354,8 @@ export const ventesService = {
       dateEcheance: data.dateEcheance
         ? new Date(data.dateEcheance)
         : dayjs()
-          .add(idClient ? 30 : 0, "day")
-          .toDate(),
+            .add(idClient ? 30 : 0, "day")
+            .toDate(),
       statut: paiement && paidAmount >= total.totalTtc ? "SOLDEE" : "EMISE",
       ...total,
       montantPaye: paiement ? paidAmount : 0,
