@@ -259,7 +259,7 @@ function SuppliersPage() {
     setDeleting(true);
     try {
       await deleteFournisseur(pendingDelete.id);
-      toast.success("Fournisseur désactivé");
+      toast.success("Fournisseur supprimé");
       setPendingDelete(null);
       await loadFournisseurs();
     } catch (error: unknown) {
