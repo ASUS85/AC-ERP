@@ -83,7 +83,6 @@ function ReportsPage() {
     try {
       const response = await genererRapport(selected, periode);
       setReport(response.data);
-      toast.success("Rapport généré à partir des données ERP");
     } catch (error) {
       const message =
         typeof error === "object" && error && "message" in error
