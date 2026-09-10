@@ -14,7 +14,7 @@
     "prisma:studio": "prisma studio",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:push": "prisma db push",
-    "render:build": "PUPPETEER_SKIP_DOWNLOAD=true npm ci --foreground-scripts && echo Installing Chrome for PDF rendering... && PUPPETEER_CACHE_DIR=./node_modules/.cache/puppeteer node ./node_modules/puppeteer/lib/esm/puppeteer/node/cli.js browsers install chrome && prisma generate && prisma db push",
+    "render:build": "PUPPETEER_SKIP_DOWNLOAD=true npm ci --foreground-scripts && echo Installing Chrome for PDF rendering... && PUPPETEER_CACHE_DIR=$PWD/node_modules/.cache/puppeteer node ./node_modules/puppeteer/lib/esm/puppeteer/node/cli.js browsers install chrome && prisma generate && prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"

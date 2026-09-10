@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PUPPETEER_CACHE_DIR
-        value: ./node_modules/.cache/puppeteer
+        value: /opt/render/project/src/backend/node_modules/.cache/puppeteer
       - key: API_VERSION
         value: v1
       - key: APP_NAME
