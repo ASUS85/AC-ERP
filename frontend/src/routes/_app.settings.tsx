@@ -863,7 +863,7 @@ function AuditRow({ audit }: { audit: Audit }) {
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-border/70 bg-card/80 px-5 py-4 backdrop-blur-sm transition-all hover:border-primary/30 hover:shadow-md",
+        "group relative rounded-2xl border border-border/70 bg-card/80 px-3 py-4 sm:px-5 backdrop-blur-sm transition-all hover:border-primary/30 hover:shadow-md",
         "hover:border-primary/30 hover:shadow-sm",
         expanded && "border-primary/50 shadow-sm",
         hasDetails && "cursor-pointer",
@@ -871,7 +871,7 @@ function AuditRow({ audit }: { audit: Audit }) {
       onClick={() => hasDetails && setExpanded((v) => !v)}
     >
       {/* Point timeline */}
-      <div className="absolute -left-8 top-0 bottom-0 flex flex-col items-center">
+      <div className="absolute -left-6 top-0 bottom-0 flex flex-col items-center sm:-left-8">
         <div className="flex-1 w-px bg-border" />
 
         <div
@@ -884,7 +884,7 @@ function AuditRow({ audit }: { audit: Audit }) {
         <div className="flex-1 w-px bg-border" />
       </div>
 
-      <div className="flex items-start gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         {/* Avatar */}
         <Avatar className="h-9 w-8">
           <AvatarImage
@@ -981,7 +981,7 @@ function AuditRow({ audit }: { audit: Audit }) {
         </div>
 
         {/* Heure + chevron */}
-        <div className="flex shrink-0 flex-col items-end gap-0.5">
+        <div className="flex shrink-0 flex-row items-center justify-between gap-2 sm:flex-col sm:items-end sm:gap-0.5">
           <span className="tabular-nums text-xs text-muted-foreground">
             <div className="inline-flex flex-col items-end gap-0.5 rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 text-xs">
               <div className="flex items-center gap-1 font-semibold text-foreground/80">
@@ -1817,7 +1817,7 @@ function SettingsPage() {
                   type="date"
                   value={logDate}
                   onChange={(e) => setLogDate(e.target.value || today())}
-                  className="w-auto"
+                  className="w-full sm:w-auto"
                   aria-label="Filtrer le journal par date"
                 />
               }
@@ -1844,7 +1844,7 @@ function SettingsPage() {
                         {period}
                       </h3>
 
-                      <div className="relative ml-4 border-l border-border pl-6 space-y-4">
+                      <div className="relative ml-2 space-y-4 border-l border-border pl-4 sm:ml-4 sm:pl-6">
                         {items.map((audit) => (
                           <AuditRow key={audit.id} audit={audit} />
                         ))}

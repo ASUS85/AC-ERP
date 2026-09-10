@@ -887,10 +887,10 @@ function InventoryPage() {
             </Button>
           }
         >
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div className="flex w-full max-w-xl  items-center gap-2">
+          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
               {tab !== "inventaires" ? (
-                <div className="relative w-full max-w-xs">
+                <div className="relative w-full sm:max-w-xs">
                   <input
                     placeholder={
                       tab === "stocks"
@@ -911,7 +911,7 @@ function InventoryPage() {
               ) : null}
 
               {tab === "stocks" ? (
-                <div className="w-full max-w-xs">
+                <div className="w-full sm:max-w-xs">
                   <SearchableSelect
                     value={stockCategorie}
                     onValueChange={setStockCategorie}
@@ -924,7 +924,7 @@ function InventoryPage() {
               ) : null}
 
               {tab === "mouvements" ? (
-                <div className="w-full max-w-xs space-y-1">
+                <div className="w-full space-y-1 sm:max-w-xs">
                   <Input
                     id="mv-date-filter"
                     type="date"
@@ -936,7 +936,7 @@ function InventoryPage() {
 
               {tab === "inventaires" ? (
                 <>
-                  <div className="w-full max-w-xs space-y-1">
+                  <div className="w-full space-y-1 sm:max-w-xs">
                     <Label
                       htmlFor="inv-date-creation-filter"
                       className="text-xs text-muted-foreground"
@@ -952,7 +952,7 @@ function InventoryPage() {
                       }
                     />
                   </div>
-                  <div className="w-full max-w-xs space-y-1">
+                  <div className="w-full space-y-1 sm:max-w-xs">
                     <Label
                       htmlFor="inv-date-validation-filter"
                       className="text-xs text-muted-foreground"
@@ -971,7 +971,7 @@ function InventoryPage() {
                 </>
               ) : null}
             </div>
-            <div className="flex gap-1 rounded-lg border border-border p-0.5">
+            <div className="grid w-full grid-cols-3 gap-1 rounded-lg border border-border p-0.5 lg:w-auto">
               {(["stocks", "mouvements", "inventaires"] as const).map((t) => (
                 <button
                   key={t}
@@ -982,7 +982,7 @@ function InventoryPage() {
                     if (t === "inventaires") setInvPage(1);
                   }}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    "rounded-md px-2 py-1.5 text-center text-xs font-medium transition-colors sm:px-3",
                     tab === t
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground",

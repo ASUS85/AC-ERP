@@ -87,12 +87,12 @@ export function AppModal({
           }
         }}
         className={cn(
-          "h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-h-[90vh] overflow-hidden gap-0 p-0 sm:w-full",
+          "w-[calc(100%-1rem)] max-h-[calc(100dvh-1rem)] overflow-hidden gap-0 p-0 sm:w-full",
           sizeClasses[size],
           positionClasses[position],
         )}
       >
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+        <div className="flex max-h-[calc(100dvh-1rem)] min-h-0 w-full min-w-0 flex-col overflow-hidden">
           <div className="border-b border-border px-4 py-3 sm:px-6">
             <DialogHeader className="space-y-2">
               <DialogTitle>{title}</DialogTitle>
