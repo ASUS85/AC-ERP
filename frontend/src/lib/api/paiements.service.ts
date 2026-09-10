@@ -47,8 +47,18 @@ export type ApiResponse<T> = {
   message?: string;
 };
 
+export type PaiementsKpis = {
+  encaissements: number;
+  decaissements: number;
+  tresorerieNette: number;
+  recusEmis: number;
+};
+
 export const getPaiements = (params?: Record<string, unknown>) =>
   api.get<any, ApiResponse<PaiementApi[]>>("/paiements", { params });
+
+export const getPaiementsKpis = () =>
+  api.get<any, ApiResponse<PaiementsKpis>>("/paiements/kpis");
 
 export const createPaiement = (data: CreatePaiementPayload) =>
   api.post("/paiements", data);

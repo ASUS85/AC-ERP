@@ -210,6 +210,40 @@ function StatsPage() {
     [monthlyData],
   );
 
+  const currentMonthDailyData = useMemo(() => {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const currentDay = now.getDate();
+
+    // Indexer les données existantes par date
+    const dataByDate = new Map(dailyData.map((entry) => [entry.date, entry]));
+
+    const result: DailyPoint[] = [];
+
+    // Du 1er jour jusqu'au jour actuel inclus
+    for (let day = 1; day <= currentDay; day++) {
+      const dateKey = [
+        year,
+        String(month + 1).padStart(2, "0"),
+        String(day).padStart(2, "0"),
+      ].join("-");
+
+      const existingData = dataByDate.get(dateKey);
+
+      result.push({
+        date: dateKey,
+        ventes: existingData?.ventes ?? 0,
+        achats: existingData?.achats ?? 0,
+        marge: existingData?.marge ?? 0,
+        paiements: existingData?.paiements ?? 0,
+      });
+    }
+
+    return result;
+  }, [dailyData]);
+
   const financeStructure = useMemo(
     () => [
       { name: "CA", value: stats?.totalVentes ?? 0 },
@@ -634,7 +668,7 @@ function StatsPage() {
           <ChartFrame loading={chartLoading} className="h-[520px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={dailyData}
+                data={currentMonthDailyData}
                 margin={{ left: -10, right: 20, top: 10, bottom: 5 }}
               >
                 <CartesianGrid

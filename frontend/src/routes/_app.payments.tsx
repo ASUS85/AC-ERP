@@ -24,7 +24,12 @@ import { Input } from "@/components/ui/input";
 import { AppModal } from "@/components/erp/AppModal";
 import { Button } from "@/components/ui/button";
 import { fmtCurrency } from "@/lib/erp-data";
-import { getPaiements, type PaiementApi } from "@/lib/api/paiements.service";
+import {
+  getPaiements,
+  getPaiementsKpis,
+  type PaiementApi,
+  type PaiementsKpis,
+} from "@/lib/api/paiements.service";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/payments")({
@@ -49,6 +54,8 @@ function PaymentsPage() {
   const [payments, setPayments] = useState<PaiementApi[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [kpis, setKpis] = useState<PaiementsKpis | null>(null);
+  const [kpisLoading, setKpisLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
@@ -87,6 +94,14 @@ function PaymentsPage() {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search, paymentDate, paymentMode]);
+
+  useEffect(() => {
+    setKpisLoading(true);
+    getPaiementsKpis()
+      .then((res) => setKpis(res.data || null))
+      .catch(() => setKpis(null))
+      .finally(() => setKpisLoading(false));
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
@@ -149,33 +164,44 @@ function PaymentsPage() {
       />
 
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {/* Les stats sont gardées statiques pour l'instant afin de conserver le rendu visuel, à rendre dynamiques plus tard avec un endpoint de dashboard */}
-        <StatCard
-          label="Encaissements"
-          value={fmtCurrency(248100)}
-          sub="ce mois"
-          icon={<ArrowDownLeft className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Décaissements"
-          value={fmtCurrency(186500)}
-          sub="ce mois"
-          icon={<ArrowUpRight className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Trésorerie nette"
-          value={`+${fmtCurrency(61600)}`}
-          delta="+8 %"
-          up
-          sub="solde du mois"
-          icon={<Wallet className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Reçus émis"
-          value="148"
-          sub="documents"
-          icon={<Receipt className="h-5 w-5" />}
-        />
+        {kpisLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex h-32 items-center justify-center rounded-lg border border-border bg-muted/40"
+            >
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ))
+        ) : (
+          <>
+            <StatCard
+              label="Encaissements"
+              value={fmtCurrency(kpis?.encaissements ?? 0)}
+              sub="ce mois"
+              icon={<ArrowDownLeft className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Décaissements"
+              value={fmtCurrency(kpis?.decaissements ?? 0)}
+              sub="ce mois"
+              icon={<ArrowUpRight className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Trésorerie nette"
+              value={`${(kpis?.tresorerieNette ?? 0) >= 0 ? "+" : ""}${fmtCurrency(kpis?.tresorerieNette ?? 0)}`}
+              up={(kpis?.tresorerieNette ?? 0) >= 0}
+              sub="solde du mois"
+              icon={<Wallet className="h-5 w-5" />}
+            />
+            <StatCard
+              label="Reçus émis"
+              value={String(kpis?.recusEmis ?? 0)}
+              sub="ce mois"
+              icon={<Receipt className="h-5 w-5" />}
+            />
+          </>
+        )}
       </div>
 
       <SectionCard title="Historique des paiements">

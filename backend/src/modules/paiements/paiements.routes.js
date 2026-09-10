@@ -5,9 +5,9 @@ import { paiementsController } from "./paiements.controller.js";
 
 const router = Router();
 router.use(authenticate);
+router.get("/kpis", authorize("paiements:lire"), paiementsController.kpis);
 router.get("/", authorize("paiements:lire"), paiementsController.list);
 router.post("/", authorize("paiements:creer"), paiementsController.create);
 router.get("/:id", authorize("paiements:lire"), paiementsController.getById);
 
 export default router;
-

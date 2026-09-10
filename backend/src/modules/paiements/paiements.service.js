@@ -14,25 +14,70 @@ const VALID_PAYMENT_MODES = new Set([
 ]);
 
 export const paiementsService = {
+  // ── KPI temps reel (encaissements/decaissements du mois en cours) ─────
+  async getKpis() {
+    const now = new Date();
+    const debutMois = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1,
+      0,
+      0,
+      0,
+      0,
+    );
+
+    const [encaissements, decaissements, recusEmis] = await Promise.all([
+      prisma.paiement.aggregate({
+        where: {
+          datePaiement: { gte: debutMois, lte: now },
+          facture: { typeFacture: "VENTE" },
+        },
+        _sum: { montant: true },
+      }),
+      prisma.paiement.aggregate({
+        where: {
+          datePaiement: { gte: debutMois, lte: now },
+          facture: { typeFacture: "ACHAT" },
+        },
+        _sum: { montant: true },
+      }),
+      prisma.paiement.count({
+        where: { datePaiement: { gte: debutMois, lte: now } },
+      }),
+    ]);
+
+    const totalEncaisse = Number(encaissements._sum.montant || 0);
+    const totalDecaisse = Number(decaissements._sum.montant || 0);
+
+    return {
+      encaissements: totalEncaisse,
+      decaissements: totalDecaisse,
+      tresorerieNette: totalEncaisse - totalDecaisse,
+      recusEmis,
+    };
+  },
   // ── Liste avec filtres et pagination standard ───────────────
   async list(query = {}) {
     const { page, limit, offset } = getPagination(query);
 
     const searchFilter = query.search?.trim()
       ? {
-        OR: [
-          { reference: { contains: query.search.trim() } },
-          { notes: { contains: query.search.trim() } },
-          { facture: { numeroFacture: { contains: query.search.trim() } } },
-          { facture: { client: { nom: { contains: query.search.trim() } } } },
-          {
-            facture: {
-              fournisseur: { raisonSociale: { contains: query.search.trim() } },
+          OR: [
+            { reference: { contains: query.search.trim() } },
+            { notes: { contains: query.search.trim() } },
+            { facture: { numeroFacture: { contains: query.search.trim() } } },
+            { facture: { client: { nom: { contains: query.search.trim() } } } },
+            {
+              facture: {
+                fournisseur: {
+                  raisonSociale: { contains: query.search.trim() },
+                },
+              },
             },
-          },
-          { utilisateur: { nom: { contains: query.search.trim() } } },
-        ],
-      }
+            { utilisateur: { nom: { contains: query.search.trim() } } },
+          ],
+        }
       : {};
 
     const modeFilter = query.modePaiement
@@ -45,10 +90,10 @@ export const paiementsService = {
     if (query.dateFrom) {
       const startDate = new Date(query.dateFrom);
       startDate.setHours(0, 0, 0, 0);
-      
+
       const endDate = new Date(query.dateFrom);
       endDate.setHours(23, 59, 59, 999);
-      
+
       dateFilter.createdAt = {
         gte: startDate,
         lte: endDate,
@@ -136,7 +181,8 @@ export const paiementsService = {
     const combined = [...paiementsReels, ...paiementsAchatSynthetiques].sort(
       (a, b) => {
         const diff =
-          new Date(a.datePaiement).getTime() - new Date(b.datePaiement).getTime();
+          new Date(a.datePaiement).getTime() -
+          new Date(b.datePaiement).getTime();
         return orderDirection === "asc" ? diff : -diff;
       },
     );
@@ -158,17 +204,29 @@ export const paiementsService = {
   // ── Enregistrement d'un nouveau paiement avec recalcul transactionnel ─
   async create(data, ctx = {}) {
     if (!data.idFacture) {
-      throw new ApiError(400, "INVOICE_REQUIRED", "L'identifiant de la facture est obligatoire");
+      throw new ApiError(
+        400,
+        "INVOICE_REQUIRED",
+        "L'identifiant de la facture est obligatoire",
+      );
     }
 
     const montant = Number(data.montant);
     if (!Number.isFinite(montant) || montant <= 0) {
-      throw new ApiError(400, "INVALID_AMOUNT", "Le montant du paiement doit être supérieur à zéro");
+      throw new ApiError(
+        400,
+        "INVALID_AMOUNT",
+        "Le montant du paiement doit être supérieur à zéro",
+      );
     }
 
     const modePaiement = data.modePaiement || "ESPECES";
     if (!VALID_PAYMENT_MODES.has(modePaiement)) {
-      throw new ApiError(400, "INVALID_PAYMENT_MODE", "Le mode de paiement est invalide");
+      throw new ApiError(
+        400,
+        "INVALID_PAYMENT_MODE",
+        "Le mode de paiement est invalide",
+      );
     }
 
     return prisma.$transaction(async (tx) => {
@@ -182,11 +240,19 @@ export const paiementsService = {
       }
 
       if (facture.statut === "ANNULEE") {
-        throw new ApiError(400, "INVOICE_CANCELLED", "Impossible d'enregistrer un paiement sur une facture annulée");
+        throw new ApiError(
+          400,
+          "INVOICE_CANCELLED",
+          "Impossible d'enregistrer un paiement sur une facture annulée",
+        );
       }
 
       if (facture.statut === "SOLDEE") {
-        throw new ApiError(400, "INVOICE_ALREADY_PAID", "Cette facture est déjà totalement soldée");
+        throw new ApiError(
+          400,
+          "INVOICE_ALREADY_PAID",
+          "Cette facture est déjà totalement soldée",
+        );
       }
 
       const dejaPaye = facture.paiements.reduce(
@@ -210,7 +276,9 @@ export const paiementsService = {
           idUtilisateur: ctx.user?.userId || facture.idUtilisateur,
           montant,
           modePaiement,
-          datePaiement: data.datePaiement ? new Date(data.datePaiement) : new Date(),
+          datePaiement: data.datePaiement
+            ? new Date(data.datePaiement)
+            : new Date(),
           reference: data.reference ? String(data.reference).trim() : null,
           notes: data.notes ? String(data.notes).trim() : null,
         },
