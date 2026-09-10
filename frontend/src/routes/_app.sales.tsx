@@ -1417,12 +1417,12 @@ function SalesPage() {
           </div>
         ) : historyDetail ? (
           <Tabs defaultValue="details" className="w-full">
-            <div className="flex items-center justify-between mb-4 border-b border-border pb-2">
+            <div className="flex flex-col gap-3 mb-4 border-b border-border pb-2 sm:flex-row sm:items-center sm:justify-between">
               <TabsList>
                 <TabsTrigger value="details">Détails</TabsTrigger>
                 <TabsTrigger value="paiements">Paiements</TabsTrigger>
               </TabsList>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -1545,8 +1545,8 @@ function SalesPage() {
 
             <TabsContent value="paiements">
               {historyDetail.paiements && historyDetail.paiements.length > 0 ? (
-                <div className="rounded-md border border-border">
-                  <table className="w-full text-sm text-left">
+                <div className="overflow-x-auto overscroll-x-contain rounded-md border border-border [-webkit-overflow-scrolling:touch]">
+                  <table className="w-full min-w-[560px] text-sm text-left">
                     <thead className="bg-muted text-muted-foreground">
                       <tr>
                         <th className="px-4 py-3 font-medium">Date</th>
@@ -1630,7 +1630,7 @@ function SalesPage() {
         }
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Montant à payer</Label>
               <Input
@@ -1656,7 +1656,7 @@ function SalesPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Date du paiement</Label>
               <Input
