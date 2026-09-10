@@ -1,4 +1,5 @@
 import Handlebars from "handlebars";
+import chromium from "@sparticuz/chromium";
 import puppeteer from "puppeteer";
 
 const DEFAULT_BROWSER_OPTIONS = {
@@ -6,6 +7,16 @@ const DEFAULT_BROWSER_OPTIONS = {
   protocolTimeout: 60000,
   args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
 };
+
+async function getProductionBrowserOptions() {
+  if (process.env.NODE_ENV !== "production") return {};
+
+  return {
+    args: chromium.args,
+    executablePath: await chromium.executablePath(),
+    headless: chromium.headless,
+  };
+}
 
 const DEFAULT_PDF_OPTIONS = {
   format: "A4",
@@ -64,6 +75,7 @@ export async function renderPdfDocument({
 
     browser = await puppeteer.launch({
       ...DEFAULT_BROWSER_OPTIONS,
+      ...(await getProductionBrowserOptions()),
       ...(browserOptions || {}),
     });
 
