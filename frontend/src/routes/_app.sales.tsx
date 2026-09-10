@@ -1545,41 +1545,68 @@ function SalesPage() {
 
             <TabsContent value="paiements">
               {historyDetail.paiements && historyDetail.paiements.length > 0 ? (
-                <div className="overflow-x-auto overscroll-x-contain rounded-md border border-border [-webkit-overflow-scrolling:touch]">
-                  <table className="w-full min-w-[560px] text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Date</th>
-                        <th className="px-4 py-3 font-medium">Mode</th>
-                        <th className="px-4 py-3 font-medium">Référence</th>
-                        <th className="px-4 py-3 font-medium text-right">
-                          Montant
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {historyDetail.paiements.map((p) => (
-                        <tr
-                          key={p.id}
-                          className="hover:bg-muted/50 transition-colors"
-                        >
-                          <td className="px-4 py-3">
-                            {formatDate(p.datePaiement)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                              {p.modePaiement}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">{p.reference || "-"}</td>
-                          <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
-                            {fmtCurrency(toNumber(p.montant))}
-                          </td>
+                <>
+                  <div className="space-y-2 sm:hidden">
+                    {historyDetail.paiements.map((p) => (
+                      <div
+                        key={p.id}
+                        className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border p-3 text-xs"
+                      >
+                        <span className="text-muted-foreground">Date</span>
+                        <span className="text-right">
+                          {formatDate(p.datePaiement)}
+                        </span>
+                        <span className="text-muted-foreground">Mode</span>
+                        <span className="justify-self-end rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                          {p.modePaiement}
+                        </span>
+                        <span className="text-muted-foreground">Référence</span>
+                        <span className="truncate text-right">
+                          {p.reference || "-"}
+                        </span>
+                        <span className="text-muted-foreground">Montant</span>
+                        <span className="text-right font-medium text-green-600 dark:text-green-400">
+                          {fmtCurrency(toNumber(p.montant))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto overscroll-x-contain rounded-md border border-border sm:block [-webkit-overflow-scrolling:touch]">
+                    <table className="w-full min-w-[560px] text-sm text-left">
+                      <thead className="bg-muted text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-3 font-medium">Date</th>
+                          <th className="px-4 py-3 font-medium">Mode</th>
+                          <th className="px-4 py-3 font-medium">Référence</th>
+                          <th className="px-4 py-3 font-medium text-right">
+                            Montant
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {historyDetail.paiements.map((p) => (
+                          <tr
+                            key={p.id}
+                            className="hover:bg-muted/50 transition-colors"
+                          >
+                            <td className="px-4 py-3">
+                              {formatDate(p.datePaiement)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                {p.modePaiement}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">{p.reference || "-"}</td>
+                            <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
+                              {fmtCurrency(toNumber(p.montant))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg border-dashed">
                   <Wallet className="h-8 w-8 text-muted-foreground mb-3 opacity-50" />

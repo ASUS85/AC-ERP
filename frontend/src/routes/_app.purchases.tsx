@@ -1841,35 +1841,40 @@ function PurchasesPage() {
                 (partielle ou totale).
               </div>
             )}
-            <PageHeader
-              title={`Receptions - ${detailsOrder.numeroBcf}`}
-              description="Pilotage des receptions et facture fournisseur"
-              breadcrumb={["Achats", "Bon de commande", "Receptions"]}
-              actions={
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!canCreateInvoiceForStatus(detailsOrder.statut)}
-                    onClick={() => void openInvoiceWizard(detailsOrder.id)}
-                  >
-                    <ReceiptText className="mr-1 h-4 w-4" /> Ajouter facture
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={detailsOrder.statut === "RECU_TOTAL"}
-                    title={
-                      detailsOrder.statut === "RECU_TOTAL"
-                        ? "Reception deja totale"
-                        : undefined
-                    }
-                    onClick={() => void openReceptionModal(detailsOrder.id)}
-                  >
-                    <Plus className="mr-1 h-4 w-4" /> Nouvelle reception
-                  </Button>
-                </div>
-              }
-            />
+            <div className="space-y-3 border-b border-border pb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Réceptions - {detailsOrder.numeroBcf}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Pilotage des réceptions et facture fournisseur
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={!canCreateInvoiceForStatus(detailsOrder.statut)}
+                  onClick={() => void openInvoiceWizard(detailsOrder.id)}
+                >
+                  <ReceiptText className="mr-1 h-4 w-4" /> Ajouter facture
+                </Button>
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  disabled={detailsOrder.statut === "RECU_TOTAL"}
+                  title={
+                    detailsOrder.statut === "RECU_TOTAL"
+                      ? "Reception deja totale"
+                      : undefined
+                  }
+                  onClick={() => void openReceptionModal(detailsOrder.id)}
+                >
+                  <Plus className="mr-1 h-4 w-4" /> Nouvelle reception
+                </Button>
+              </div>
+            </div>
 
             <SectionCard title="Liste des receptions">
               <div className="mb-4">
@@ -1885,12 +1890,41 @@ function PurchasesPage() {
                 />
               </div>
 
-              <DataTable
-                columns={receptionColumns}
-                rows={paginatedReceptionRows}
-                rowKey={(row) => row.id}
-                withActions={false}
-              />
+              <div className="space-y-2 md:hidden">
+                {paginatedReceptionRows.map((reception) => (
+                  <div
+                    key={reception.id}
+                    className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border p-3 text-xs"
+                  >
+                    <span className="text-muted-foreground">Référence</span>
+                    <span className="truncate text-right font-medium">
+                      {reception.reference}
+                    </span>
+                    <span className="text-muted-foreground">Date</span>
+                    <span className="text-right">{reception.date}</span>
+                    <span className="text-muted-foreground">Fournisseur</span>
+                    <span className="truncate text-right">
+                      {reception.fournisseur}
+                    </span>
+                    <span className="text-muted-foreground">Quantité</span>
+                    <span className="text-right">
+                      {reception.quantiteRecue} article(s)
+                    </span>
+                    <span className="text-muted-foreground">Statut</span>
+                    <span className="justify-self-end">
+                      <StatusBadge status={reception.statut} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden md:block">
+                <DataTable
+                  columns={receptionColumns}
+                  rows={paginatedReceptionRows}
+                  rowKey={(row) => row.id}
+                  withActions={false}
+                />
+              </div>
 
               <Pagination
                 count={filteredReceptionRows.length}
@@ -2190,8 +2224,12 @@ function PurchasesPage() {
               <p className="text-sm text-destructive">{linesError}</p>
             ) : null}
 
-            <div className="sticky top-0 z-10 flex justify-end bg-background py-2">
-              <Button variant="outline" onClick={addLine}>
+            <div className="flex justify-end border-b border-border pb-3">
+              <Button
+                className="w-full sm:w-auto"
+                variant="outline"
+                onClick={addLine}
+              >
                 <Plus className="mr-1 h-4 w-4" /> Ajouter une ligne
               </Button>
             </div>
