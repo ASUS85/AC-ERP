@@ -87,13 +87,13 @@ export function AppModal({
           }
         }}
         className={cn(
-          "max-h-[90vh] overflow-visible p-0",
+          "h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-h-[90vh] overflow-hidden gap-0 p-0 sm:w-full",
           sizeClasses[size],
           positionClasses[position],
         )}
       >
-        <div className="flex max-h-[90vh] flex-col">
-          <div className="border-b border-border px-6 py-3">
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="border-b border-border px-4 py-3 sm:px-6">
             <DialogHeader className="space-y-2">
               <DialogTitle>{title}</DialogTitle>
               {description ? (
@@ -101,9 +101,13 @@ export function AppModal({
               ) : null}
             </DialogHeader>
           </div>
-          <div className="flex-1 overflow-auto px-6 py-5">{children}</div>
+          <div className="min-h-0 flex-1 overflow-auto px-4 py-5 sm:px-6">
+            {children}
+          </div>
           {footer ? (
-            <div className="border-t border-border px-6 py-4">{footer}</div>
+            <div className="border-t border-border px-4 py-4 sm:px-6">
+              {footer}
+            </div>
           ) : null}
         </div>
       </DialogContent>

@@ -1846,7 +1846,7 @@ function PurchasesPage() {
               description="Pilotage des receptions et facture fournisseur"
               breadcrumb={["Achats", "Bon de commande", "Receptions"]}
               actions={
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -1917,7 +1917,7 @@ function PurchasesPage() {
         description="Wizard en 3 etapes: informations, produits, verification"
         size="xxl"
         footer={
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
               onClick={() => setCreateOpen(false)}
@@ -1925,7 +1925,7 @@ function PurchasesPage() {
             >
               Annuler
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               {createStep > 1 ? (
                 <Button
                   variant="outline"
@@ -2185,12 +2185,12 @@ function PurchasesPage() {
         ) : null}
 
         {createStep === 2 ? (
-          <div className="h-[560px] space-y-4 overflow-y-auto pr-1">
+          <div className="min-h-0 space-y-4">
             {linesError ? (
               <p className="text-sm text-destructive">{linesError}</p>
             ) : null}
 
-            <div className="flex justify-end">
+            <div className="sticky top-0 z-10 flex justify-end bg-background py-2">
               <Button variant="outline" onClick={addLine}>
                 <Plus className="mr-1 h-4 w-4" /> Ajouter une ligne
               </Button>
@@ -2568,7 +2568,7 @@ function PurchasesPage() {
         }
         size="xxl"
         footer={
-          <div className="flex items-center justify-between gap-2 w-full">
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
               disabled={receptionSubmitting}
@@ -2597,7 +2597,7 @@ function PurchasesPage() {
         }
       >
         {receptionOrder ? (
-          <div className="h-[65vh] overflow-y-auto pr-2 space-y-6">
+          <div className="min-h-0 space-y-6">
             <div className="grid gap-6 md:grid-cols-[1fr_300px]">
               <div className="space-y-6">
                 <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -2852,7 +2852,7 @@ function PurchasesPage() {
         size="xxl"
         position="center"
         footer={
-          <div className="flex items-center justify-between gap-2 w-full">
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
               disabled={invoiceWizardSubmitting}
@@ -3239,11 +3239,11 @@ function PurchasesPage() {
         description={pdfFilename}
         size="xxl"
         footer={
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button variant="outline" onClick={() => setPdfModalOpen(false)}>
               Fermer
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 variant="outline"
                 onClick={printCurrentPdf}
