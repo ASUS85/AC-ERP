@@ -5828,3 +5828,11 @@ Unknown argument `token`. Available options are marked with ?. {"stack":"PrismaC
 2026-09-04T17:41:58.345Z info: Socket deconnecte fv6F2RX3oJ0LBsx1AAAC
 2026-09-04T17:42:18.309Z error: Email ou mot de passe invalide {"stack":"ApiError: Email ou mot de passe invalide\n    at Object.login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/modules/auth/auth.service.js:172:13)\n    at async login (file:///C:/Users/Asus/Documents/Travail/Projet%20Soutenance%20Licence/ac_erp1.0/backend/src/modules/auth/auth.controller.js:9:9)","code":"INVALID_CREDENTIALS"}
 2026-09-04T17:43:30.385Z info: Arret du serveur
+2026-09-10T13:25:38.273Z info: Base de donnees connectee
+2026-09-10T13:25:39.368Z info: CRON backup planifié (chaque jour à 16h)
+2026-09-10T13:25:39.642Z info: CRON IA planifie (previsions et alertes chaque jour a 16h)
+2026-09-10T13:25:39.851Z info: Serveur demarre port 3000
+2026-09-10T13:26:26.636Z info: Base de donnees connectee
+2026-09-10T13:26:26.995Z info: CRON backup planifié (chaque jour à 16h)
+2026-09-10T13:26:27.004Z info: CRON IA planifie (previsions et alertes chaque jour a 16h)
+2026-09-10T13:26:27.054Z info: Serveur demarre port 3000
