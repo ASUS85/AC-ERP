@@ -116,16 +116,9 @@ export const Route = createRootRouteWithContext<{
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap",
-      },
+      // Inter/Poppins were never applied (styles.css maps --font-sans and
+      // --font-display to the system sans-serif stack), so this external
+      // Google Fonts request only added network round-trips with no visual effect.
     ],
   }),
   shellComponent: RootShell,
