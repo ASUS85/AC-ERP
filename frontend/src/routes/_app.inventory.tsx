@@ -888,7 +888,7 @@ function InventoryPage() {
           }
         >
           <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="flex w-full max-w-xl flex-col gap-2 sm:flex-row sm:flex-row sm:items-end">
               {tab !== "inventaires" ? (
                 <div className="relative w-full sm:max-w-xs">
                   <input
