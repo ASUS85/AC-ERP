@@ -44,6 +44,7 @@ import {
 import { createPaiement } from "@/lib/api/paiements.service";
 import { toast } from "sonner";
 import { resolveMediaUrl } from "@/lib/avatar";
+import { ImageWithFallback } from "@/components/erp/ImageWithFallback";
 import { cn } from "@/lib/utils";
 import { useProductsStore } from "@/stores/products.store";
 import { useClientsStore } from "@/stores/clients.store";
@@ -810,19 +811,18 @@ function SalesPage() {
                         className="group rounded-lg border border-border p-3 text-left transition-all hover:border-primary/40 hover:shadow-card"
                       >
                         <div className="mb-2 flex h-16 items-center justify-center overflow-hidden rounded-md bg-secondary/60 text-primary">
-                          {product.photo ? (
-                            <img
-                              src={resolveMediaUrl(product.photo)}
-                              alt={product.designation}
-                              className="h-full w-full rounded-md object-cover"
-                              onError={(e) => {
-                                (e.currentTarget as HTMLElement).style.display =
-                                  "none";
-                              }}
-                            />
-                          ) : (
-                            <ShoppingCart className="h-6 w-6 opacity-70" />
-                          )}
+                          <ImageWithFallback
+                            src={
+                              product.photo
+                                ? resolveMediaUrl(product.photo)
+                                : null
+                            }
+                            alt={product.designation}
+                            className="h-full w-full rounded-md object-cover"
+                            fallback={
+                              <ShoppingCart className="h-6 w-6 opacity-70" />
+                            }
+                          />
                         </div>
                         <p className="line-clamp-1 text-sm font-medium text-foreground">
                           {product.designation}
@@ -1206,18 +1206,16 @@ function SalesPage() {
         {selectedProductDetail ? (
           <div className="grid gap-5 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
             <div className="flex min-h-64 items-center justify-center overflow-hidden rounded-lg bg-secondary/60 text-primary">
-              {selectedProductDetail.photo ? (
-                <img
-                  src={resolveMediaUrl(selectedProductDetail.photo)}
-                  alt={selectedProductDetail.designation}
-                  className="h-full max-h-[420px] w-full object-contain"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = "none";
-                  }}
-                />
-              ) : (
-                <ShoppingCart className="h-14 w-14 opacity-70" />
-              )}
+              <ImageWithFallback
+                src={
+                  selectedProductDetail.photo
+                    ? resolveMediaUrl(selectedProductDetail.photo)
+                    : null
+                }
+                alt={selectedProductDetail.designation}
+                className="h-full max-h-[420px] w-full object-contain"
+                fallback={<ShoppingCart className="h-14 w-14 opacity-70" />}
+              />
             </div>
             <div className="space-y-3 text-sm">
               <div>

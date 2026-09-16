@@ -46,6 +46,7 @@ import {
 } from "@/lib/number-input";
 import { useProductsStore } from "@/stores/products.store";
 import { resolveMediaUrl } from "@/lib/avatar";
+import { ImageWithFallback } from "@/components/erp/ImageWithFallback";
 export const Route = createFileRoute("/_app/inventory")({
   head: () => ({ meta: [{ title: "Stocks — AC ERP" }] }),
   component: InventoryPage,
@@ -60,6 +61,7 @@ type StockItem = {
     id: string;
     reference: string;
     designation: string;
+    photo?: string | null;
     stockMinimum: number;
     prixVenteHt: number | string;
     categorie?: { nom: string } | null;
@@ -75,7 +77,7 @@ type Mouvement = {
   motif?: string | null;
   referenceDoc?: string | null;
   createdAt: string;
-  produit: { reference: string; designation: string };
+  produit: { reference: string; designation: string; photo?: string | null };
   utilisateur?: { nom: string; prenom: string } | null;
 };
 
@@ -540,18 +542,12 @@ function InventoryPage() {
       render: (s) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
-            {s.produit.photo ? (
-              <img
-                src={resolveMediaUrl(s.produit.photo)}
-                alt={s.produit.designation}
-                className="h-full w-full rounded-lg object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <Package className="h-4 w-4" />
-            )}
+            <ImageWithFallback
+              src={s.produit.photo ? resolveMediaUrl(s.produit.photo) : null}
+              alt={s.produit.designation}
+              className="h-full w-full rounded-lg object-cover"
+              fallback={<Package className="h-4 w-4" />}
+            />
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium text-foreground">
@@ -611,18 +607,12 @@ function InventoryPage() {
       render: (m) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
-            {m.produit.photo ? (
-              <img
-                src={resolveMediaUrl(m.produit.photo)}
-                alt={m.produit.designation}
-                className="h-full w-full rounded-lg object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <Package className="h-4 w-4" />
-            )}
+            <ImageWithFallback
+              src={m.produit.photo ? resolveMediaUrl(m.produit.photo) : null}
+              alt={m.produit.designation}
+              className="h-full w-full rounded-lg object-cover"
+              fallback={<Package className="h-4 w-4" />}
+            />
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium text-foreground">

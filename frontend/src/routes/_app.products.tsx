@@ -42,6 +42,7 @@ import {
   updateProduit,
   type ProduitPayload,
 } from "@/lib/api/produits.service";
+import { ImageWithFallback } from "@/components/erp/ImageWithFallback";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import {
   formatGroupedInputNumber,
@@ -404,18 +405,12 @@ function ProductsPage() {
       render: (product) => (
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
-            {product.photo ? (
-              <img
-                src={resolveMediaUrl(product.photo)}
-                alt={product.designation}
-                className="h-full w-full rounded-lg object-cover"
-                onError={(e) => {
-                  (e.currentTarget as HTMLElement).style.display = "none";
-                }}
-              />
-            ) : (
-              <Package className="h-4 w-4" />
-            )}
+            <ImageWithFallback
+              src={product.photo ? resolveMediaUrl(product.photo) : null}
+              alt={product.designation}
+              className="h-full w-full rounded-lg object-cover"
+              fallback={<Package className="h-4 w-4" />}
+            />
           </span>
           <div className="min-w-0">
             <p className="truncate font-medium text-foreground">
@@ -650,13 +645,15 @@ function ProductsPage() {
               ) : null}
               {form.photo ? (
                 <div className="rounded-md border border-border p-2">
-                  <img
+                  <ImageWithFallback
                     src={resolveMediaUrl(form.photo)}
                     alt="Aperçu produit"
                     className="h-24 w-24 rounded object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLElement).style.display = "none";
-                    }}
+                    fallback={
+                      <span className="flex h-24 w-24 items-center justify-center rounded bg-secondary text-muted-foreground">
+                        <Package className="h-6 w-6" />
+                      </span>
+                    }
                   />
                 </div>
               ) : null}
