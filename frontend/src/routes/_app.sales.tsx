@@ -607,9 +607,6 @@ function SalesPage() {
       invalidateClients();
       // Le crédit disponible du client vient de changer, il faut le recharger.
       await Promise.all([loadProducts(true), loadClients(true), loadHistory()]);
-      toast.success("Vente validée", {
-        description: "La facture de vente a été générée.",
-      });
     } catch (error: unknown) {
       const message =
         error && typeof error === "object" && "message" in error
@@ -631,6 +628,8 @@ function SalesPage() {
       link.href = url;
       link.download = `${createdInvoice.numeroFacture || "facture"}.pdf`;
       link.click();
+      toast.success("Téléchargement de la facture lancé");
+      setSuccessOpen(false);
       URL.revokeObjectURL(url);
     } catch {
       toast.error("Impossible de télécharger la facture");

@@ -697,33 +697,20 @@ function PurchasesPage() {
     },
     {
       key: "factureRecue",
-      header: "Facture recue",
+      header: "Facture reçue",
       align: "right",
-      render: (o) => {
-        const canCreateInvoice = canCreateInvoiceForStatus(o.statutRaw);
-
-        return (
-          <div
-            className="flex flex-col items-end gap-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Switch
-              checked={o.factureRecue}
-              disabled={!canCreateInvoice}
-              onCheckedChange={() => {
-                if (!canCreateInvoice) return;
-                void openInvoiceWizard(o.id);
-              }}
-              aria-label={`Facture recue pour ${o.ref}`}
-            />
-            {!canCreateInvoice ? (
-              <p className="text-center text-[11px] leading-tight text-amber-600">
-                Reception valide requise
-              </p>
-            ) : null}
-          </div>
-        );
-      },
+      render: (o) => (
+        <span
+          className={cn(
+            "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+            o.factureRecue
+              ? "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400"
+              : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
+          )}
+        >
+          {o.factureRecue ? "Oui" : "Non"}
+        </span>
+      ),
     },
   ];
 
