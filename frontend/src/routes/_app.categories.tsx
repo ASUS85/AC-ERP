@@ -559,7 +559,7 @@ function CategoriesPage() {
           ?
         </p>
         <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
-          Les produits liés à cette catégorie seront également archivés. La
+          Les produits liés à cette catégorie seront également supprimés. La
           suppression est refusée si l’un d’eux possède encore du stock.
         </div>
       </AppModal>

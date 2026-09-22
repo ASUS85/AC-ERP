@@ -40,7 +40,7 @@ export const categoriesRepository = {
       throw new ApiError(
         400,
         "CATEGORY_PRODUCTS_IN_STOCK",
-        "Impossible d'archiver cette categorie : des produits ont encore du stock",
+        "Impossible de supprimer cette categorie : des produits ont encore du stock",
       );
     }
     return prisma

@@ -41,7 +41,7 @@ export const categoriesService = {
       throw new ApiError(
         400,
         "CATEGORY_HAS_CHILDREN",
-        "Impossible d'archiver cette categorie : elle contient des sous-categories",
+        "Impossible de supprimer cette categorie : elle contient des sous-categories",
       );
     }
     return categoriesRepository.archiveWithProducts(id);
