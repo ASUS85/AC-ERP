@@ -69,7 +69,7 @@ export function SidebarNav({
         <div
           className={cn(
             "flex h-16 shrink-0 items-center border-b border-sidebar-border",
-            collapsed ? "justify-center px-3" : "gap-2.5 px-5",
+            collapsed ? "justify-center px-3" : "gap-2.5 px-2",
           )}
         >
           <img
@@ -94,7 +94,7 @@ export function SidebarNav({
               type="button"
               onClick={onToggleCollapsed}
               className={cn(
-                "ml-auto hidden h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border/50 bg-sidebar-accent/40 text-sidebar-foreground/80 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-sidebar-accent hover:text-white lg:inline-flex",
+                "ml-auto hidden h-9 w-9 items-center justify-center rounded-xl shadow-sm transition-all hover:-translate-y-0.5 hover:bg-sidebar-accent hover:text-white lg:inline-flex",
                 collapsed ? "mx-auto ml-0" : "",
               )}
               aria-label={collapsed ? "Déplier le sidebar" : "Plier le sidebar"}
@@ -110,7 +110,7 @@ export function SidebarNav({
 
         <nav
           className={cn(
-            "sidebar-scrollbar flex-1 space-y-5 overflow-y-auto py-4",
+            "sidebar-scrollbar flex-1 space-y-3 overflow-y-auto py-2",
             collapsed ? "px-0" : "px-0",
           )}
         >
