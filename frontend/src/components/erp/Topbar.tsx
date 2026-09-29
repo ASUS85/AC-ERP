@@ -313,7 +313,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-         {/*  {canOpenSettings && (
+          {/*  {canOpenSettings && (
             <Button asChild variant="ghost" size="icon" aria-label="Paramètres">
               <Link to="/settings">
                 <Settings className="h-5 w-5" />
@@ -346,7 +346,9 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
-                <span className="block truncate">Mon compte</span>
+                <span className="block max-w-36 truncate text-sm font-medium">
+                  {getDisplayName(user)}
+                </span>
                 {user?.email && (
                   <span className="block truncate text-xs font-normal text-muted-foreground">
                     {user.email}
