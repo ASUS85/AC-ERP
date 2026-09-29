@@ -15,6 +15,7 @@ import { setStoredCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { useSettingsStore } from "@/stores/settings.store";
+import { FloatingAssistantButton } from "@/components/erp/FloatingAssistantButton";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ context, location }) => {
@@ -148,6 +149,9 @@ function AppLayout() {
           <GlobalLoaderSlot target="main" />
         </main>
       </div>
+
+      {/* Bouton flottant de l'assistant ERP */}
+      <FloatingAssistantButton />
     </div>
   );
 }
