@@ -313,13 +313,13 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {canOpenSettings && (
+         {/*  {canOpenSettings && (
             <Button asChild variant="ghost" size="icon" aria-label="Paramètres">
               <Link to="/settings">
                 <Settings className="h-5 w-5" />
               </Link>
             </Button>
-          )}
+          )} */}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
