@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<StoredUser | null>(null);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const { notifications, unreadCount, markAllAsRead } = useNotifications();
@@ -140,9 +142,18 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
     navigate({ to: url });
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate({ to: "/login" });
+  const handleLogout = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    try {
+      await logout();
+      await navigate({ to: "/login" });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion", error);
+      setLoggingOut(false);
+    }
   };
 
   const handleMarkAllNotificationsRead = async () => {
@@ -157,7 +168,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-6">
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-4">
         <Button
           variant="ghost"
           size="icon"
@@ -312,7 +323,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 pl-1.5 pr-2">
+              <Button variant="ghost" className="gap-2 pl-1.5 pr-1">
                 <Avatar className="h-9 w-8">
                   <AvatarImage
                     src={resolveAvatarUrl(user?.avatar)}
@@ -322,15 +333,15 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
                     {getInitials(user)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden text-left leading-tight sm:block">
+                {/*  <span className="hidden text-left leading-tight sm:block">
                   <span className="block max-w-36 truncate text-sm font-medium">
                     {getDisplayName(user)}
                   </span>
-                  {/* <span className="block max-w-36 truncate text-[11px] text-muted-foreground">
+                  <span className="block max-w-36 truncate text-[11px] text-muted-foreground">
                     {getRoleName(user)}
-                  </span> */}
-                </span>
-                <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
+                  </span> 
+                </span> */}
+                {/* <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" /> */}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -361,7 +372,13 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         </div>
       </header>
 
-      <AlertDialog open={confirmLogoutOpen} onOpenChange={setConfirmLogoutOpen}>
+      <AlertDialog
+        open={confirmLogoutOpen}
+        onOpenChange={(open) => {
+          if (loggingOut) return;
+          setConfirmLogoutOpen(open);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer la déconnexion</AlertDialogTitle>
@@ -371,12 +388,20 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={loggingOut}>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleLogout}
+              disabled={loggingOut}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Se déconnecter
+              {loggingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Déconnexion…
+                </>
+              ) : (
+                "Se déconnecter"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

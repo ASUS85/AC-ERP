@@ -205,7 +205,7 @@ export function SidebarNav({
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-sidebar-border p-3">
+        {/* <div className="shrink-0 border-t border-sidebar-border p-3">
           <div
             className={cn(
               "flex items-center rounded-lg bg-sidebar-accent/50 py-2.5",
@@ -229,7 +229,7 @@ export function SidebarNav({
               </div>
             ) : null}
           </div>
-        </div>
+        </div> */}
       </div>
     </TooltipProvider>
   );
