@@ -1040,6 +1040,7 @@ function SettingsPage() {
   const [creatingBackup, setCreatingBackup] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<BackupInfo | null>(null);
   const [restoring, setRestoring] = useState(false);
+  const [revokingSessions, setRevokingSessions] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
   const [updatingSystemField, setUpdatingSystemField] = useState<
     keyof SystemSettings | null
@@ -1054,7 +1055,9 @@ function SettingsPage() {
   const fetchSysteme = useSettingsStore((state) => state.fetchSysteme);
   const setCachedEntreprise = useSettingsStore((state) => state.setEntreprise);
   const setCachedSysteme = useSettingsStore((state) => state.setSysteme);
-  const isSuperAdmin = profile?.role?.nomRole === "SUPER_ADMIN" || "ADMIN";
+  const isSuperAdmin = ["SUPER_ADMIN", "ADMIN"].includes(
+    profile?.role?.nomRole ?? "",
+  );
   // L'API /backup exige la permission users:supprimer (super admin)
   const canManageBackups = hasPermission("users", "supprimer");
 
@@ -1284,6 +1287,8 @@ function SettingsPage() {
   };
 
   const revokeSessions = async () => {
+    if (revokingSessions) return;
+    setRevokingSessions(true);
     try {
       await revokeOtherSessions();
       const updatedSessions = await fetchSessions(true);
@@ -1292,6 +1297,8 @@ function SettingsPage() {
       toast.success("Les autres sessions ont été déconnectées");
     } catch {
       toast.error("Impossible de révoquer les sessions");
+    } finally {
+      setRevokingSessions(false);
     }
   };
 
@@ -1799,8 +1806,16 @@ function SettingsPage() {
                 variant="outline"
                 className="mt-4 w-full"
                 onClick={revokeSessions}
+                disabled={revokingSessions}
               >
-                Déconnecter les autres sessions
+                {revokingSessions ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Déconnexion en cours...
+                  </>
+                ) : (
+                  "Déconnecter les autres sessions"
+                )}
               </Button>
             </SectionCard>
           </div>
