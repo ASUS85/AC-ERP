@@ -146,10 +146,29 @@ async function collectReportData(type, dateDebut, dateFin) {
   const dateRange = periodRange(dateDebut, dateFin);
 
   if (type === "stocks") {
-    const stocks = await prisma.stock.findMany({
+    const currentStocks = await prisma.stock.findMany({
       take: 50,
       include: { produit: true },
     });
+    const movementsAfterPeriod = currentStocks.length
+      ? await prisma.mouvementStock.findMany({
+          where: {
+            idProduit: { in: currentStocks.map((stock) => stock.idProduit) },
+            createdAt: { gt: dateRange.lte },
+          },
+          orderBy: { createdAt: "asc" },
+          select: { idProduit: true, stockAvant: true },
+        })
+      : [];
+    const stockAtPeriodEnd = new Map();
+    for (const movement of movementsAfterPeriod) {
+      if (!stockAtPeriodEnd.has(movement.idProduit))
+        stockAtPeriodEnd.set(movement.idProduit, movement.stockAvant);
+    }
+    const stocks = currentStocks.map((stock) => ({
+      ...stock,
+      stockActuel: stockAtPeriodEnd.get(stock.idProduit) ?? stock.stockActuel,
+    }));
 
     return {
       stocks,
