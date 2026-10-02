@@ -244,26 +244,60 @@ function CustomersPage() {
     field: K,
     value: ClientPayload[K],
   ) => {
-    setForm((current: ClientPayload) => ({ ...current, [field]: value }));
-    if (errors[field])
+    setForm((current: ClientPayload) => ({
+      ...current,
+      [field]: value,
+    }));
+
+    // Faire disparaître l'alerte dès qu'une valeur est modifiée
+    if (noChangesAlert) {
+      setNoChangesAlert(false);
+    }
+
+    if (errors[field]) {
       setErrors((current: Record<string, string>) => ({
         ...current,
         [field]: "",
       }));
+    }
+  };
+
+  const hasFormChanges = () => {
+    return (
+      form.nom !== initialForm.nom ||
+      form.email !== initialForm.email ||
+      form.telephone !== initialForm.telephone ||
+      form.adresse !== initialForm.adresse ||
+      form.ville !== initialForm.ville ||
+      form.pays !== initialForm.pays ||
+      form.type !== initialForm.type ||
+      Number(form.plafondCredit || 0) !==
+        Number(initialForm.plafondCredit || 0) ||
+      Number(form.delaiPaiement || 0) !==
+        Number(initialForm.delaiPaiement || 0) ||
+      form.modePaiementDefaut !== initialForm.modePaiementDefaut ||
+      form.statut !== initialForm.statut
+    );
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+
+    // En modification, aucune requête si aucune valeur n'a changé
+    if (editingClient && !hasFormChanges()) {
+      setNoChangesAlert(true);
+      return;
+    }
+
+    setNoChangesAlert(false);
     setSubmitting(true);
 
     try {
       if (editingClient) {
         await updateClient(editingClient.id, form);
-
         toast.success("Client modifié");
       } else {
         await createClient(form);
-
         toast.success("Client ajouté");
       }
 
@@ -315,6 +349,8 @@ function CustomersPage() {
   };
 
   const [form, setForm] = useState<ClientPayload>(emptyForm);
+  const [initialForm, setInitialForm] = useState<ClientPayload>(emptyForm);
+  const [noChangesAlert, setNoChangesAlert] = useState(false);
 
   const openPreview = async () => {
     setPreviewOpen(true);
@@ -511,7 +547,9 @@ function CustomersPage() {
                 onClick={() => {
                   setEditingClient(null);
                   setForm(emptyForm);
+                  setInitialForm(emptyForm);
                   setErrors({});
+                  setNoChangesAlert(false);
                   setModalOpen(true);
                 }}
               >
@@ -535,9 +573,7 @@ function CustomersPage() {
                   label: "Modifier",
                   icon: <Pencil className="h-4 w-4" />,
                   onClick: () => {
-                    setEditingClient(client);
-
-                    setForm({
+                    const values: ClientPayload = {
                       nom: client.nom || "",
                       email: client.email || "",
                       telephone: client.telephone || "",
@@ -550,8 +586,13 @@ function CustomersPage() {
                       modePaiementDefaut: (client.modePaiementDefaut ||
                         "VIREMENT") as ClientPayload["modePaiementDefaut"],
                       statut: client.statut as ClientPayload["statut"],
-                    });
+                    };
 
+                    setEditingClient(client);
+                    setForm(values);
+                    setInitialForm(values);
+                    setErrors({});
+                    setNoChangesAlert(false);
                     setModalOpen(true);
                   },
                 },
@@ -770,6 +811,13 @@ function CustomersPage() {
               placeholder="Rue, quartier, immeuble..."
             />
           </Field>
+
+          {noChangesAlert && (
+            <div className="md:col-span-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+              Aucune modification détectée. Veuillez modifier au moins une
+              valeur avant d’enregistrer.
+            </div>
+          )}
         </div>
       </AppModal>
 

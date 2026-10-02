@@ -104,6 +104,8 @@ function StatsPage() {
   const [topClients, setTopClients] = useState<TopClient[]>([]);
   const [dailyData, setDailyData] = useState<DailyPoint[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
   const dashboardData = useDashboardStore((state) => state.data);
   const loading = useDashboardStore((state) => state.loading);
   const fetchOverview = useDashboardStore((state) => state.fetchOverview);
@@ -144,31 +146,62 @@ function StatsPage() {
       .then(([clientsResponse, ventesResponse, achatsResponse]) => {
         if (!active) return;
 
+        //console.log("📊 Statistiques - réponse ventes :", ventesResponse);
+        //console.log("📊 Statistiques - réponse achats :", achatsResponse);
+
+        const ventesData = responseData<RapportFacture>(ventesResponse);
+        const achatsData = responseData<RapportFacture>(achatsResponse);
+
+        //console.log("📅 Données ventes extraites :", ventesData);
+        //console.log("📅 Données achats extraites :", achatsData);
+
         setTopClients(responseData<TopClient>(clientsResponse));
 
         const grouped = new Map<string, DailyPoint>();
+
         const ensureDay = (date: string) => {
           const current = grouped.get(date);
+
           if (current) return current;
-          const next = { date, ventes: 0, achats: 0, marge: 0, paiements: 0 };
+
+          const next: DailyPoint = {
+            date,
+            ventes: 0,
+            achats: 0,
+            marge: 0,
+            paiements: 0,
+          };
+
           grouped.set(date, next);
+
           return next;
         };
 
-        responseData<RapportFacture>(ventesResponse).forEach((facture) => {
+        ventesData.forEach((facture) => {
           const date = dayKey(facture.dateEmission);
+
           if (!date) return;
+
           const point = ensureDay(date);
+
           point.ventes += toNumber(facture.totalTtc);
           point.paiements += toNumber(facture.montantPaye);
         });
 
-        responseData<RapportFacture>(achatsResponse).forEach((facture) => {
+        achatsData.forEach((facture) => {
           const date = dayKey(facture.dateEmission);
+
           if (!date) return;
+
           const point = ensureDay(date);
+
           point.achats += toNumber(facture.totalTtc);
         });
+
+        /* console.log(
+          "📈 Données journalières regroupées :",
+          Array.from(grouped.values()),
+        ); */
 
         setDailyData(
           Array.from(grouped.values())
@@ -210,38 +243,62 @@ function StatsPage() {
     [monthlyData],
   );
 
-  const currentMonthDailyData = useMemo(() => {
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const currentDay = now.getDate();
-
-    // Indexer les données existantes par date
+  const filteredDailyData = useMemo(() => {
     const dataByDate = new Map(dailyData.map((entry) => [entry.date, entry]));
 
     const result: DailyPoint[] = [];
 
-    // Du 1er jour jusqu'au jour actuel inclus
-    for (let day = 1; day <= currentDay; day++) {
-      const dateKey = [
-        year,
-        String(month + 1).padStart(2, "0"),
-        String(day).padStart(2, "0"),
-      ].join("-");
+    const firstMonth = selectedMonth === "all" ? 0 : selectedMonth;
+    const lastMonth = selectedMonth === "all" ? 11 : selectedMonth;
 
-      const existingData = dataByDate.get(dateKey);
+    for (let month = firstMonth; month <= lastMonth; month++) {
+      const daysInMonth = new Date(selectedYear, month + 1, 0).getDate();
 
-      result.push({
-        date: dateKey,
-        ventes: existingData?.ventes ?? 0,
-        achats: existingData?.achats ?? 0,
-        marge: existingData?.marge ?? 0,
-        paiements: existingData?.paiements ?? 0,
-      });
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateKey = [
+          selectedYear,
+          String(month + 1).padStart(2, "0"),
+          String(day).padStart(2, "0"),
+        ].join("-");
+
+        const existingData = dataByDate.get(dateKey);
+
+        result.push({
+          date: dateKey,
+          ventes: existingData?.ventes ?? 0,
+          achats: existingData?.achats ?? 0,
+          marge: existingData?.marge ?? 0,
+          paiements: existingData?.paiements ?? 0,
+        });
+      }
     }
 
+    /* console.log("📊 Historique journalier filtré :", {
+      année: selectedYear,
+      mois: selectedMonth,
+      nombreDeJours: result.length,
+      données: result,
+    }); */
+
     return result;
+  }, [dailyData, selectedYear, selectedMonth]);
+
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+
+    const years = new Set<number>();
+
+    dailyData.forEach((item) => {
+      const year = Number(item.date.slice(0, 4));
+
+      if (Number.isFinite(year)) {
+        years.add(year);
+      }
+    });
+
+    years.add(currentYear);
+
+    return Array.from(years).sort((a, b) => b - a);
   }, [dailyData]);
 
   const financeStructure = useMemo(
@@ -665,10 +722,51 @@ function StatsPage() {
           description="Ventes, achats, marge et paiements sur longue période"
           headerGradient
         >
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <select
+              value={selectedYear}
+              onChange={(e) => {
+                setSelectedYear(Number(e.target.value));
+                setSelectedMonth("all");
+              }}
+              className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedMonth}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setSelectedMonth(value === "all" ? "all" : Number(value));
+              }}
+              className="h-9 rounded-md border border-border bg-background px-3 text-sm"
+            >
+              <option value="all">Tous les mois</option>
+              <option value="0">Janvier</option>
+              <option value="1">Février</option>
+              <option value="2">Mars</option>
+              <option value="3">Avril</option>
+              <option value="4">Mai</option>
+              <option value="5">Juin</option>
+              <option value="6">Juillet</option>
+              <option value="7">Août</option>
+              <option value="8">Septembre</option>
+              <option value="9">Octobre</option>
+              <option value="10">Novembre</option>
+              <option value="11">Décembre</option>
+            </select>
+          </div>
+
           <ChartFrame loading={chartLoading} className="h-[520px]">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
-                data={currentMonthDailyData}
+                data={filteredDailyData}
                 margin={{ left: -10, right: 20, top: 10, bottom: 5 }}
               >
                 <CartesianGrid

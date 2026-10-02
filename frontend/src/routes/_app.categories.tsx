@@ -106,6 +106,8 @@ function CategoriesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [noChangesAlert, setNoChangesAlert] = useState(false);
+  const [initialForm, setInitialForm] = useState<CategoryPayload>(emptyForm);
 
   const pageSize = 10;
   const fetchCategories = useCategoriesStore((state) => state.fetchList);
@@ -168,26 +170,38 @@ function CategoriesPage() {
     value: CategoryPayload[K],
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+    if (noChangesAlert) {
+      setNoChangesAlert(false);
+    }
+
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
   const openCreateModal = () => {
     setEditing(null);
     setForm(emptyForm);
+    setInitialForm(emptyForm);
     setErrors({});
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
   const openEditModal = (cat: Categorie) => {
-    setEditing(cat);
-    setForm({
+    const values: CategoryPayload = {
       nom: cat.nom || "",
       description: cat.description || "",
       idCategorieParent: cat.idCategorieParent || null,
       icone: cat.icone || "",
       statut: cat.statut,
-    });
+    };
+
+    setEditing(cat);
+    setForm(values);
+    setInitialForm(values);
     setErrors({});
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
@@ -203,9 +217,27 @@ function CategoriesPage() {
     return Object.keys(next).length === 0;
   };
 
+  const hasFormChanges = () => {
+    return (
+      form.nom !== initialForm.nom ||
+      form.description !== initialForm.description ||
+      form.idCategorieParent !== initialForm.idCategorieParent ||
+      form.icone !== initialForm.icone ||
+      form.statut !== initialForm.statut
+    );
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
+
+    if (editing && !hasFormChanges()) {
+      setNoChangesAlert(true);
+      return;
+    }
+
+    setNoChangesAlert(false);
     setSubmitting(true);
+
     try {
       if (editing) {
         await updateCategorie(editing.id, form);
@@ -214,6 +246,7 @@ function CategoriesPage() {
         await createCategorie(form);
         toast.success("Categorie ajoutee");
       }
+
       invalidateCategories();
       setModalOpen(false);
       await loadCategories();
@@ -222,6 +255,7 @@ function CategoriesPage() {
         error && typeof error === "object" && "message" in error
           ? (error as { message: string }).message
           : "Erreur lors de l'enregistrement";
+
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -519,6 +553,12 @@ function CategoriesPage() {
               placeholder="Description facultative"
             />
           </Field>
+          {noChangesAlert && (
+            <div className="md:col-span-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+              Aucune modification détectée. Veuillez modifier au moins une
+              valeur avant d’enregistrer.
+            </div>
+          )}
         </div>
       </AppModal>
 

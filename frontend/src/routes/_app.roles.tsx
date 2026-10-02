@@ -107,6 +107,13 @@ function RolesPage() {
     description: "",
     isSystemRole: false,
   });
+  const [initialForm, setInitialForm] = useState<RolePayload>({
+    nomRole: "",
+    description: "",
+    isSystemRole: false,
+  });
+
+  const [noChangesAlert, setNoChangesAlert] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [permissionIds, setPermissionIds] = useState<string[]>([]);
 
@@ -185,21 +192,42 @@ function RolesPage() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [permissions, searchQuery]);
 
+  const normalizeRoleName = (value: string) => {
+    return value.trim().replace(/\s+/g, "_").toUpperCase();
+  };
+
+  const formatRoleName = (value: string) => {
+    return value.replace(/_/g, " ");
+  };
+
   const openCreateModal = () => {
     setEditingRole(null);
     setErrors({});
-    setForm({ nomRole: "", description: "", isSystemRole: false });
+
+    const values: RolePayload = {
+      nomRole: "",
+      description: "",
+      isSystemRole: false,
+    };
+
+    setForm(values);
+    setInitialForm(values);
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
   const openEditModal = (role: RoleItem) => {
-    setEditingRole(role);
-    setErrors({});
-    setForm({
-      nomRole: role.nomRole,
+    const values: RolePayload = {
+      nomRole: formatRoleName(role.nomRole),
       description: role.description ?? "",
       isSystemRole: role.isSystemRole ?? false,
-    });
+    };
+
+    setEditingRole(role);
+    setErrors({});
+    setForm(values);
+    setInitialForm(values);
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
@@ -208,22 +236,47 @@ function RolesPage() {
     setDeleteModalOpen(true);
   };
 
+  const hasFormChanges = () => {
+    return (
+      form.nomRole !== initialForm.nomRole ||
+      form.description !== initialForm.description ||
+      form.isSystemRole !== initialForm.isSystemRole
+    );
+  };
+
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
-    if (!form.nomRole.trim())
+
+    if (!form.nomRole.trim()) {
       newErrors.nomRole = "Le nom du rôle est obligatoire";
+    }
+
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length) return;
 
+    if (editingRole && !hasFormChanges()) {
+      setNoChangesAlert(true);
+      return;
+    }
+
+    setNoChangesAlert(false);
     setSubmitting(true);
+
     try {
+      const roleData: RolePayload = {
+        ...form,
+        nomRole: normalizeRoleName(form.nomRole),
+      };
+
       if (editingRole) {
-        await updateRole(editingRole.id, form);
+        await updateRole(editingRole.id, roleData);
         toast.success("Rôle mis à jour");
       } else {
-        await createRole(form);
+        await createRole(roleData);
         toast.success("Rôle ajouté");
       }
+
       setModalOpen(false);
       setErrors({});
       await loadData();
@@ -365,7 +418,7 @@ function RolesPage() {
                         <span
                           className={`font-medium text-sm truncate ${isActive ? "text-primary font-semibold" : ""}`}
                         >
-                          {role.nomRole}
+                          {formatRoleName(role.nomRole)}
                         </span>
                         {role.isSystemRole && (
                           <Lock className="h-3 w-3 text-amber-500 shrink-0" />
@@ -605,6 +658,7 @@ function RolesPage() {
               value={form.nomRole}
               onChange={(event) => {
                 setForm({ ...form, nomRole: event.target.value });
+                setNoChangesAlert(false);
                 if (errors.nomRole)
                   setErrors((prev) => ({ ...prev, nomRole: "" }));
               }}
@@ -620,13 +674,20 @@ function RolesPage() {
               id="description"
               rows={3}
               value={form.description ?? ""}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
+              onChange={(event) => {
+                setForm({ ...form, description: event.target.value });
+                setNoChangesAlert(false);
+              }}
               placeholder="Décrivez les responsabilités de ce rôle..."
             />
           </div>
         </div>
+        {noChangesAlert && (
+          <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+            Aucune modification détectée. Veuillez modifier au moins une valeur
+            avant d’enregistrer.
+          </div>
+        )}
       </AppModal>
 
       {/* Modal Confirmation Suppression */}

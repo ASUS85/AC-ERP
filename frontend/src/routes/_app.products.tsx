@@ -145,6 +145,7 @@ function ProductsPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [noChanges, setNoChanges] = useState(false);
 
   const pageSize = 40;
   const fetchCategories = useCategoriesStore((state) => state.fetchList);
@@ -227,6 +228,7 @@ function ProductsPage() {
     value: ProduitPayload[K],
   ) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setNoChanges(false);
     if (errors[field]) setErrors((current) => ({ ...current, [field]: "" }));
   };
 
@@ -293,8 +295,50 @@ function ProductsPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
+  const hasProductChanges = () => {
+    if (!editingProduct) return true;
+
+    const currentValues = {
+      reference: form.reference?.trim() || "",
+      designation: form.designation?.trim() || "",
+      photo: form.photo?.trim() || "",
+      description: form.description?.trim() || "",
+      uniteMesure: form.uniteMesure || "",
+      prixAchatHt: Number(form.prixAchatHt || 0),
+      prixVenteHt: Number(form.prixVenteHt || 0),
+      tauxTva: Number(form.tauxTva || 0),
+      stockMinimum: Number(form.stockMinimum || 0),
+      idCategorie: form.idCategorie || "",
+      statut: form.statut || "",
+    };
+
+    const originalValues = {
+      reference: editingProduct.reference?.trim() || "",
+      designation: editingProduct.designation?.trim() || "",
+      photo: editingProduct.photo?.trim() || "",
+      description: editingProduct.description?.trim() || "",
+      uniteMesure: editingProduct.uniteMesure || "",
+      prixAchatHt: Number(editingProduct.prixAchatHt || 0),
+      prixVenteHt: Number(editingProduct.prixVenteHt || 0),
+      tauxTva: Number(editingProduct.tauxTva || 0),
+      stockMinimum: Number(editingProduct.stockMinimum || 0),
+      idCategorie:
+        editingProduct.idCategorie || editingProduct.categorie?.id || "",
+      statut: editingProduct.statut || "",
+    };
+
+    return JSON.stringify(currentValues) !== JSON.stringify(originalValues);
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
+
+    if (editingProduct && !hasProductChanges()) {
+      setNoChanges(true);
+      return;
+    }
+
+    setNoChanges(false);
     setSubmitting(true);
     try {
       const payload = {
@@ -588,24 +632,39 @@ function ProductsPage() {
         description="Renseignez les informations du catalogue."
         size="xl"
         footer={
-          <div className="flex justify-between gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setModalOpen(false)}
-              disabled={submitting}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={() => void handleSubmit()}
-              disabled={submitting || uploadingPhoto}
-            >
-              {submitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {editingProduct ? "Enregistrer" : "Créer"}
-            </Button>
-          </div>
+          <>
+            {noChanges && editingProduct ? (
+              <div
+                role="alert"
+                className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+              >
+                <p className="font-medium">Aucune modification détectée</p>
+                <p className="mt-1">
+                  Veuillez modifier au moins une valeur avant d’enregistrer.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="flex justify-between gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setModalOpen(false)}
+                disabled={submitting}
+              >
+                Annuler
+              </Button>
+
+              <Button
+                onClick={() => void handleSubmit()}
+                disabled={submitting || uploadingPhoto}
+              >
+                {submitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                {editingProduct ? "Enregistrer" : "Créer"}
+              </Button>
+            </div>
+          </>
         }
       >
         <div className="grid gap-4 md:grid-cols-2">

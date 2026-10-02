@@ -79,6 +79,16 @@ function UsersPage() {
     idRole: "",
     statut: "ACTIF",
   });
+  const [initialForm, setInitialForm] = useState<UserPayload>({
+    nom: "",
+    prenom: "",
+    email: "",
+    telephone: "",
+    idRole: "",
+    statut: "ACTIF",
+  });
+
+  const [noChangesAlert, setNoChangesAlert] = useState(false);
 
   const currentUser = useAuthStore((state) => state.user);
   const currentUserRole = currentUser?.role?.nomRole;
@@ -121,14 +131,19 @@ function UsersPage() {
   const openCreateModal = () => {
     setEditingUser(null);
     setErrors({});
-    setForm({
+
+    const values: UserPayload = {
       nom: "",
       prenom: "",
       email: "",
       telephone: "",
       idRole: "",
-      statut: "",
-    });
+      statut: "ACTIF",
+    };
+
+    setForm(values);
+    setInitialForm(values);
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
@@ -138,31 +153,56 @@ function UsersPage() {
   };
 
   const openEditModal = (user: UserRow) => {
-    setEditingUser(user);
-    setErrors({});
-    setForm({
+    const values: UserPayload = {
       nom: user.nom,
       prenom: user.prenom,
       email: user.email,
       telephone: user.telephone || "",
       idRole: user.role?.id || "",
       statut: (user.statut as UserPayload["statut"]) || "ACTIF",
-    });
+    };
+
+    setEditingUser(user);
+    setErrors({});
+    setForm(values);
+    setInitialForm(values);
+    setNoChangesAlert(false);
     setModalOpen(true);
+  };
+
+  const hasFormChanges = () => {
+    return (
+      form.nom !== initialForm.nom ||
+      form.prenom !== initialForm.prenom ||
+      form.email !== initialForm.email ||
+      form.telephone !== initialForm.telephone ||
+      form.idRole !== initialForm.idRole ||
+      form.statut !== initialForm.statut
+    );
   };
 
   const handleSubmit = async () => {
     const newErrors: Record<string, string> = {};
+
     if (!form.nom.trim()) newErrors.nom = "Le nom est obligatoire";
     if (!form.prenom.trim()) newErrors.prenom = "Le prénom est obligatoire";
     if (!form.email.trim()) newErrors.email = "L’email est obligatoire";
     if (!form.idRole) newErrors.idRole = "Le rôle est obligatoire";
+
     setErrors(newErrors);
+
     if (Object.keys(newErrors).length) {
       return;
     }
 
+    if (editingUser && !hasFormChanges()) {
+      setNoChangesAlert(true);
+      return;
+    }
+
+    setNoChangesAlert(false);
     setSubmitting(true);
+
     try {
       if (editingUser) {
         await updateUser(editingUser.id, form);
@@ -171,12 +211,14 @@ function UsersPage() {
         await createUser(form);
         toast.success("Utilisateur ajouté");
       }
+
       setModalOpen(false);
       setErrors({});
       await loadData();
     } catch (error: any) {
       const message = error?.message || "Échec de l’opération";
       const details = error?.details || {};
+
       const fieldErrors =
         details && typeof details === "object"
           ? Object.entries(details).reduce<Record<string, string>>(
@@ -187,6 +229,7 @@ function UsersPage() {
               {},
             )
           : {};
+
       setErrors(fieldErrors);
       toast.error(message);
     } finally {
@@ -402,13 +445,14 @@ function UsersPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="nom">
-              Nom <span class="ml-1 text-destructive">*</span>
+              Nom <span className="ml-1 text-destructive">*</span>
             </Label>
             <Input
               id="nom"
               value={form.nom}
               onChange={(e) => {
                 setForm({ ...form, nom: e.target.value });
+                setNoChangesAlert(false);
                 if (errors.nom) setErrors((prev) => ({ ...prev, nom: "" }));
               }}
               placeholder="Entrez le nom"
@@ -419,13 +463,14 @@ function UsersPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="prenom">
-              Prénom <span class="ml-1 text-destructive">*</span>
+              Prénom <span className="ml-1 text-destructive">*</span>
             </Label>
             <Input
               id="prenom"
               value={form.prenom}
               onChange={(e) => {
                 setForm({ ...form, prenom: e.target.value });
+                setNoChangesAlert(false);
                 if (errors.prenom)
                   setErrors((prev) => ({ ...prev, prenom: "" }));
               }}
@@ -437,7 +482,7 @@ function UsersPage() {
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="email">
-              Email <span class="ml-1 text-destructive">*</span>
+              Email <span className="ml-1 text-destructive">*</span>
             </Label>
             <Input
               id="email"
@@ -445,6 +490,7 @@ function UsersPage() {
               value={form.email}
               onChange={(e) => {
                 setForm({ ...form, email: e.target.value });
+                setNoChangesAlert(false);
                 if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
               }}
               placeholder="Entrez l'adresse email"
@@ -458,31 +504,50 @@ function UsersPage() {
             <Input
               id="telephone"
               value={form.telephone || ""}
-              onChange={(e) => setForm({ ...form, telephone: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, telephone: e.target.value });
+                setNoChangesAlert(false);
+              }}
               placeholder="Entrez le numéro de téléphone"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">
-              Rôle <span class="ml-1 text-destructive">*</span>
+              Rôle <span className="ml-1 text-destructive">*</span>
             </Label>
             <Select
               value={form.idRole}
               onValueChange={(value) => {
                 setForm({ ...form, idRole: value });
+                setNoChangesAlert(false);
                 if (errors.idRole)
                   setErrors((prev) => ({ ...prev, idRole: "" }));
               }}
             >
               <SelectTrigger id="role">
-                <SelectValue placeholder="Sélectionner un rôle" />
+                <SelectValue
+                  placeholder={
+                    loading ? "Chargement des rôles..." : "Sélectionner un rôle"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    {role.nomRole}
-                  </SelectItem>
-                ))}
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Chargement des rôles...
+                  </div>
+                ) : roles.length > 0 ? (
+                  roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.nomRole.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="py-3 text-center text-sm text-muted-foreground">
+                    Aucun rôle disponible
+                  </div>
+                )}
               </SelectContent>
             </Select>
             {errors.idRole ? (
@@ -490,12 +555,15 @@ function UsersPage() {
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="statut">Statut</Label>
+            <Label htmlFor="statut">
+              Statut <span className="ml-1 text-destructive">*</span>
+            </Label>
             <Select
               value={form.statut}
-              onValueChange={(value: UserPayload["statut"]) =>
-                setForm({ ...form, statut: value })
-              }
+              onValueChange={(value: UserPayload["statut"]) => {
+                setForm({ ...form, statut: value });
+                setNoChangesAlert(false);
+              }}
             >
               <SelectTrigger id="statut">
                 <SelectValue placeholder="Sélectionner un statut" />
@@ -508,6 +576,12 @@ function UsersPage() {
             </Select>
           </div>
         </div>
+        {noChangesAlert && (
+          <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+            Aucune modification détectée. Veuillez modifier au moins une valeur
+            avant d’enregistrer.
+          </div>
+        )}
       </AppModal>
 
       <AppModal

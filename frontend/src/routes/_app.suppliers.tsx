@@ -112,6 +112,8 @@ function SuppliersPage() {
   const [pendingDelete, setPendingDelete] = useState<Fournisseur | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [initialForm, setInitialForm] = useState(emptyForm);
+  const [noChangesAlert, setNoChangesAlert] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -173,7 +175,15 @@ function SuppliersPage() {
 
   const setField = (field: string, value: string | number) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+
+    // Masquer l'alerte dès qu'une valeur est modifiée
+    if (noChangesAlert) {
+      setNoChangesAlert(false);
+    }
+
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
   };
 
   const stats = useMemo(() => {
@@ -187,7 +197,9 @@ function SuppliersPage() {
   const openCreateModal = () => {
     setEditing(null);
     setForm(emptyForm);
+    setInitialForm(emptyForm);
     setErrors({});
+    setNoChangesAlert(false);
     setModalOpen(true);
   };
 
@@ -195,11 +207,13 @@ function SuppliersPage() {
     setModalOpen(true);
     setModalLoading(true);
     setEditing(null);
+    setNoChangesAlert(false);
+
     try {
       const response = await getFournisseurById(id);
       const f = ((response as any)?.data || {}) as Fournisseur;
-      setEditing(f);
-      setForm({
+
+      const values = {
         raisonSociale: f.raisonSociale || "",
         email: f.email || "",
         telephone: f.telephone || "",
@@ -210,7 +224,11 @@ function SuppliersPage() {
         delaiLivraisonMoyen: f.delaiLivraisonMoyen || 7,
         conditionsPaiement: f.conditionsPaiement || "",
         statut: f.statut,
-      });
+      };
+
+      setEditing(f);
+      setForm(values);
+      setInitialForm(values);
       setErrors({});
     } catch {
       toast.error("Impossible de charger le fournisseur");
@@ -219,7 +237,6 @@ function SuppliersPage() {
       setModalLoading(false);
     }
   };
-
   const validateForm = () => {
     const next: Record<string, string> = {};
     if (!form.raisonSociale.trim())
@@ -230,9 +247,34 @@ function SuppliersPage() {
     return Object.keys(next).length === 0;
   };
 
+  const hasFormChanges = () => {
+    return (
+      form.raisonSociale !== initialForm.raisonSociale ||
+      form.email !== initialForm.email ||
+      form.telephone !== initialForm.telephone ||
+      form.adresse !== initialForm.adresse ||
+      form.ville !== initialForm.ville ||
+      form.pays !== initialForm.pays ||
+      form.numeroFiscal !== initialForm.numeroFiscal ||
+      Number(form.delaiLivraisonMoyen || 0) !==
+        Number(initialForm.delaiLivraisonMoyen || 0) ||
+      form.conditionsPaiement !== initialForm.conditionsPaiement ||
+      form.statut !== initialForm.statut
+    );
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
+
+    // En modification, aucune requête si aucune valeur n'a changé
+    if (editing && !hasFormChanges()) {
+      setNoChangesAlert(true);
+      return;
+    }
+
+    setNoChangesAlert(false);
     setSubmitting(true);
+
     try {
       if (editing) {
         await updateFournisseur(editing.id, form);
@@ -241,6 +283,7 @@ function SuppliersPage() {
         await createFournisseur(form);
         toast.success("Fournisseur ajoute");
       }
+
       setModalOpen(false);
       await loadFournisseurs();
     } catch (error: unknown) {
@@ -248,6 +291,7 @@ function SuppliersPage() {
         error && typeof error === "object" && "message" in error
           ? (error as { message: string }).message
           : "Erreur lors de l'enregistrement";
+
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -452,7 +496,7 @@ function SuppliersPage() {
               htmlFor="raisonSociale"
               error={errors.raisonSociale}
             >
-              <span class="ml-1 text-destructive">*</span>
+              <span className="ml-1 text-destructive">*</span>
               <Input
                 id="raisonSociale"
                 value={form.raisonSociale}
@@ -461,7 +505,7 @@ function SuppliersPage() {
               />
             </Field>
             <Field label="Email" htmlFor="email" error={errors.email}>
-              <span class="ml-1 text-destructive">*</span>
+              <span className="ml-1 text-destructive">*</span>
               <Input
                 id="email"
                 type="email"
@@ -475,7 +519,7 @@ function SuppliersPage() {
               htmlFor="telephone"
               error={errors.telephone}
             >
-              <span class="ml-1 text-destructive">*</span>
+              <span className="ml-1 text-destructive">*</span>
               <Input
                 id="telephone"
                 value={form.telephone}
@@ -568,6 +612,13 @@ function SuppliersPage() {
                 placeholder="30 jours fin de mois, etc."
               />
             </Field>
+
+            {noChangesAlert && (
+              <div className="md:col-span-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+                Aucune modification détectée. Veuillez modifier au moins une
+                valeur avant d’enregistrer.
+              </div>
+            )}
           </div>
         )}
       </AppModal>
