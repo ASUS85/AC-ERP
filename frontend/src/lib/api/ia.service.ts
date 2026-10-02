@@ -86,13 +86,20 @@ export const deleteConversation = (idConversation: string) =>
   api.delete(`/ia/conversations/${idConversation}`) as unknown as Promise<
     IaApiResponse<null>
   >;
+export type RapportPeriode = {
+  dateDebut: string;
+  dateFin: string;
+};
+
 export const genererRapport = (
   type: IaRapport["typeRapport"],
-  periode: IaRapport["periode"],
+  periode: RapportPeriode,
 ) =>
-  api.post("/ia/rapport", { type, periode }) as unknown as Promise<
-    IaApiResponse<IaRapport>
-  >;
+  api.post("/ia/rapport", {
+    type,
+    dateDebut: periode.dateDebut,
+    dateFin: periode.dateFin,
+  }) as unknown as Promise<IaApiResponse<IaRapport>>;
 export const telechargerRapportPdf = (idRapport: string) =>
   api.get(`/ia/rapports/${idRapport}/pdf`, {
     responseType: "blob",

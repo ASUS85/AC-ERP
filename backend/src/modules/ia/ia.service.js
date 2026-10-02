@@ -54,6 +54,16 @@ async function askClaude(
   }
 }
 
+function periodRange(dateDebut, dateFin) {
+  const start = new Date(`${dateDebut}T00:00:00`);
+  const end = new Date(`${dateFin}T23:59:59.999`);
+
+  return {
+    gte: start,
+    lte: end,
+  };
+}
+
 function periodStart(period) {
   const date = new Date();
   if (period === "semaine") date.setDate(date.getDate() - 7);
@@ -132,12 +142,15 @@ async function collectContext(message) {
   return context;
 }
 
-async function collectReportData(type, dateDebut) {
+async function collectReportData(type, dateDebut, dateFin) {
+  const dateRange = periodRange(dateDebut, dateFin);
+
   if (type === "stocks") {
     const stocks = await prisma.stock.findMany({
       take: 50,
       include: { produit: true },
     });
+
     return {
       stocks,
       total: stocks.reduce(
@@ -151,13 +164,17 @@ async function collectReportData(type, dateDebut) {
       ).length,
     };
   }
+
   if (type === "achats") {
     const achats = await prisma.bonCommandeFournisseur.findMany({
-      where: { dateCommande: { gte: dateDebut } },
+      where: {
+        dateCommande: dateRange,
+      },
       take: 50,
       orderBy: { dateCommande: "desc" },
       include: { fournisseur: true, lignes: true },
     });
+
     return {
       achats,
       total: achats.reduce((sum, item) => sum + number(item.totalTtc), 0),
@@ -165,19 +182,28 @@ async function collectReportData(type, dateDebut) {
       risque: achats.length,
     };
   }
+
   const factures = await prisma.facture.findMany({
     where: {
-      dateEmission: { gte: dateDebut },
+      dateEmission: dateRange,
       typeFacture: type === "ventes" ? "VENTE" : { in: ["VENTE", "ACHAT"] },
     },
     take: 50,
     orderBy: { dateEmission: "desc" },
-    include: { client: true, fournisseur: true, lignes: true, paiements: true },
+    include: {
+      client: true,
+      fournisseur: true,
+      lignes: true,
+      paiements: true,
+    },
   });
+
   const paiements =
     type === "financier"
       ? await prisma.paiement.findMany({
-          where: { datePaiement: { gte: dateDebut } },
+          where: {
+            datePaiement: dateRange,
+          },
           take: 50,
           orderBy: { datePaiement: "desc" },
           include: {
@@ -191,10 +217,13 @@ async function collectReportData(type, dateDebut) {
           },
         })
       : [];
+
   const total = factures.reduce((sum, item) => sum + number(item.totalTtc), 0);
+
   const achats = factures
     .filter((item) => item.typeFacture === "ACHAT")
     .reduce((sum, item) => sum + number(item.totalTtc), 0);
+
   return {
     factures,
     paiements,
@@ -325,12 +354,13 @@ function buildReportCharts(data, type) {
 function buildReportNarrative(type, periode, data) {
   const elements =
     data.factures?.length || data.achats?.length || data.stocks?.length || 0;
-  const periodLabel = {
-    semaine: "la semaine en cours",
-    mois: "le mois en cours",
-    trimestre: "le trimestre en cours",
-    annee: "l'année en cours",
-  }[periode];
+  const periodLabel =
+    {
+      semaine: "la semaine en cours",
+      mois: "le mois en cours",
+      trimestre: "le trimestre en cours",
+      annee: "l'année en cours",
+    }[periode] || periode;
 
   if (type === "stocks") {
     return `Sur ${elements} références analysées pour ${periodLabel}, la valeur estimée du stock est de ${money(data.total)}. ${data.risque} référence(s) sont au seuil de sécurité ou en dessous. La priorité est de sécuriser les articles critiques et de confirmer les réapprovisionnements nécessaires.`;
@@ -379,7 +409,9 @@ export async function buildForecasts() {
     const key = new Date(invoice.dateEmission).toISOString().slice(0, 7);
     monthly.set(key, (monthly.get(key) || 0) + number(invoice.totalTtc));
   }
-  const values = [...monthly.values()];
+  const values = [...monthly.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, value]) => value);
   const average = values.length
     ? values.reduce((sum, value) => sum + value, 0) / values.length
     : 0;
@@ -638,25 +670,46 @@ export const iaService = {
       );
     await iaRepository.deleteConversation(idConversation);
   },
-  async genererRapport({ type, periode, userId }) {
-    if (!["ventes", "achats", "stocks", "financier"].includes(type))
+  async genererRapport({ type, dateDebut, dateFin, userId }) {
+    if (!["ventes", "achats", "stocks", "financier"].includes(type)) {
       throw new ApiError(
         400,
         "INVALID_REPORT_TYPE",
         "Type de rapport invalide",
       );
-    if (!["semaine", "mois", "trimestre", "annee"].includes(periode))
-      throw new ApiError(400, "INVALID_REPORT_PERIOD", "Période invalide");
-    const data = await collectReportData(type, periodStart(periode));
+    }
+
+    if (!dateDebut || !dateFin) {
+      throw new ApiError(
+        400,
+        "REPORT_PERIOD_REQUIRED",
+        "La période du rapport est obligatoire",
+      );
+    }
+
+    const data = await collectReportData(type, dateDebut, dateFin);
+
+    const periode = `${dateDebut} au ${dateFin}`;
+
     const narrative = buildReportNarrative(type, periode, data);
+
     const html = await buildReportHtml(type, periode, data, narrative);
+
     const report = await iaRepository.createRapport({
       idUtilisateur: userId,
       typeRapport: type,
       periode,
+      dateDebut: new Date(`${dateDebut}T00:00:00`),
+      dateFin: new Date(`${dateFin}T23:59:59.999`),
       contenu: narrative,
     });
-    return { ...report, html };
+
+    return {
+      ...report,
+      html,
+      dateDebut,
+      dateFin,
+    };
   },
   getPrevisions() {
     return buildForecasts();
@@ -666,26 +719,37 @@ export const iaService = {
   },
   async telechargerRapportPdf(idRapport, userId) {
     const report = await iaRepository.findRapportById(idRapport);
+
     if (!report || report.idUtilisateur !== userId)
       throw new ApiError(404, "REPORT_NOT_FOUND", "Rapport introuvable");
 
+    const dateDebut = report.dateDebut.toISOString().slice(0, 10);
+    const dateFin = report.dateFin.toISOString().slice(0, 10);
+
     const data = await collectReportData(
       report.typeRapport,
-      periodStart(report.periode),
+      dateDebut,
+      dateFin,
     );
+
     const html = await buildReportHtml(
       report.typeRapport,
       report.periode,
       data,
       report.contenu,
     );
+
     const { buffer } = await renderPdfDocument({
       html,
-      pdfOptions: { format: "A4", printBackground: true },
+      pdfOptions: {
+        format: "A4",
+        printBackground: true,
+      },
     });
+
     return {
       buffer,
-      filename: `rapport-${report.typeRapport}-${report.periode}.pdf`,
+      filename: `rapport-${report.typeRapport}-${dateDebut}-${dateFin}.pdf`,
     };
   },
   getAlertesRupture() {

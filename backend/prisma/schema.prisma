@@ -772,16 +772,18 @@ model RapportIa {
   id            String      @id @default(uuid()) @db.Char(36)
   idUtilisateur String      @map("id_utilisateur") @db.Char(36)
   typeRapport   String      @map("type_rapport") @db.VarChar(50)
-  periode       String      @db.VarChar(20)
+  periode       String      @db.VarChar(100)
+  dateDebut     DateTime?   @map("date_debut")
+  dateFin       DateTime?   @map("date_fin")
   contenu       String      @db.Text
   fichierPdf    String?     @map("fichier_pdf") @db.VarChar(500)
   createdAt     DateTime    @default(now()) @map("created_at")
-  utilisateur   Utilisateur @relation(fields: [idUtilisateur], references: [id], map: "fk_rap_user")
+
+  utilisateur Utilisateur @relation(fields: [idUtilisateur], references: [id], map: "fk_rap_user")
 
   @@index([idUtilisateur], map: "fk_rap_user")
   @@map("rapports_ia")
 }
-
 enum StatutUtilisateur {
   ACTIF
   INACTIF

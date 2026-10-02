@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FileBarChart,
   FileText,
@@ -63,31 +63,172 @@ const types = [
   },
 ] as const;
 
-const periodLabels = {
-  semaine: "Cette semaine",
-  mois: "Ce mois-ci",
-  trimestre: "Ce trimestre",
-  annee: "Cette année",
-};
+const currentYear = new Date().getFullYear();
+
+const months = [
+  { value: "1", label: "Janvier" },
+  { value: "2", label: "Février" },
+  { value: "3", label: "Mars" },
+  { value: "4", label: "Avril" },
+  { value: "5", label: "Mai" },
+  { value: "6", label: "Juin" },
+  { value: "7", label: "Juillet" },
+  { value: "8", label: "Août" },
+  { value: "9", label: "Septembre" },
+  { value: "10", label: "Octobre" },
+  { value: "11", label: "Novembre" },
+  { value: "12", label: "Décembre" },
+];
+
+function formatDate(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
 
 function ReportsPage() {
   const [selected, setSelected] = useState<IaRapport["typeRapport"]>("ventes");
-  const [periode, setPeriode] = useState<IaRapport["periode"]>("mois");
+  const [annee, setAnnee] = useState("");
+  const [mois, setMois] = useState("");
+  const [semaine, setSemaine] = useState("");
+  const [jour, setJour] = useState("");
+
+  const [filterError, setFilterError] = useState<
+    "annee" | "mois" | "semaine" | null
+  >(null);
   const [report, setReport] = useState<IaRapport>();
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const active = types.find((t) => t.id === selected)!;
 
+  const years = useMemo(() => {
+    return Array.from({ length: 10 }, (_, index) =>
+      String(currentYear - index),
+    );
+  }, []);
+
+  const weeks = useMemo(() => {
+    if (!annee || !mois) return [];
+
+    const year = Number(annee);
+    const month = Number(mois);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const ranges = [];
+
+    for (let start = 1; start <= daysInMonth; start += 7) {
+      const end = Math.min(start + 6, daysInMonth);
+
+      ranges.push({
+        value: `${start}-${end}`,
+        label: `Semaine ${start}-${end}`,
+        start,
+        end,
+      });
+    }
+
+    return ranges;
+  }, [annee, mois]);
+
+  const days = useMemo(() => {
+    if (!annee || !mois || !semaine) return [];
+
+    const year = Number(annee);
+    const month = Number(mois);
+    const [start, end] = semaine.split("-").map(Number);
+
+    return Array.from({ length: end - start + 1 }, (_, index) => {
+      const dayNumber = start + index;
+      const date = new Date(year, month - 1, dayNumber);
+
+      return {
+        value: String(dayNumber),
+        label: date.toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+        }),
+      };
+    });
+  }, [annee, mois, semaine]);
+
+  const periodLabel = useMemo(() => {
+    if (!annee) return "";
+
+    if (jour && mois) {
+      const month = months.find((month) => month.value === mois);
+
+      const date = new Date(Number(annee), Number(mois) - 1, Number(jour));
+
+      return date.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+
+    if (semaine && mois) {
+      const month = months.find((month) => month.value === mois);
+      return `Semaine ${semaine} — ${month?.label} ${annee}`;
+    }
+
+    if (mois) {
+      const month = months.find((month) => month.value === mois);
+      return `${month?.label} ${annee}`;
+    }
+
+    return `Année ${annee}`;
+  }, [annee, mois, semaine, jour]);
+
   const generate = async () => {
+    if (!annee) {
+      setFilterError("annee");
+      return;
+    }
+
+    let dateDebut: string;
+    let dateFin: string;
+
+    const year = Number(annee);
+
+    if (jour && mois && semaine) {
+      const date = new Date(year, Number(mois) - 1, Number(jour));
+
+      dateDebut = formatDate(date);
+      dateFin = formatDate(date);
+    } else if (semaine && mois) {
+      const month = Number(mois);
+      const [start, end] = semaine.split("-").map(Number);
+
+      dateDebut = formatDate(new Date(year, month - 1, start));
+      dateFin = formatDate(new Date(year, month - 1, end));
+    } else if (mois) {
+      const month = Number(mois);
+
+      dateDebut = formatDate(new Date(year, month - 1, 1));
+      dateFin = formatDate(new Date(year, month, 0));
+    } else {
+      dateDebut = `${year}-01-01`;
+      dateFin = `${year}-12-31`;
+    }
+
     setGenerating(true);
+
     try {
-      const response = await genererRapport(selected, periode);
+      const response = await genererRapport(selected, {
+        dateDebut,
+        dateFin,
+      });
+
       setReport(response.data);
     } catch (error) {
       const message =
         typeof error === "object" && error && "message" in error
           ? String(error.message)
           : "Impossible de générer le rapport";
+
       toast.error(message);
     } finally {
       setGenerating(false);
@@ -102,7 +243,7 @@ function ReportsPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `rapport-${report.typeRapport}-${report.periode}.pdf`;
+      link.download = `rapport-${report.typeRapport}-${annee}${mois ? `-${mois}` : ""}${semaine ? `-S${semaine}` : ""}${jour ? `-${jour}` : ""}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -139,6 +280,11 @@ function ReportsPage() {
                 onClick={() => {
                   setSelected(t.id);
                   setReport(undefined);
+                  setAnnee("");
+                  setMois("");
+                  setSemaine("");
+                  setJour("");
+                  setFilterError(null);
                 }}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all",
@@ -166,25 +312,212 @@ function ReportsPage() {
               </button>
             ))}
           </div>
-          <div className="mt-4 space-y-1.5">
-            <Label>Période</Label>
-            <Select
-              value={periode}
-              onValueChange={(value: IaRapport["periode"]) => {
-                setPeriode(value);
-                setReport(undefined);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="semaine">Cette semaine</SelectItem>
-                <SelectItem value="mois">Ce mois-ci</SelectItem>
-                <SelectItem value="trimestre">Ce trimestre</SelectItem>
-                <SelectItem value="annee">Cette année</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="mt-4 overflow-hidden rounded-lg border border-border/70">
+            <div className="bg-primary/5 px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">
+                Période du rapport
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Affinez progressivement la période à analyser.
+              </p>
+            </div>
+
+            <div className="grid gap-3 p-4 md:grid-cols-2">
+              {/* Année */}
+              <div className="space-y-1.5">
+                <Label>Année</Label>
+                <Select
+                  value={annee}
+                  onValueChange={(value) => {
+                    setAnnee(value);
+                    setMois("");
+                    setSemaine("");
+                    setJour("");
+                    setFilterError(null);
+                    setReport(undefined);
+                  }}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      filterError === "annee" &&
+                        "border-destructive ring-1 ring-destructive",
+                    )}
+                  >
+                    <SelectValue placeholder="Sélectionner une année" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Mois */}
+              <div className="space-y-1.5">
+                <Label>Mois</Label>
+                <Select
+                  value={mois}
+                  onOpenChange={(open) => {
+                    if (open && !annee) {
+                      setFilterError("annee");
+                    }
+                  }}
+                  onValueChange={(value) => {
+                    if (!annee) {
+                      setFilterError("annee");
+                      return;
+                    }
+
+                    setMois(value);
+                    setSemaine("");
+                    setJour("");
+                    setFilterError(null);
+                    setReport(undefined);
+                  }}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      filterError === "annee" &&
+                        !annee &&
+                        "border-destructive ring-1 ring-destructive",
+                    )}
+                  >
+                    <SelectValue placeholder="Sélectionner un mois" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Semaine */}
+              {/* Semaine */}
+              <div className="space-y-1.5">
+                <Label>Semaine</Label>
+                <Select
+                  value={semaine}
+                  onOpenChange={(open) => {
+                    if (!open) return;
+
+                    if (!annee) {
+                      setFilterError("annee");
+                      return;
+                    }
+
+                    if (!mois) {
+                      setFilterError("mois");
+                    }
+                  }}
+                  onValueChange={(value) => {
+                    if (!annee) {
+                      setFilterError("annee");
+                      return;
+                    }
+
+                    if (!mois) {
+                      setFilterError("mois");
+                      return;
+                    }
+
+                    setSemaine(value);
+                    setJour("");
+                    setFilterError(null);
+                    setReport(undefined);
+                  }}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      filterError === "annee" &&
+                        "border-destructive ring-1 ring-destructive",
+                      filterError === "mois" &&
+                        "border-destructive ring-1 ring-destructive",
+                    )}
+                  >
+                    <SelectValue placeholder="Sélectionner une semaine" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {weeks.map((week) => (
+                      <SelectItem key={week.value} value={week.value}>
+                        {week.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Jour */}
+              {/* Jour */}
+              <div className="space-y-1.5">
+                <Label>Jour</Label>
+                <Select
+                  value={jour}
+                  onOpenChange={(open) => {
+                    if (!open) return;
+
+                    if (!annee) {
+                      setFilterError("annee");
+                      return;
+                    }
+
+                    if (!mois) {
+                      setFilterError("mois");
+                      return;
+                    }
+
+                    if (!semaine) {
+                      setFilterError("semaine");
+                    }
+                  }}
+                  onValueChange={(value) => {
+                    if (!annee) {
+                      setFilterError("annee");
+                      return;
+                    }
+
+                    if (!mois) {
+                      setFilterError("mois");
+                      return;
+                    }
+
+                    if (!semaine) {
+                      setFilterError("semaine");
+                      return;
+                    }
+
+                    setJour(value);
+                    setFilterError(null);
+                    setReport(undefined);
+                  }}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      filterError === "semaine" &&
+                        "border-destructive ring-1 ring-destructive",
+                    )}
+                  >
+                    <SelectValue placeholder="Sélectionner un jour" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {days.map((day) => (
+                      <SelectItem key={day.value} value={day.value}>
+                        {day.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <Button
             className="mt-4 w-full gap-1.5"
@@ -259,7 +592,7 @@ function ReportsPage() {
                     {active.label}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Période : {periodLabels[report.periode]}
+                    Période : {periodLabel}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-primary" />
