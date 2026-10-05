@@ -30,6 +30,35 @@ export const achatsRepository = {
       include: { fournisseur: true, lignes: { include: { produit: true } } },
     });
   },
+  facturesImporteesCountsByBcfIds(ids = []) {
+    if (!ids.length) return Promise.resolve(new Map());
+
+    return prisma.facture
+      .findMany({
+        where: {
+          typeFacture: "ACHAT",
+          OR: ids.map((idBcf) => ({
+            mentionsLegales: {
+              contains: `[BCF_IMPORT] idBcf=${idBcf};`,
+            },
+          })),
+        },
+        select: {
+          mentionsLegales: true,
+        },
+      })
+      .then((rows) => {
+        const counts = new Map(ids.map((id) => [id, 0]));
+        for (const row of rows) {
+          const mentions = row.mentionsLegales || "";
+          const id = ids.find((idBcf) =>
+            mentions.includes(`[BCF_IMPORT] idBcf=${idBcf};`),
+          );
+          if (id) counts.set(id, (counts.get(id) || 0) + 1);
+        }
+        return counts;
+      });
+  },
   bcfById(id) {
     return prisma.bonCommandeFournisseur.findUnique({
       where: { id },
@@ -123,6 +152,13 @@ export const achatsRepository = {
         });
         if (!bonCommande) {
           throw new ApiError(404, "NOT_FOUND", "BCF introuvable");
+        }
+        if (!["CONFIRME", "RECU_PARTIEL"].includes(bonCommande.statut)) {
+          throw new ApiError(
+            409,
+            "BCF_NOT_CONFIRMED",
+            "Le bon de commande doit etre confirme par le fournisseur avant une reception",
+          );
         }
 
         const reception = await tx.receptionMarchandise.create({

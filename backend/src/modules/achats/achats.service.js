@@ -140,8 +140,18 @@ export const achatsService = {
       idUtilisateurValidateur: ctx.user.userId,
     });
   },
-  getBonsCommande() {
-    return achatsRepository.bcf({ orderBy: { createdAt: "desc" } });
+  async getBonsCommande() {
+    const bonsCommande = await achatsRepository.bcf({
+      orderBy: { createdAt: "desc" },
+    });
+    const counts = await achatsRepository.facturesImporteesCountsByBcfIds(
+      bonsCommande.map((bonCommande) => bonCommande.id),
+    );
+
+    return bonsCommande.map((bonCommande) => ({
+      ...bonCommande,
+      facturesImporteesCount: counts.get(bonCommande.id) || 0,
+    }));
   },
   getBonCommande(id) {
     return achatsRepository.bcfById(id);

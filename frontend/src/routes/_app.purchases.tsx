@@ -68,6 +68,7 @@ type BonCommandeApi = {
   dateCommande?: string;
   totalTtc?: number | string;
   statut: string;
+  facturesImporteesCount?: number;
   fournisseur?: { raisonSociale?: string | null } | null;
   receptions?: Array<{
     id: string;
@@ -249,9 +250,55 @@ const normalizeStatus = (status?: string) =>
   STATUS_LABELS[status || ""] || status || "-";
 
 const INVOICE_ALLOWED_STATUSES = new Set(["RECU_PARTIEL", "RECU_TOTAL"]);
+const RECEPTION_ALLOWED_STATUSES = new Set(["CONFIRME", "RECU_PARTIEL"]);
 
 const canCreateInvoiceForStatus = (status?: string) =>
   INVOICE_ALLOWED_STATUSES.has(status || "");
+
+const canCreateReceptionForStatus = (status?: string) =>
+  RECEPTION_ALLOWED_STATUSES.has(status || "");
+
+const receptionDisabledTitle = (status?: string) => {
+  if (status === "RECU_TOTAL") return "Reception deja totale";
+  if (!canCreateReceptionForStatus(status)) {
+    return "Confirmation fournisseur requise";
+  }
+  return undefined;
+};
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+  if (!error || typeof error !== "object") return fallback;
+  const record = error as Record<string, unknown>;
+
+  if (typeof record.message === "string" && record.message.trim()) {
+    return record.message;
+  }
+
+  const payload = record.payload;
+  if (payload && typeof payload === "object") {
+    const message = (payload as Record<string, unknown>).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+
+  const response = record.response;
+  if (response && typeof response === "object") {
+    const data = (response as Record<string, unknown>).data;
+    if (data && typeof data === "object") {
+      const dataRecord = data as Record<string, unknown>;
+      const message = dataRecord.message;
+      if (typeof message === "string" && message.trim()) return message;
+      const responseError = dataRecord.error;
+      if (responseError && typeof responseError === "object") {
+        const errorMessage = (responseError as Record<string, unknown>).message;
+        if (typeof errorMessage === "string" && errorMessage.trim()) {
+          return errorMessage;
+        }
+      }
+    }
+  }
+
+  return fallback;
+};
 
 const normalizeReceptionStatus = (status?: string) => {
   if (status === "CONFORME") return "Valide";
@@ -470,26 +517,12 @@ function PurchasesPage() {
         data?: BonCommandeApi[];
       };
       const bcf = Array.isArray(response?.data) ? response.data : [];
-      const rowsWithInvoiceState = await Promise.all(
-        bcf.map(async (item) => {
-          let factureRecue = item.statut === "FACTURE_RECU";
+      const rowsWithInvoiceState = bcf.map((item) => {
+        const factureRecue =
+          item.statut === "FACTURE_RECU" ||
+          Number(item.facturesImporteesCount || 0) > 0;
 
-          if (!factureRecue) {
-            try {
-              const invoiceResponse = (await getFacturesImporteesBcf(
-                item.id,
-              )) as {
-                data?: ImportedInvoiceItem[];
-              };
-              factureRecue = Array.isArray(invoiceResponse?.data)
-                ? invoiceResponse.data.length > 0
-                : false;
-            } catch {
-              factureRecue = false;
-            }
-          }
-
-          return {
+        return {
             id: item.id,
             ref: item.numeroBcf,
             fournisseur: item.fournisseur?.raisonSociale || "-",
@@ -501,9 +534,8 @@ function PurchasesPage() {
             statut: normalizeStatus(item.statut),
             statutRaw: item.statut,
             factureRecue,
-          };
-        }),
-      );
+        };
+      });
 
       setRows(rowsWithInvoiceState);
     } catch {
@@ -1095,9 +1127,6 @@ function PurchasesPage() {
     const selectedOrderId = orderId || detailsOrder?.id;
     if (!selectedOrderId) return;
 
-    setReceptionOpen(true);
-    setReceptionLoading(true);
-    setReceptionOrder(null);
     try {
       const response = (await getBonCommandeFournisseurById(
         selectedOrderId,
@@ -1109,6 +1138,16 @@ function PurchasesPage() {
         toast.error("Bon de commande introuvable");
         return;
       }
+      if (!canCreateReceptionForStatus(order.statut)) {
+        toast.warning(
+          "Le bon de commande doit etre confirme par le fournisseur avant une reception",
+        );
+        return;
+      }
+
+      setReceptionOpen(true);
+      setReceptionLoading(true);
+      setReceptionOrder(null);
       const receptionLines = buildReceptionLinesFromOrder(order);
       setReceptionOrder({
         id: order.id,
@@ -1120,8 +1159,10 @@ function PurchasesPage() {
       setReceptionLinesError("");
       setReceptionStep(1);
       setDetailsOrder(order);
-    } catch {
-      toast.error("Impossible de charger le detail du bon");
+    } catch (error: unknown) {
+      toast.error(
+        getApiErrorMessage(error, "Impossible de charger le detail du bon"),
+      );
       setReceptionOpen(false);
     } finally {
       setReceptionLoading(false);
@@ -1152,8 +1193,10 @@ function PurchasesPage() {
       setReceptionStep(1);
       await loadRows();
       await openDetailsModal(receptionOrder.id);
-    } catch {
-      toast.error("Impossible d'enregistrer la reception");
+    } catch (error: unknown) {
+      toast.error(
+        getApiErrorMessage(error, "Impossible d'enregistrer la reception"),
+      );
     } finally {
       setReceptionSubmitting(false);
     }
@@ -1492,23 +1535,11 @@ function PurchasesPage() {
           () => sendToSupplier(row.id),
         ),
         makeAction(
-          "details",
-          "Voir le detail",
-          <FileEdit className="mr-2 h-4 w-4" />,
-          () => openReceptionModal(row.id),
-        ),
-        makeAction(
           "cancel",
           "Annuler",
           <Trash2 className="mr-2 h-4 w-4" />,
           () => transitionOrder(row.id, "CANCEL", "Bon annule"),
           true,
-        ),
-        makeAction(
-          "create-reception",
-          "Creer une reception",
-          <PackageCheck className="mr-2 h-4 w-4" />,
-          () => openReceptionModal(row.id),
         ),
         makeAction(
           "download-pdf",
@@ -1837,6 +1868,12 @@ function PurchasesPage() {
                 (partielle ou totale).
               </div>
             )}
+            {detailsOrder.statut !== "RECU_TOTAL" &&
+            !canCreateReceptionForStatus(detailsOrder.statut) ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                Reception disponible apres confirmation du fournisseur.
+              </div>
+            ) : null}
             <div className="space-y-3 border-b border-border pb-3">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
@@ -1859,12 +1896,11 @@ function PurchasesPage() {
                 <Button
                   size="sm"
                   className="w-full sm:w-auto"
-                  disabled={detailsOrder.statut === "RECU_TOTAL"}
-                  title={
-                    detailsOrder.statut === "RECU_TOTAL"
-                      ? "Reception deja totale"
-                      : undefined
+                  disabled={
+                    detailsOrder.statut === "RECU_TOTAL" ||
+                    !canCreateReceptionForStatus(detailsOrder.statut)
                   }
+                  title={receptionDisabledTitle(detailsOrder.statut)}
                   onClick={() => void openReceptionModal(detailsOrder.id)}
                 >
                   <Plus className="mr-1 h-4 w-4" /> Nouvelle reception

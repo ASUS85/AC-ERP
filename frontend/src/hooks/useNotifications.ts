@@ -230,6 +230,9 @@ export function useNotifications() {
 
     socket = io(apiOrigin, {
       auth: { token, userId: user?.id },
+      transports: ["websocket"],
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
     });
 
     socket.on("user-access-updated", (access) => {
