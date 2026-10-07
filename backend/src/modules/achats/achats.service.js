@@ -66,6 +66,53 @@ function parseImportMetadata(mentionsLegales = "") {
   return metadata;
 }
 
+function parseReceptionIdsFromMetadata(metadata = {}) {
+  const raw = metadata["Reception IDs"] || "";
+  return String(raw)
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+}
+
+function facturedReceptionIdsFromInvoices(invoices = []) {
+  const ids = new Set();
+  for (const invoice of invoices) {
+    if (invoice.statut === "ANNULEE") continue;
+    const metadata = parseImportMetadata(invoice.mentionsLegales || "");
+    const decision = String(metadata.Decision || "VALIDER").toUpperCase();
+    if (decision === "REJETER") continue;
+    for (const receptionId of parseReceptionIdsFromMetadata(metadata)) {
+      ids.add(receptionId);
+    }
+  }
+  return ids;
+}
+
+function normalizeReceptionIdsInput(value) {
+  if (Array.isArray(value)) {
+    return value.map((id) => String(id).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return normalizeReceptionIdsInput(parsed);
+    } catch {
+      // Keep comma-separated form support for multipart forms.
+    }
+    return trimmed
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function round2(value) {
+  return Math.round(Number(value || 0) * 100) / 100;
+}
+
 function buildImportedInvoiceLines(bonCommande) {
   const fromReceived = (bonCommande.lignes || [])
     .map((ligne) => {
@@ -118,6 +165,86 @@ function buildImportedInvoiceLines(bonCommande) {
     .filter(Boolean);
 }
 
+function buildImportedInvoiceFromReceptions(bonCommande, receptionIds) {
+  const selectedIds = new Set(receptionIds);
+  const productLinesById = new Map(
+    (bonCommande.lignes || []).map((ligne) => [ligne.id, ligne]),
+  );
+
+  const selectedReceptions = (bonCommande.receptions || []).filter((reception) =>
+    selectedIds.has(reception.id),
+  );
+
+  const linesByProduct = new Map();
+  for (const reception of selectedReceptions) {
+    for (const receptionLine of reception.lignes || []) {
+      const bcfLine = productLinesById.get(receptionLine.idLigneBcf);
+      if (!bcfLine) continue;
+      const key = bcfLine.idProduit;
+      const quantity = Number(receptionLine.quantiteRecue || 0);
+      if (quantity <= 0) continue;
+      const previous = linesByProduct.get(key);
+      if (previous) {
+        previous.quantite += quantity;
+        continue;
+      }
+      linesByProduct.set(key, {
+        idProduit: bcfLine.idProduit,
+        designation: bcfLine.produit?.designation || "Produit",
+        quantite: quantity,
+        prixUnitaireHt: Number(bcfLine.prixUnitaireHt || 0),
+        remise: Number(bcfLine.remise || 0),
+        tauxTva: Number(bcfLine.produit?.tauxTva || 18),
+      });
+    }
+  }
+
+  const lignes = Array.from(linesByProduct.values()).map((line) => {
+    const brutHt = line.quantite * line.prixUnitaireHt;
+    const montantRemise = brutHt * (line.remise / 100);
+    const montantHt = brutHt - montantRemise;
+    const montantTva = montantHt * (line.tauxTva / 100);
+    const montantTtc = montantHt + montantTva;
+    return {
+      ...line,
+      montantHt: round2(montantHt),
+      montantTva: round2(montantTva),
+      montantTtc: round2(montantTtc),
+    };
+  });
+
+  return {
+    lignes,
+    totalHt: round2(lignes.reduce((acc, line) => acc + line.montantHt, 0)),
+    totalTva: round2(lignes.reduce((acc, line) => acc + line.montantTva, 0)),
+    totalTtc: round2(lignes.reduce((acc, line) => acc + line.montantTtc, 0)),
+    totalRemise: round2(
+      Array.from(linesByProduct.values()).reduce(
+        (acc, line) =>
+          acc + line.quantite * line.prixUnitaireHt * (line.remise / 100),
+        0,
+      ),
+    ),
+  };
+}
+
+function assertAmountMatches(label, expected, received) {
+  if (received === undefined || received === null || received === "") {
+    throw new ApiError(
+      400,
+      "SUPPLIER_INVOICE_AMOUNT_REQUIRED",
+      `Le montant ${label} est obligatoire`,
+    );
+  }
+  if (Math.abs(round2(expected) - round2(received)) > 0.01) {
+    throw new ApiError(
+      400,
+      "SUPPLIER_INVOICE_AMOUNT_MISMATCH",
+      `Le montant ${label} ne correspond pas aux receptions selectionnees`,
+    );
+  }
+}
+
 export const achatsService = {
   getDemandes() {
     return achatsRepository.demandes({ orderBy: { createdAt: "desc" } });
@@ -154,7 +281,19 @@ export const achatsService = {
     }));
   },
   getBonCommande(id) {
-    return achatsRepository.bcfById(id);
+    return achatsRepository.bcfById(id).then(async (bonCommande) => {
+      if (!bonCommande) return bonCommande;
+      const factures = await achatsRepository.facturesImporteesBcf(id);
+      const facturedIds = facturedReceptionIdsFromInvoices(factures);
+      return {
+        ...bonCommande,
+        receptions: (bonCommande.receptions || []).map((reception) => ({
+          ...reception,
+          facturee: facturedIds.has(reception.id),
+        })),
+        facturesImporteesCount: factures.length,
+      };
+    });
   },
   async createBonCommande(data, ctx) {
     if (!data?.idFournisseur) {
@@ -457,29 +596,44 @@ export const achatsService = {
       throw new ApiError(400, "SUPPLIER_REQUIRED", "Fournisseur introuvable");
     }
 
-    const lignesFacture = (bonCommande.lignes || [])
-      .map((ligne) => {
-        const quantite = Number(ligne.quantiteRecue || 0);
-        const prixUnitaire = Number(ligne.prixUnitaireHt || 0);
-        const remise = Number(ligne.remise || 0);
-        const montantHt = quantite * prixUnitaire * (1 - remise / 100);
-        const tauxTva = Number(ligne.produit?.tauxTva || 18);
-        const montantTva = montantHt * (tauxTva / 100);
-        const montantTtc = montantHt + montantTva;
+    const receptionIds = normalizeReceptionIdsInput(data?.receptionIds);
 
-        return {
-          idProduit: ligne.idProduit,
-          designation: ligne.produit?.designation || "Produit",
-          quantite,
-          prixUnitaireHt: prixUnitaire,
-          remise,
-          tauxTva,
-          montantHt,
-          montantTva,
-          montantTtc,
-        };
-      })
-      .filter((l) => l.quantite > 0);
+    if (receptionIds.length === 0) {
+      throw new ApiError(
+        400,
+        "RECEPTIONS_REQUIRED",
+        "Selectionnez au moins une reception a facturer",
+      );
+    }
+
+    const existingInvoices = await achatsRepository.facturesImporteesBcf(idBcf);
+    const alreadyFacturedIds = facturedReceptionIdsFromInvoices(existingInvoices);
+    const receptionsById = new Map(
+      (bonCommande.receptions || []).map((reception) => [reception.id, reception]),
+    );
+
+    for (const receptionId of receptionIds) {
+      if (!receptionsById.has(receptionId)) {
+        throw new ApiError(
+          400,
+          "INVALID_RECEPTION",
+          "Reception selectionnee invalide pour ce bon de commande",
+        );
+      }
+      if (alreadyFacturedIds.has(receptionId)) {
+        throw new ApiError(
+          409,
+          "RECEPTION_ALREADY_INVOICED",
+          "Une reception selectionnee est deja entierement facturee",
+        );
+      }
+    }
+
+    const computedInvoice = buildImportedInvoiceFromReceptions(
+      bonCommande,
+      receptionIds,
+    );
+    const lignesFacture = computedInvoice.lignes;
 
     if (lignesFacture.length === 0) {
       throw new ApiError(
@@ -489,18 +643,10 @@ export const achatsService = {
       );
     }
 
-    const totalHt = lignesFacture.reduce(
-      (acc, l) => acc + Number(l.montantHt),
-      0,
-    );
-    const totalTva = lignesFacture.reduce(
-      (acc, l) => acc + Number(l.montantTva),
-      0,
-    );
-    const totalTtc = lignesFacture.reduce(
-      (acc, l) => acc + Number(l.montantTtc),
-      0,
-    );
+    assertAmountMatches("HT", computedInvoice.totalHt, data?.totalHt);
+    assertAmountMatches("TVA", computedInvoice.totalTva, data?.totalTva);
+    assertAmountMatches("TTC", computedInvoice.totalTtc, data?.totalTtc);
+    assertAmountMatches("remise", computedInvoice.totalRemise, data?.totalRemise);
 
     const now = new Date();
     const defaultEcheance = new Date(now);
@@ -524,17 +670,29 @@ export const achatsService = {
         dateEcheance: data?.dateEcheance
           ? new Date(data.dateEcheance)
           : defaultEcheance,
-        totalHt,
-        totalTva,
-        totalTtc,
-        mentionsLegales:
-          data?.mentionsLegales ||
-          `Facture generee depuis ${bonCommande.numeroBcf}`,
+        totalHt: computedInvoice.totalHt,
+        totalTva: computedInvoice.totalTva,
+        totalTtc: computedInvoice.totalTtc,
+        mentionsLegales: [
+          `[BCF_IMPORT] idBcf=${bonCommande.id};`,
+          `Source BCF: ${bonCommande.numeroBcf}`,
+          "Decision: VALIDER",
+          `Reception IDs: ${receptionIds.join(",")}`,
+          data?.numeroFacture
+            ? `Numero fournisseur: ${String(data.numeroFacture).trim()}`
+            : "",
+          data?.dateFacture ? `Date facture: ${data.dateFacture}` : "",
+          data?.mentionsLegales || data?.observations
+            ? `Observations: ${data.mentionsLegales || data.observations}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
         lignes: { create: lignesFacture },
       },
       {
         idUtilisateur: ctx.user.userId,
-        montant: totalTtc,
+        montant: computedInvoice.totalTtc,
         modePaiement,
       },
     );
@@ -587,27 +745,81 @@ export const achatsService = {
       );
     }
 
-    const lignesImportees =
-      decision === "VALIDER" ? buildImportedInvoiceLines(bonCommande) : [];
+    let receptionIds = [];
+    let computedInvoice = {
+      lignes: [],
+      totalHt: 0,
+      totalTva: 0,
+      totalTtc: 0,
+      totalRemise: 0,
+    };
 
-    const totalHt =
-      decision === "VALIDER"
-        ? lignesImportees.reduce((acc, line) => acc + Number(line.montantHt), 0)
-        : 0;
-    const totalTva =
-      decision === "VALIDER"
-        ? lignesImportees.reduce(
-            (acc, line) => acc + Number(line.montantTva),
-            0,
-          )
-        : 0;
-    const totalTtc =
-      decision === "VALIDER"
-        ? lignesImportees.reduce(
-            (acc, line) => acc + Number(line.montantTtc),
-            0,
-          )
-        : 0;
+    if (decision === "VALIDER") {
+      const existingInvoices = await achatsRepository.facturesImporteesBcf(idBcf);
+      const alreadyFacturedIds = facturedReceptionIdsFromInvoices(existingInvoices);
+      const receptionsById = new Map(
+        (bonCommande.receptions || []).map((reception) => [
+          reception.id,
+          reception,
+        ]),
+      );
+      receptionIds = normalizeReceptionIdsInput(body?.receptionIds);
+      if (receptionIds.length === 0) {
+        receptionIds = (bonCommande.receptions || [])
+          .filter((reception) => !alreadyFacturedIds.has(reception.id))
+          .map((reception) => reception.id);
+      }
+      if (receptionIds.length === 0) {
+        throw new ApiError(
+          400,
+          "RECEPTIONS_REQUIRED",
+          "Selectionnez au moins une reception a facturer",
+        );
+      }
+      for (const receptionId of receptionIds) {
+        if (!receptionsById.has(receptionId)) {
+          throw new ApiError(
+            400,
+            "INVALID_RECEPTION",
+            "Reception selectionnee invalide pour ce bon de commande",
+          );
+        }
+        if (alreadyFacturedIds.has(receptionId)) {
+          throw new ApiError(
+            409,
+            "RECEPTION_ALREADY_INVOICED",
+            "Une reception selectionnee est deja entierement facturee",
+          );
+        }
+      }
+      computedInvoice = buildImportedInvoiceFromReceptions(
+        bonCommande,
+        receptionIds,
+      );
+      if (computedInvoice.lignes.length === 0) {
+        throw new ApiError(
+          409,
+          "INVOICE_LINES_EMPTY",
+          "Impossible de creer une facture sans quantite recue",
+        );
+      }
+      if (body?.totalHt !== undefined) {
+        assertAmountMatches("HT", computedInvoice.totalHt, body.totalHt);
+      }
+      if (body?.totalTva !== undefined) {
+        assertAmountMatches("TVA", computedInvoice.totalTva, body.totalTva);
+      }
+      if (body?.totalTtc !== undefined) {
+        assertAmountMatches("TTC", computedInvoice.totalTtc, body.totalTtc);
+      }
+      if (body?.totalRemise !== undefined) {
+        assertAmountMatches(
+          "remise",
+          computedInvoice.totalRemise,
+          body.totalRemise,
+        );
+      }
+    }
 
     const now = new Date();
     const defaultEcheance = new Date(now);
@@ -618,11 +830,14 @@ export const achatsService = {
       `[BCF_IMPORT] idBcf=${bonCommande.id};`,
       `Source BCF: ${bonCommande.numeroBcf}`,
       `Decision: ${decision}`,
+      receptionIds.length ? `Reception IDs: ${receptionIds.join(",")}` : "",
       `Fichier URL: ${fileUrl}`,
       `Fichier nom: ${file.originalname || file.filename}`,
       `Fichier mime: ${file.mimetype || "-"}`,
       `Fichier taille: ${Number(file.size || 0)}`,
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     const createdInvoice = await achatsRepository.createFactureAchat(
       {
@@ -632,18 +847,18 @@ export const achatsService = {
         idUtilisateur: ctx.user.userId,
         dateEcheance: defaultEcheance,
         statut: decision === "VALIDER" ? "EMISE" : "ANNULEE",
-        totalHt,
-        totalTva,
-        totalTtc,
+        totalHt: computedInvoice.totalHt,
+        totalTva: computedInvoice.totalTva,
+        totalTtc: computedInvoice.totalTtc,
         mentionsLegales,
-        ...(lignesImportees.length > 0
-          ? { lignes: { create: lignesImportees } }
+        ...(computedInvoice.lignes.length > 0
+          ? { lignes: { create: computedInvoice.lignes } }
           : {}),
       },
       decision === "VALIDER"
         ? {
             idUtilisateur: ctx.user.userId,
-            montant: totalTtc,
+            montant: computedInvoice.totalTtc,
             modePaiement,
           }
         : undefined,

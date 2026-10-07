@@ -27,7 +27,19 @@ export const telechargerBonCommandeFournisseurPdf = (
   }) as unknown as Promise<Blob>;
 export const creerFactureAchatDepuisBcf = (
   id: string,
-  data?: { dateEcheance?: string; mentionsLegales?: string },
+  data?: {
+    receptionIds?: string[];
+    numeroFacture?: string;
+    dateFacture?: string;
+    dateEcheance?: string;
+    totalHt?: number;
+    totalTva?: number;
+    totalTtc?: number;
+    totalRemise?: number;
+    modePaiement?: string;
+    observations?: string;
+    mentionsLegales?: string;
+  },
 ) => api.post(`/achats/bons-commande/${id}/facture`, data || {});
 export const importerFactureFournisseurBcf = (
   id: string,

@@ -263,8 +263,8 @@ export const achatsRepository = {
         };
       },
       {
-        maxWait: 10000,
-        timeout: 15000,
+        maxWait: 20000,
+        timeout: 60000,
       },
     );
   },

@@ -48,7 +48,7 @@ import {
   getBonCommandeFournisseurById,
   getBonsCommandeFournisseur,
   getFacturesImporteesBcf,
-  importerFactureFournisseurBcf,
+  creerFactureAchatDepuisBcf,
   receptionBonCommandeFournisseur,
   telechargerBonCommandeFournisseurPdf,
   transitionBonCommandeFournisseur,
@@ -56,6 +56,7 @@ import {
 import { getFournisseurs } from "@/lib/api/fournisseurs.service";
 import { toast } from "sonner";
 import { useProductsStore } from "@/stores/products.store";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_app/purchases")({
   head: () => ({ meta: [{ title: "Achats — AC ERP" }] }),
@@ -66,8 +67,12 @@ type BonCommandeApi = {
   id: string;
   numeroBcf: string;
   dateCommande?: string;
+  totalHt?: number | string;
+  totalTva?: number | string;
   totalTtc?: number | string;
   statut: string;
+  dateLivraisonPrevue?: string | null;
+  notes?: string | null;
   facturesImporteesCount?: number;
   fournisseur?: { raisonSociale?: string | null } | null;
   receptions?: Array<{
@@ -86,6 +91,7 @@ type BonCommandeApi = {
       quantiteRecue?: number;
       idLigneBcf?: string;
     }>;
+    facturee?: boolean;
   }>;
   lignes?: Array<{
     id: string;
@@ -127,6 +133,8 @@ type ReceptionRow = {
   quantiteRecue: number;
   statut: string;
   statutRaw: string;
+  facturee: boolean;
+  selectable: boolean;
 };
 
 type SupplierItem = {
@@ -215,6 +223,18 @@ type InvoiceFormErrors = Partial<
   >
 >;
 
+type DetailTab = "details" | "receptions";
+
+type BcfNotes = {
+  entrepot: string;
+  dateBon: string;
+  conditionsPaiement: string;
+  conditionsLivraison: string;
+  devise: string;
+  priorite: string;
+  commentaires: string;
+};
+
 const UNIT_OPTIONS = [
   { value: "PIECE", label: "Piece" },
   { value: "KG", label: "Kg" },
@@ -229,6 +249,40 @@ const toInputDate = (date: Date) => {
   const local = new Date(date);
   local.setMinutes(local.getMinutes() - local.getTimezoneOffset());
   return local.toISOString().slice(0, 10);
+};
+
+const parseBcfNotes = (notes?: string | null): BcfNotes => {
+  const result: BcfNotes = {
+    entrepot: "",
+    dateBon: "",
+    conditionsPaiement: "",
+    conditionsLivraison: "",
+    devise: "",
+    priorite: "",
+    commentaires: "",
+  };
+  const mapping: Record<string, keyof BcfNotes> = {
+    Entrepot: "entrepot",
+    "Date bon": "dateBon",
+    "Conditions paiement": "conditionsPaiement",
+    "Conditions livraison": "conditionsLivraison",
+    Devise: "devise",
+    Priorite: "priorite",
+    Commentaires: "commentaires",
+  };
+  String(notes || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const separatorIndex = line.indexOf(":");
+      if (separatorIndex < 0) return;
+      const label = line.slice(0, separatorIndex).trim();
+      const key = mapping[label];
+      if (!key) return;
+      result[key] = line.slice(separatorIndex + 1).trim();
+    });
+  return result;
 };
 
 const PAGE_SIZE = 10;
@@ -312,15 +366,7 @@ const toNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const computeTtcFromHtAndTva = (montantHt: string, tva: string) => {
-  const ht = toNumber(montantHt, Number.NaN);
-  const vat = toNumber(tva, Number.NaN);
-  if (!Number.isFinite(ht) || !Number.isFinite(vat) || ht < 0 || vat < 0) {
-    return "";
-  }
-  const ttc = ht + (ht * vat) / 100;
-  return String(Math.round(ttc * 100) / 100);
-};
+const roundAmount = (value: number) => Math.round(value * 100) / 100;
 
 const makeLineId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -390,7 +436,6 @@ function PurchasesPage() {
     ref: string;
     lines: ReceptionLine[];
   } | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
   const [importOrder, setImportOrder] = useState<{
     id: string;
     ref: string;
@@ -405,12 +450,15 @@ function PurchasesPage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsOrder, setDetailsOrder] = useState<BonCommandeApi | null>(null);
+  const [detailsTab, setDetailsTab] = useState<DetailTab>("details");
   const [receptionRowsSearch, setReceptionRowsSearch] = useState("");
   const [receptionRowsStatusFilter, setReceptionRowsStatusFilter] =
     useState("");
   const [receptionRowsPage, setReceptionRowsPage] = useState(1);
+  const [selectedReceptionIds, setSelectedReceptionIds] = useState<string[]>(
+    [],
+  );
   const [invoiceWizardOpen, setInvoiceWizardOpen] = useState(false);
-  const [invoiceWizardStep, setInvoiceWizardStep] = useState(1);
   const [invoiceWizardSubmitting, setInvoiceWizardSubmitting] = useState(false);
   const [invoiceForm, setInvoiceForm] = useState({
     numeroFacture: "",
@@ -424,7 +472,6 @@ function PurchasesPage() {
     modePaiement: "",
     observations: "",
   });
-  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [invoiceFormErrors, setInvoiceFormErrors] = useState<InvoiceFormErrors>(
     {},
   );
@@ -461,13 +508,16 @@ function PurchasesPage() {
     if (!invoiceForm.dateEcheance) {
       nextErrors.dateEcheance = "Ce champ est requis";
     }
-    if (!invoiceForm.montantHt || toNumber(invoiceForm.montantHt, 0) < 0) {
+    if (selectedReceptionIds.length === 0) {
+      nextErrors.ttc = "Selectionnez au moins une reception";
+    }
+    if (!invoiceForm.montantHt || toNumber(invoiceForm.montantHt, 0) <= 0) {
       nextErrors.montantHt = "Montant HT invalide";
     }
-    if (!invoiceForm.tva || toNumber(invoiceForm.tva, 0) < 0) {
+    if (invoiceForm.tva === "" || toNumber(invoiceForm.tva, 0) < 0) {
       nextErrors.tva = "TVA invalide";
     }
-    if (!invoiceForm.ttc || toNumber(invoiceForm.ttc, 0) < 0) {
+    if (!invoiceForm.ttc || toNumber(invoiceForm.ttc, 0) <= 0) {
       nextErrors.ttc = "TTC invalide";
     }
     if (!invoiceForm.modePaiement) {
@@ -478,11 +528,28 @@ function PurchasesPage() {
     } else if (toNumber(invoiceForm.remise, 0) > 100) {
       nextErrors.remise = "La remise ne doit pas dépasser 100 %";
     }
-    if (toNumber(invoiceForm.tva, 0) > 100) {
-      nextErrors.tva = "La TVA ne doit pas dépasser 100 %";
-    }
     if (invoiceForm.transport && toNumber(invoiceForm.transport, 0) < 0) {
       nextErrors.transport = "La valeur doit etre positive";
+    }
+    delete nextErrors.transport;
+    delete nextErrors.remise;
+    if (
+      roundAmount(toNumber(invoiceForm.remise, 0)) !==
+      roundAmount(selectedInvoiceTotals.totalRemise)
+    ) {
+      nextErrors.remise =
+        "La remise doit correspondre aux receptions selectionnees";
+    }
+    if (
+      roundAmount(toNumber(invoiceForm.montantHt, 0)) !==
+        roundAmount(selectedInvoiceTotals.totalHt) ||
+      roundAmount(toNumber(invoiceForm.tva, 0)) !==
+        roundAmount(selectedInvoiceTotals.totalTva) ||
+      roundAmount(toNumber(invoiceForm.ttc, 0)) !==
+        roundAmount(selectedInvoiceTotals.totalTtc)
+    ) {
+      nextErrors.ttc =
+        "Les montants doivent correspondre aux receptions selectionnees";
     }
     setInvoiceFormErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -523,17 +590,17 @@ function PurchasesPage() {
           Number(item.facturesImporteesCount || 0) > 0;
 
         return {
-            id: item.id,
-            ref: item.numeroBcf,
-            fournisseur: item.fournisseur?.raisonSociale || "-",
-            articles: item.lignes?.length || 0,
-            date: item.dateCommande
-              ? new Date(item.dateCommande).toLocaleDateString("fr-FR")
-              : "-",
-            montant: Number(item.totalTtc || 0),
-            statut: normalizeStatus(item.statut),
-            statutRaw: item.statut,
-            factureRecue,
+          id: item.id,
+          ref: item.numeroBcf,
+          fournisseur: item.fournisseur?.raisonSociale || "-",
+          articles: item.lignes?.length || 0,
+          date: item.dateCommande
+            ? new Date(item.dateCommande).toLocaleDateString("fr-FR")
+            : "-",
+          montant: Number(item.totalTtc || 0),
+          statut: normalizeStatus(item.statut),
+          statutRaw: item.statut,
+          factureRecue,
         };
       });
 
@@ -634,9 +701,77 @@ function PurchasesPage() {
         quantiteRecue,
         statut: normalizeReceptionStatus(item.statut),
         statutRaw: item.statut,
+        facturee: Boolean(item.facturee),
+        selectable: !item.facturee && quantiteRecue > 0,
       };
     });
   }, [detailsOrder]);
+
+  const selectedInvoiceTotals = useMemo(() => {
+    if (!detailsOrder) {
+      return { totalHt: 0, totalRemise: 0, totalTva: 0, totalTtc: 0 };
+    }
+
+    const selected = new Set(selectedReceptionIds);
+    const linesById = new Map(
+      (detailsOrder.lignes || []).map((line) => [line.id, line]),
+    );
+
+    return (detailsOrder.receptions || [])
+      .filter((reception) => selected.has(reception.id) && !reception.facturee)
+      .flatMap((reception) => reception.lignes || [])
+      .reduce(
+        (acc, receptionLine) => {
+          const sourceLine = linesById.get(receptionLine.idLigneBcf || "");
+          if (!sourceLine) return acc;
+          const quantity = toNumber(receptionLine.quantiteRecue, 0);
+          const price = toNumber(sourceLine.prixUnitaireHt, 0);
+          const discountRate = toNumber(sourceLine.remise, 0);
+          const vatRate = toNumber(sourceLine.produit?.tauxTva, 18);
+          const brutHt = quantity * price;
+          const remise = brutHt * (discountRate / 100);
+          const totalHt = brutHt - remise;
+          const totalTva = totalHt * (vatRate / 100);
+          acc.totalHt += totalHt;
+          acc.totalRemise += remise;
+          acc.totalTva += totalTva;
+          acc.totalTtc += totalHt + totalTva;
+          return acc;
+        },
+        { totalHt: 0, totalRemise: 0, totalTva: 0, totalTtc: 0 },
+      );
+  }, [detailsOrder, selectedReceptionIds]);
+
+  useEffect(() => {
+    setInvoiceForm((prev) => ({
+      ...prev,
+      montantHt: selectedReceptionIds.length
+        ? String(roundAmount(selectedInvoiceTotals.totalHt))
+        : "",
+      tva: selectedReceptionIds.length
+        ? String(roundAmount(selectedInvoiceTotals.totalTva))
+        : "",
+      ttc: selectedReceptionIds.length
+        ? String(roundAmount(selectedInvoiceTotals.totalTtc))
+        : "",
+      remise: selectedReceptionIds.length
+        ? String(roundAmount(selectedInvoiceTotals.totalRemise))
+        : "",
+      transport: "",
+    }));
+  }, [selectedInvoiceTotals, selectedReceptionIds.length]);
+
+  const effectiveTvaRate = useMemo(() => {
+    const ht = toNumber(invoiceForm.montantHt, 0);
+    const ttc = toNumber(invoiceForm.ttc, 0);
+    if (ht <= 0) return 0;
+    return roundAmount(((ttc - ht) / ht) * 100);
+  }, [invoiceForm.montantHt, invoiceForm.ttc]);
+
+  const detailsNotes = useMemo(
+    () => parseBcfNotes(detailsOrder?.notes),
+    [detailsOrder?.notes],
+  );
 
   const receptionFilterOptions = useMemo(
     () => [
@@ -694,8 +829,21 @@ function PurchasesPage() {
       return;
     }
 
+    if (selectedReceptionIds.length === 0) {
+      toast.warning("Selectionnez au moins une reception a facturer");
+      return;
+    }
+
     setImportOrder({ id: selectedOrderId, ref: row?.ref || "BCF" });
-    setInvoiceWizardStep(1);
+    setInvoiceForm((prev) => ({
+      ...prev,
+      numeroFacture: "",
+      dateFacture: todayDate,
+      dateEcheance: "",
+      modePaiement: "",
+      observations: "",
+    }));
+    setInvoiceFormErrors({});
     setInvoiceWizardOpen(true);
   };
 
@@ -764,8 +912,31 @@ function PurchasesPage() {
         align: "right",
         render: (row) => <StatusBadge status={row.statut} />,
       },
+      {
+        key: "selectable",
+        header: "Facturer",
+        align: "right",
+        render: (row) => (
+          <Checkbox
+            checked={row.facturee || selectedReceptionIds.includes(row.id)}
+            disabled={row.facturee || !row.selectable}
+            aria-label={
+              row.facturee
+                ? "Reception deja facturee"
+                : "Selectionner la reception"
+            }
+            onCheckedChange={(checked) => {
+              setSelectedReceptionIds((prev) =>
+                checked
+                  ? Array.from(new Set([...prev, row.id]))
+                  : prev.filter((id) => id !== row.id),
+              );
+            }}
+          />
+        ),
+      },
     ],
-    [],
+    [selectedReceptionIds],
   );
 
   const steps = useMemo(() => {
@@ -1090,11 +1261,15 @@ function PurchasesPage() {
       };
     });
 
-  const openDetailsModal = async (orderId: string) => {
+  const openDetailsModal = async (orderId: string, preserveTab: boolean = false) => {
     setDetailsOpen(true);
     setDetailsLoading(true);
-    setDetailsOrder(null);
-    setImportedInvoices([]);
+    if (!preserveTab) {
+      setDetailsOrder(null);
+      setImportedInvoices([]);
+      setSelectedReceptionIds([]);
+      setDetailsTab("details");
+    }
     try {
       const response = (await getBonCommandeFournisseurById(orderId)) as {
         data?: BonCommandeApi;
@@ -1127,6 +1302,14 @@ function PurchasesPage() {
     const selectedOrderId = orderId || detailsOrder?.id;
     if (!selectedOrderId) return;
 
+    setReceptionOpen(true);
+    setReceptionLoading(true);
+    setReceptionOrder(null);
+    setReceptionGeneralForm({ date: todayDate, observations: "" });
+    setReceptionGeneralErrors({});
+    setReceptionLinesError("");
+    setReceptionStep(1);
+
     try {
       const response = (await getBonCommandeFournisseurById(
         selectedOrderId,
@@ -1136,28 +1319,23 @@ function PurchasesPage() {
       const order = response?.data;
       if (!order) {
         toast.error("Bon de commande introuvable");
+        setReceptionOpen(false);
         return;
       }
       if (!canCreateReceptionForStatus(order.statut)) {
         toast.warning(
           "Le bon de commande doit etre confirme par le fournisseur avant une reception",
         );
+        setReceptionOpen(false);
         return;
       }
 
-      setReceptionOpen(true);
-      setReceptionLoading(true);
-      setReceptionOrder(null);
       const receptionLines = buildReceptionLinesFromOrder(order);
       setReceptionOrder({
         id: order.id,
         ref: order.numeroBcf,
         lines: receptionLines,
       });
-      setReceptionGeneralForm({ date: todayDate, observations: "" });
-      setReceptionGeneralErrors({});
-      setReceptionLinesError("");
-      setReceptionStep(1);
       setDetailsOrder(order);
     } catch (error: unknown) {
       toast.error(
@@ -1191,8 +1369,8 @@ function PurchasesPage() {
       setReceptionOpen(false);
       setReceptionOrder(null);
       setReceptionStep(1);
-      await loadRows();
-      await openDetailsModal(receptionOrder.id);
+      void loadRows();
+      void openDetailsModal(receptionOrder.id, true);
     } catch (error: unknown) {
       toast.error(
         getApiErrorMessage(error, "Impossible d'enregistrer la reception"),
@@ -1300,35 +1478,6 @@ function PurchasesPage() {
     }
   };
 
-  const openImportInvoiceModal = async (orderId: string) => {
-    const row = rows.find((item) => item.id === orderId);
-    setImportOrder({ id: orderId, ref: row?.ref || "BCF" });
-    setImportOpen(true);
-    setImportFile(null);
-    if (importPreviewUrl) {
-      URL.revokeObjectURL(importPreviewUrl);
-      setImportPreviewUrl(null);
-    }
-    setImportedInvoicesLoading(true);
-    try {
-      const response = (await getFacturesImporteesBcf(orderId)) as {
-        data?: ImportedInvoiceItem[];
-      };
-      setImportedInvoices(Array.isArray(response?.data) ? response.data : []);
-    } catch (error: unknown) {
-      const maybeMessage =
-        error && typeof error === "object" && "message" in error
-          ? String((error as { message?: unknown }).message || "")
-          : "";
-      toast.error(
-        maybeMessage.trim() || "Impossible de charger les factures importees",
-      );
-      setImportedInvoices([]);
-    } finally {
-      setImportedInvoicesLoading(false);
-    }
-  };
-
   const onImportFileChange = (file: File | null) => {
     setImportFile(file);
     if (importPreviewUrl) {
@@ -1344,41 +1493,35 @@ function PurchasesPage() {
     decision: "VALIDER" | "REJETER",
   ) => {
     if (!importOrder?.id) return;
-    if (!importFile) {
-      toast.error("Selectionnez d'abord un fichier PDF, DOC ou DOCX");
-      return;
-    }
+    if (decision !== "VALIDER") return;
 
     setImportSubmitting(true);
     try {
-      const response = (await importerFactureFournisseurBcf(importOrder.id, {
-        file: importFile,
-        decision,
+      const response = (await creerFactureAchatDepuisBcf(importOrder.id, {
+        receptionIds: selectedReceptionIds,
+        numeroFacture: invoiceForm.numeroFacture,
+        dateFacture: invoiceForm.dateFacture,
+        dateEcheance: invoiceForm.dateEcheance,
         modePaiement: invoiceForm.modePaiement,
+        totalHt: roundAmount(selectedInvoiceTotals.totalHt),
+        totalTva: roundAmount(selectedInvoiceTotals.totalTva),
+        totalTtc: roundAmount(selectedInvoiceTotals.totalTtc),
+        totalRemise: roundAmount(selectedInvoiceTotals.totalRemise),
+        observations: invoiceForm.observations,
       })) as { data?: { numeroFacture?: string } };
 
       const numero = response?.data?.numeroFacture;
-      toast.success(
-        numero
-          ? `Facture importee ${decision.toLowerCase()}: ${numero}`
-          : `Facture importee ${decision.toLowerCase()}`,
-      );
-
-      onImportFileChange(null);
-
-      const listResponse = (await getFacturesImporteesBcf(importOrder.id)) as {
-        data?: ImportedInvoiceItem[];
-      };
-      setImportedInvoices(
-        Array.isArray(listResponse?.data) ? listResponse.data : [],
-      );
-      await loadRows();
+      setInvoiceWizardOpen(false);
+      setSelectedReceptionIds([]);
+      void loadRows();
+      void openDetailsModal(importOrder.id, true);
+      toast.success(numero ? `Facture creee: ${numero}` : "Facture creee");
     } catch (error: unknown) {
       const maybeMessage =
         error && typeof error === "object" && "message" in error
           ? String((error as { message?: unknown }).message || "")
           : "";
-      toast.error(maybeMessage.trim() || "Import de facture impossible");
+      toast.error(maybeMessage.trim() || "Creation de facture impossible");
     } finally {
       setImportSubmitting(false);
     }
@@ -1582,12 +1725,6 @@ function PurchasesPage() {
     if (row.statutRaw === "RECU_PARTIEL") {
       return [
         makeAction(
-          "import-invoice",
-          "Ajouter facture fournisseur",
-          <FileEdit className="mr-2 h-4 w-4" />,
-          () => openInvoiceWizard(row.id),
-        ),
-        makeAction(
           "new-reception",
           "Nouvelle reception",
           <PackageCheck className="mr-2 h-4 w-4" />,
@@ -1616,12 +1753,6 @@ function PurchasesPage() {
 
     if (row.statutRaw === "RECU_TOTAL") {
       return [
-        makeAction(
-          "import-invoice",
-          "Ajouter facture fournisseur",
-          <FileEdit className="mr-2 h-4 w-4" />,
-          () => openInvoiceWizard(row.id),
-        ),
         makeAction(
           "download-pdf",
           "Telecharger PDF",
@@ -1874,6 +2005,24 @@ function PurchasesPage() {
                 Reception disponible apres confirmation du fournisseur.
               </div>
             ) : null}
+            <div className="flex rounded-md border border-border bg-muted/30 p-1">
+              <Button
+                size="sm"
+                variant={detailsTab === "details" ? "secondary" : "ghost"}
+                className="flex-1"
+                onClick={() => setDetailsTab("details")}
+              >
+                Details
+              </Button>
+              <Button
+                size="sm"
+                variant={detailsTab === "receptions" ? "secondary" : "ghost"}
+                className="flex-1"
+                onClick={() => setDetailsTab("receptions")}
+              >
+                Receptions
+              </Button>
+            </div>
             <div className="space-y-3 border-b border-border pb-3">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
@@ -1888,7 +2037,10 @@ function PurchasesPage() {
                   size="sm"
                   variant="outline"
                   className="w-full sm:w-auto"
-                  disabled={!canCreateInvoiceForStatus(detailsOrder.statut)}
+                  disabled={
+                    !canCreateInvoiceForStatus(detailsOrder.statut) ||
+                    selectedReceptionIds.length === 0
+                  }
                   onClick={() => void openInvoiceWizard(detailsOrder.id)}
                 >
                   <ReceiptText className="mr-1 h-4 w-4" /> Ajouter facture
@@ -1908,64 +2060,228 @@ function PurchasesPage() {
               </div>
             </div>
 
-            <SectionCard title="Liste des receptions">
-              <div className="mb-4">
-                <Toolbar
-                  placeholder="Rechercher une reception..."
-                  searchValue={receptionRowsSearch}
-                  onSearchChange={setReceptionRowsSearch}
-                  filterOptions={receptionFilterOptions}
-                  selectedFilter={receptionRowsStatusFilter}
-                  onFilterChange={setReceptionRowsStatusFilter}
-                  filterPlaceholder="Filtrer par statut"
-                  filterSearchPlaceholder="Rechercher un statut"
-                />
-              </div>
-
-              <div className="space-y-2 md:hidden">
-                {paginatedReceptionRows.map((reception) => (
-                  <div
-                    key={reception.id}
-                    className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border p-3 text-xs"
-                  >
-                    <span className="text-muted-foreground">Référence</span>
-                    <span className="truncate text-right font-medium">
-                      {reception.reference}
-                    </span>
-                    <span className="text-muted-foreground">Date</span>
-                    <span className="text-right">{reception.date}</span>
-                    <span className="text-muted-foreground">Fournisseur</span>
-                    <span className="truncate text-right">
-                      {reception.fournisseur}
-                    </span>
-                    <span className="text-muted-foreground">Quantité</span>
-                    <span className="text-right">
-                      {reception.quantiteRecue} article(s)
-                    </span>
-                    <span className="text-muted-foreground">Statut</span>
-                    <span className="justify-self-end">
-                      <StatusBadge status={reception.statut} />
-                    </span>
+            {detailsTab === "details" ? (
+              <div className="h-[560px] space-y-4 overflow-y-auto pr-1">
+                <div className="rounded-md border border-border p-4">
+                  <h4 className="mb-2 text-sm font-semibold">
+                    Informations generales
+                  </h4>
+                  <div className="grid gap-2 text-sm md:grid-cols-2">
+                    <p>
+                      <span className="text-muted-foreground">
+                        Fournisseur:
+                      </span>{" "}
+                      {detailsOrder.fournisseur?.raisonSociale || "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Date bon:</span>{" "}
+                      {detailsNotes.dateBon ||
+                        (detailsOrder.dateCommande
+                          ? new Date(
+                              detailsOrder.dateCommande,
+                            ).toLocaleDateString("fr-FR")
+                          : "-")}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Entrepot:</span>{" "}
+                      {detailsNotes.entrepot || "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">
+                        Date livraison:
+                      </span>{" "}
+                      {detailsOrder.dateLivraisonPrevue
+                        ? new Date(
+                            detailsOrder.dateLivraisonPrevue,
+                          ).toLocaleDateString("fr-FR")
+                        : "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Statut:</span>{" "}
+                      {normalizeStatus(detailsOrder.statut)}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Receptions:</span>{" "}
+                      {detailsOrder.receptions?.length || 0}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">
+                        Conditions paiement:
+                      </span>{" "}
+                      {detailsNotes.conditionsPaiement || "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">
+                        Conditions livraison:
+                      </span>{" "}
+                      {detailsNotes.conditionsLivraison || "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Devise:</span>{" "}
+                      {detailsNotes.devise || "-"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Priorite:</span>{" "}
+                      {detailsNotes.priorite || "-"}
+                    </p>
+                    <p className="md:col-span-2">
+                      <span className="text-muted-foreground">
+                        Commentaires:
+                      </span>{" "}
+                      {detailsNotes.commentaires || "-"}
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="hidden md:block">
-                <DataTable
-                  columns={receptionColumns}
-                  rows={paginatedReceptionRows}
-                  rowKey={(row) => row.id}
-                  withActions={false}
-                />
-              </div>
+                </div>
 
-              <Pagination
-                count={filteredReceptionRows.length}
-                currentPage={receptionRowsPage}
-                totalPages={receptionTotalPages}
-                pageSize={RECEPTION_PAGE_SIZE}
-                onPageChange={setReceptionRowsPage}
-              />
-            </SectionCard>
+                <div className="rounded-md border border-border p-4">
+                  <h4 className="mb-2 text-sm font-semibold">Produits</h4>
+                  <div className="space-y-2">
+                    {(detailsOrder.lignes || []).map((line) => {
+                      const quantity = toNumber(line.quantiteCommandee, 0);
+                      const price = toNumber(line.prixUnitaireHt, 0);
+                      const discount = toNumber(line.remise, 0);
+                      const netHt = quantity * price * (1 - discount / 100);
+                      return (
+                        <div
+                          key={line.id}
+                          className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"
+                        >
+                          <p>
+                            {line.produit?.designation || "Produit"} (
+                            {line.produit?.reference || "-"}) - {quantity}{" "}
+                            {line.produit?.uniteMesure || "PIECE"}
+                          </p>
+                          <p className="font-medium">{fmtCurrency(netHt)}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-5">
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Total HT</p>
+                    <p className="font-semibold">
+                      {fmtCurrency(toNumber(detailsOrder.totalHt, 0))}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs text-muted-foreground">
+                      Total remise
+                    </p>
+                    <p className="font-semibold">
+                      {fmtCurrency(
+                        (detailsOrder.lignes || []).reduce((acc, line) => {
+                          const quantity = toNumber(line.quantiteCommandee, 0);
+                          const price = toNumber(line.prixUnitaireHt, 0);
+                          const discount = toNumber(line.remise, 0);
+                          return acc + quantity * price * (discount / 100);
+                        }, 0),
+                      )}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Total TVA</p>
+                    <p className="font-semibold">
+                      {fmtCurrency(toNumber(detailsOrder.totalTva, 0))}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Factures</p>
+                    <p className="font-semibold">{importedInvoices.length}</p>
+                  </div>
+                  <div className="rounded-md border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Total TTC</p>
+                    <p className="font-semibold">
+                      {fmtCurrency(toNumber(detailsOrder.totalTtc, 0))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {detailsTab === "receptions" ? (
+              <SectionCard title="Liste des receptions">
+                <div className="mb-4">
+                  <Toolbar
+                    placeholder="Rechercher une reception..."
+                    searchValue={receptionRowsSearch}
+                    onSearchChange={setReceptionRowsSearch}
+                    filterOptions={receptionFilterOptions}
+                    selectedFilter={receptionRowsStatusFilter}
+                    onFilterChange={setReceptionRowsStatusFilter}
+                    filterPlaceholder="Filtrer par statut"
+                    filterSearchPlaceholder="Rechercher un statut"
+                  />
+                </div>
+
+                <div className="space-y-2 md:hidden">
+                  {paginatedReceptionRows.map((reception) => (
+                    <div
+                      key={reception.id}
+                      className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md border border-border p-3 text-xs"
+                    >
+                      <span className="text-muted-foreground">Référence</span>
+                      <span className="truncate text-right font-medium">
+                        {reception.reference}
+                      </span>
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="text-right">{reception.date}</span>
+                      <span className="text-muted-foreground">Fournisseur</span>
+                      <span className="truncate text-right">
+                        {reception.fournisseur}
+                      </span>
+                      <span className="text-muted-foreground">Quantité</span>
+                      <span className="text-right">
+                        {reception.quantiteRecue} article(s)
+                      </span>
+                      <span className="text-muted-foreground">Statut</span>
+                      <span className="justify-self-end">
+                        <StatusBadge status={reception.statut} />
+                      </span>
+                      <span className="text-muted-foreground">Facturer</span>
+                      <span className="justify-self-end">
+                        <Checkbox
+                          checked={
+                            reception.facturee ||
+                            selectedReceptionIds.includes(reception.id)
+                          }
+                          disabled={reception.facturee || !reception.selectable}
+                          aria-label={
+                            reception.facturee
+                              ? "Reception deja facturee"
+                              : "Selectionner la reception"
+                          }
+                          onCheckedChange={(checked) => {
+                            setSelectedReceptionIds((prev) =>
+                              checked
+                                ? Array.from(new Set([...prev, reception.id]))
+                                : prev.filter((id) => id !== reception.id),
+                            );
+                          }}
+                        />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="hidden md:block">
+                  <DataTable
+                    columns={receptionColumns}
+                    rows={paginatedReceptionRows}
+                    rowKey={(row) => row.id}
+                    withActions={false}
+                  />
+                </div>
+
+                <Pagination
+                  count={filteredReceptionRows.length}
+                  currentPage={receptionRowsPage}
+                  totalPages={receptionTotalPages}
+                  pageSize={RECEPTION_PAGE_SIZE}
+                  onPageChange={setReceptionRowsPage}
+                />
+              </SectionCard>
+            ) : null}
           </div>
         ) : (
           <p className="py-10 text-center text-sm text-muted-foreground">
@@ -2911,7 +3227,6 @@ function PurchasesPage() {
           if (!open) {
             setImportOrder(null);
             setImportFile(null);
-            setInvoiceWizardStep(1);
             setInvoiceFormErrors({});
             if (importPreviewUrl) {
               URL.revokeObjectURL(importPreviewUrl);
@@ -2937,26 +3252,16 @@ function PurchasesPage() {
               Annuler
             </Button>
             <Button
-              disabled={invoiceWizardSubmitting || !importFile}
+              disabled={
+                invoiceWizardSubmitting || selectedReceptionIds.length === 0
+              }
               onClick={async () => {
                 if (!validateInvoiceStep1()) {
-                  return;
-                }
-                if (!importFile) {
-                  setInvoiceFormErrors((prev) => ({
-                    ...prev,
-                    file: "Le fichier PDF est requis",
-                  }));
                   return;
                 }
                 setInvoiceWizardSubmitting(true);
                 await submitImportInvoiceDecision("VALIDER");
                 setInvoiceWizardSubmitting(false);
-                setInvoiceWizardOpen(false);
-                if (importOrder?.id) {
-                  await openDetailsModal(importOrder.id);
-                  await loadRows();
-                }
               }}
             >
               {invoiceWizardSubmitting ? (
@@ -3057,20 +3362,14 @@ function PurchasesPage() {
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
+                      readOnly
                       className={cn(
+                        "bg-muted/40",
                         invoiceFormErrors.montantHt
                           ? "border-destructive focus-visible:ring-destructive"
                           : "",
                       )}
                       value={formatGroupedInputNumber(invoiceForm.montantHt)}
-                      onChange={(e) => {
-                        const montantHt = normalizeNumberInput(e.target.value);
-                        setInvoiceForm((prev) => ({
-                          ...prev,
-                          montantHt,
-                          ttc: computeTtcFromHtAndTva(montantHt, prev.tva),
-                        }));
-                      }}
                     />
                     {invoiceFormErrors.montantHt && (
                       <p className="text-xs text-destructive">
@@ -3079,27 +3378,29 @@ function PurchasesPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="invoice-tva">TVA</Label>
-                    <Input
-                      id="invoice-tva"
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="0"
-                      className={cn(
-                        invoiceFormErrors.tva
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : "",
-                      )}
-                      value={formatGroupedInputNumber(invoiceForm.tva)}
-                      onChange={(e) => {
-                        const tva = normalizeNumberInput(e.target.value);
-                        setInvoiceForm((prev) => ({
-                          ...prev,
-                          tva,
-                          ttc: computeTtcFromHtAndTva(prev.montantHt, tva),
-                        }));
-                      }}
-                    />
+                    <Label htmlFor="invoice-tva">Total TVA</Label>
+                    <div className="relative">
+                      <Input
+                        id="invoice-tva"
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0"
+                        readOnly
+                        className={cn(
+                          "bg-muted/40 pr-20",
+                          invoiceFormErrors.tva
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : "",
+                        )}
+                        value={formatGroupedInputNumber(invoiceForm.tva)}
+                      />
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        {effectiveTvaRate.toLocaleString("fr-FR", {
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        %
+                      </span>
+                    </div>
                     {invoiceFormErrors.tva && (
                       <p className="text-xs text-destructive">
                         {invoiceFormErrors.tva}
@@ -3107,51 +3408,32 @@ function PurchasesPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="invoice-remise">Remise</Label>
+                    <Label htmlFor="invoice-remise">Total remise</Label>
                     <Input
                       id="invoice-remise"
                       type="text"
                       inputMode="decimal"
                       placeholder="0"
+                      readOnly
                       className={cn(
+                        "bg-muted/40",
                         invoiceFormErrors.remise
                           ? "border-destructive focus-visible:ring-destructive"
                           : "",
                       )}
-                      value={formatGroupedInputNumber(invoiceForm.remise)}
-                      onChange={(e) =>
-                        setInvoiceForm((prev) => ({
-                          ...prev,
-                          remise: normalizeNumberInput(e.target.value),
-                        }))
-                      }
+                      value={formatGroupedInputNumber(
+                        selectedReceptionIds.length
+                          ? String(
+                              roundAmount(selectedInvoiceTotals.totalRemise),
+                            )
+                          : "",
+                      )}
                     />
                     {invoiceFormErrors.remise && (
                       <p className="text-xs text-destructive">
                         {invoiceFormErrors.remise}
                       </p>
                     )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="invoice-transport">Transport</Label>
-                    <Input
-                      id="invoice-transport"
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="0"
-                      className={cn(
-                        invoiceFormErrors.transport
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : "",
-                      )}
-                      value={formatGroupedInputNumber(invoiceForm.transport)}
-                      onChange={(e) =>
-                        setInvoiceForm((prev) => ({
-                          ...prev,
-                          transport: normalizeNumberInput(e.target.value),
-                        }))
-                      }
-                    />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="invoice-ttc">Total TTC</Label>

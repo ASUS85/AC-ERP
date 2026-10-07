@@ -73,7 +73,7 @@ export const produitsService = {
       throw new ApiError(
         400,
         "STOCK_NOT_EMPTY",
-        "Impossible d'archiver un produit avec stock",
+        "Impossible de supprimer se produit car il est encore présent en stock",
       );
     return produitsRepository.update(id, {
       statut: "ARCHIVE",
