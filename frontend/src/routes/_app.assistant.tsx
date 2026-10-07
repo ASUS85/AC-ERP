@@ -78,6 +78,28 @@ function readConversationPreferences(): ConversationPreferences {
   }
 }
 
+function MessagesSkeleton() {
+  return (
+    <div className="space-y-5" aria-busy="true" aria-label="Chargement des messages">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className={cn("flex gap-3", i % 2 === 1 && "flex-row-reverse")}
+        >
+          <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+          <Skeleton
+            className={cn("h-14 rounded-2xl", i % 2 === 1 ? "w-1/2" : "w-2/3")}
+          />
+        </div>
+      ))}
+      <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+        Chargement de la conversation…
+      </p>
+    </div>
+  );
+}
+
 function AssistantPage() {
   const [messages, setMessages] = useState<Msg[]>([
     {
@@ -102,6 +124,7 @@ function AssistantPage() {
   const [renameTitle, setRenameTitle] = useState("");
   const [conversationActionPending, setConversationActionPending] =
     useState(false);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const hasLoadedConversations = useRef(false);
 
@@ -188,17 +211,28 @@ function AssistantPage() {
   };
 
   const openConversation = async (conversation: IaConversation) => {
+    setMessagesLoading(true);
+    setMessages([]);
     try {
       const response = await getConversationMessages(conversation.id);
+      const sorted = [...response.data].sort((a, b) => {
+        const diff =
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        if (diff !== 0) return diff;
+        return a.role === b.role ? 0 : a.role === "user" ? -1 : 1;
+      });
+
       setIdConversation(conversation.id);
       setMessages(
-        response.data.map((message) => ({
+        sorted.map((message) => ({
           role: message.role === "assistant" ? "ai" : "user",
           text: message.contenu,
         })),
       );
     } catch {
       toast.error("Impossible de charger cette conversation");
+    } finally {
+      setMessagesLoading(false);
     }
   };
 
@@ -315,7 +349,7 @@ function AssistantPage() {
                     className={cn(
                       "group flex items-center gap-1 rounded-lg border border-transparent pr-1 transition-colors hover:bg-secondary/70",
                       idConversation === conversation.id &&
-                        "border-primary/20 bg-primary/5",
+                      "border-primary/20 bg-primary/5",
                     )}
                   >
                     <button
@@ -438,145 +472,148 @@ function AssistantPage() {
         <div className="h-[68vh] min-h-0 lg:col-span-3 lg:h-full">
           <div className="flex h-full flex-col rounded-sm border border-border bg-card shadow-card">
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex animate-in fade-in-0 slide-in-from-bottom-2 gap-3 duration-300",
-                    m.role === "user" && "flex-row-reverse",
-                  )}
-                >
-                  {m.role === "ai" ? (
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Bot className="h-4 w-4" />
-                    </span>
-                  ) : (
-                    <Avatar className="h-8 w-8 shrink-0 border border-primary/15">
-                      <AvatarImage
-                        src={avatarUrl || undefined}
-                        alt="Votre profil"
-                      />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
+              {messagesLoading ? (
+                <MessagesSkeleton />
+              ) : (
+                messages.map((m, i) => (
                   <div
+                    key={i}
                     className={cn(
-                      "max-w-[82%] break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                      m.role === "ai"
-                        ? "bg-secondary text-foreground"
-                        : "bg-primary text-primary-foreground whitespace-pre-wrap",
+                      "flex animate-in fade-in-0 slide-in-from-bottom-2 gap-3 duration-300",
+                      m.role === "user" && "flex-row-reverse",
                     )}
                   >
                     {m.role === "ai" ? (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          // Tableaux
-                          table: ({ children }) => (
-                            <div className="my-2 overflow-x-auto rounded-lg border border-border">
-                              <table className="w-full min-w-[560px] text-sm">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Bot className="h-4 w-4" />
+                      </span>
+                    ) : (
+                      <Avatar className="h-8 w-8 shrink-0 border border-primary/15">
+                        <AvatarImage
+                          src={avatarUrl || undefined}
+                          alt="Votre profil"
+                        />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div
+                      className={cn(
+                        "max-w-[82%] break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                        m.role === "ai"
+                          ? "bg-secondary text-foreground"
+                          : "bg-primary text-primary-foreground whitespace-pre-wrap",
+                      )}
+                    >
+                      {m.role === "ai" ? (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            // Tableaux
+                            table: ({ children }) => (
+                              <div className="my-2 overflow-x-auto rounded-lg border border-border">
+                                <table className="w-full min-w-[560px] text-sm">
+                                  {children}
+                                </table>
+                              </div>
+                            ),
+                            thead: ({ children }) => (
+                              <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
                                 {children}
-                              </table>
-                            </div>
-                          ),
-                          thead: ({ children }) => (
-                            <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
-                              {children}
-                            </thead>
-                          ),
-                          tbody: ({ children }) => (
-                            <tbody className="divide-y divide-border">
-                              {children}
-                            </tbody>
-                          ),
-                          tr: ({ children }) => (
-                            <tr className="transition-colors hover:bg-muted/30">
-                              {children}
-                            </tr>
-                          ),
-                          th: ({ children }) => (
-                            <th className="px-3 py-2 text-left font-semibold">
-                              {children}
-                            </th>
-                          ),
-                          td: ({ children }) => (
-                            <td className="px-3 py-2">{children}</td>
-                          ),
+                              </thead>
+                            ),
+                            tbody: ({ children }) => (
+                              <tbody className="divide-y divide-border">
+                                {children}
+                              </tbody>
+                            ),
+                            tr: ({ children }) => (
+                              <tr className="transition-colors hover:bg-muted/30">
+                                {children}
+                              </tr>
+                            ),
+                            th: ({ children }) => (
+                              <th className="px-3 py-2 text-left font-semibold">
+                                {children}
+                              </th>
+                            ),
+                            td: ({ children }) => (
+                              <td className="px-3 py-2">{children}</td>
+                            ),
 
-                          // Blocs de code
-                          code: ({ inline, children, ...props }: any) =>
-                            inline ? (
-                              <code
-                                className="rounded bg-background/80 px-1.5 py-0.5 font-mono text-xs text-primary"
-                                {...props}
-                              >
-                                {children}
-                              </code>
-                            ) : (
-                              <pre className="my-2 overflow-x-auto rounded-lg bg-background/80 p-3">
+                            // Blocs de code
+                            code: ({ inline, children, ...props }: any) =>
+                              inline ? (
                                 <code
-                                  className="font-mono text-xs text-foreground"
+                                  className="rounded bg-background/80 px-1.5 py-0.5 font-mono text-xs text-primary"
                                   {...props}
                                 >
                                   {children}
                                 </code>
-                              </pre>
+                              ) : (
+                                <pre className="my-2 overflow-x-auto rounded-lg bg-background/80 p-3">
+                                  <code
+                                    className="font-mono text-xs text-foreground"
+                                    {...props}
+                                  >
+                                    {children}
+                                  </code>
+                                </pre>
+                              ),
+
+                            // Titres
+                            h2: ({ children }) => (
+                              <h2 className="mb-2 mt-3 text-sm font-bold text-foreground first:mt-0">
+                                {children}
+                              </h2>
+                            ),
+                            h3: ({ children }) => (
+                              <h3 className="mb-1 mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground first:mt-0">
+                                {children}
+                              </h3>
                             ),
 
-                          // Titres
-                          h2: ({ children }) => (
-                            <h2 className="mb-2 mt-3 text-sm font-bold text-foreground first:mt-0">
-                              {children}
-                            </h2>
-                          ),
-                          h3: ({ children }) => (
-                            <h3 className="mb-1 mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground first:mt-0">
-                              {children}
-                            </h3>
-                          ),
+                            // Listes
+                            ul: ({ children }) => (
+                              <ul className="my-1.5 space-y-1 pl-4">
+                                {children}
+                              </ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="my-1.5 list-decimal space-y-1 pl-4">
+                                {children}
+                              </ol>
+                            ),
+                            li: ({ children }) => (
+                              <li className="text-sm leading-relaxed">
+                                {children}
+                              </li>
+                            ),
 
-                          // Listes
-                          ul: ({ children }) => (
-                            <ul className="my-1.5 space-y-1 pl-4">
-                              {children}
-                            </ul>
-                          ),
-                          ol: ({ children }) => (
-                            <ol className="my-1.5 list-decimal space-y-1 pl-4">
-                              {children}
-                            </ol>
-                          ),
-                          li: ({ children }) => (
-                            <li className="text-sm leading-relaxed">
-                              {children}
-                            </li>
-                          ),
+                            // Gras
+                            strong: ({ children }) => (
+                              <strong className="font-semibold text-foreground">
+                                {children}
+                              </strong>
+                            ),
 
-                          // Gras
-                          strong: ({ children }) => (
-                            <strong className="font-semibold text-foreground">
-                              {children}
-                            </strong>
-                          ),
-
-                          // Paragraphes
-                          p: ({ children }) => (
-                            <p className="mb-1.5 leading-relaxed last:mb-0">
-                              {children}
-                            </p>
-                          ),
-                        }}
-                      >
-                        {m.text}
-                      </ReactMarkdown>
-                    ) : (
-                      m.text
-                    )}
+                            // Paragraphes
+                            p: ({ children }) => (
+                              <p className="mb-1.5 leading-relaxed last:mb-0">
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {m.text}
+                        </ReactMarkdown>
+                      ) : (
+                        m.text
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )))}
               {sending && (
                 <div className="flex animate-in fade-in-0 slide-in-from-bottom-2 gap-3 duration-300">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -602,7 +639,7 @@ function AssistantPage() {
               <div ref={endRef} />
             </div>
 
-            {messages.length <= 1 && (
+            {!messagesLoading && messages.length <= 1 && (
               <div className="flex flex-wrap gap-2 px-5 pb-3">
                 {suggestions.map((s) => (
                   <button
