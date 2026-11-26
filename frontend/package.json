@@ -2,10 +2,14 @@
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": false,
+  "main": "electron/main.js",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:electron": "vite build --mode electron && node scripts/prepare-electron-build.mjs",
+    "electron:dev": "electron .",
+    "electron:build": "npm run build:electron && electron-builder --win",
     "start": "node .output/server/index.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -78,6 +82,8 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "electron": "^45.5.0",
+    "electron-builder": "^26.18.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
@@ -89,5 +95,23 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
+  },
+  "build": {
+    "appId": "com.acerp.app",
+    "productName": "AC ERP",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
