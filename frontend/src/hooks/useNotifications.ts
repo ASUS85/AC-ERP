@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
 import { AUTH_STORAGE_KEYS } from "@/lib/auth-session";
+import { API_ORIGIN } from "@/lib/api/config";
 import {
   getNotifications,
   marquerLue,
@@ -224,11 +225,7 @@ export function useNotifications() {
       };
     }
 
-    const apiUrl =
-      import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-    const apiOrigin = apiUrl.replace(/\/api\/v\d+\/?$/, "").replace(/\/$/, "");
-
-    socket = io(apiOrigin, {
+    socket = io(API_ORIGIN, {
       auth: { token, userId: user?.id },
       transports: ["websocket"],
       reconnectionDelay: 1000,

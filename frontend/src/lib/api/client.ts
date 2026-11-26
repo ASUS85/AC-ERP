@@ -1,8 +1,9 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { AUTH_STORAGE_KEYS, clearAuthSession } from "../auth-session";
+import { API_BASE_URL } from "./config";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1",
+  baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 30000,
 });
@@ -40,9 +41,13 @@ function getRequestPath(url?: string) {
 function redirectToLogin() {
   if (redirectingToLogin || typeof window === "undefined") return;
   redirectingToLogin = true;
-  const destination = `${window.location.pathname}${window.location.search}`;
+  const isElectron = import.meta.env.VITE_TARGET === "electron";
+  const destination = isElectron
+    ? window.location.hash.slice(1) || "/"
+    : `${window.location.pathname}${window.location.search}`;
   clearAuthSession();
-  window.location.replace(`/login?redirect=${encodeURIComponent(destination)}`);
+  const loginUrl = `/login?redirect=${encodeURIComponent(destination)}`;
+  window.location.replace(isElectron ? `#${loginUrl}` : loginUrl);
 }
 
 api.interceptors.response.use(
@@ -82,17 +87,13 @@ api.interceptors.response.use(
         original.headers.Authorization = `Bearer ${accessToken}`;
         return api(original);
       } catch (refreshError) {
-        clearAuthSession();
-        window.location.href = "/login";
+        redirectToLogin();
         return Promise.reject(refreshError);
       } finally {
         refreshing = false;
       }
     }
-    if (
-      error.response?.status === 401 &&
-      !PUBLIC_AUTH_PATHS.has(requestPath)
-    ) {
+    if (error.response?.status === 401 && !PUBLIC_AUTH_PATHS.has(requestPath)) {
       redirectToLogin();
     }
     return Promise.reject(
