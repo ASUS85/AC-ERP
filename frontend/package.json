@@ -10,7 +10,7 @@
     "build": "vite build",
     "build:electron": "node scripts/build-electron.mjs && node scripts/prepare-electron-build.mjs",
     "electron:dev": "electron .",
-    "electron:build": "npm run build:electron && electron-builder --win",
+    "electron:build": "npm run build:electron && node scripts/package-electron.mjs",
     "start": "node .output/server/index.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
@@ -83,6 +83,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "7zip-bin": "5.2.0",
     "electron": "^45.5.0",
     "electron-builder": "^26.18.0",
     "eslint": "^9.32.0",
@@ -100,19 +101,34 @@
   "build": {
     "appId": "com.acerp.app",
     "productName": "AC ERP",
+    "toolsets": {
+      "nsis": "1.2.1"
+    },
+    "asar": true,
+    "disableAsarIntegrity": true,
+    "compression": "store",
     "directories": {
       "output": "release"
     },
     "files": [
       "dist/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "build/icon.ico"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "signExecutable": false
     },
+    "artifactName": "AC-ERP-Setup-${version}.${ext}",
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "packElevateHelper": false,
+      "differentialPackage": false,
+      "warningsAsErrors": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     }
   }
 }
