@@ -118,7 +118,8 @@
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico",
-      "signExecutable": false
+      "signExecutable": false,
+      "signAndEditExecutable": false
     },
     "artifactName": "AC-ERP-Setup-${version}.${ext}",
     "nsis": {
